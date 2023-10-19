@@ -1,0 +1,1542 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<helpItems schema="maml" xmlns="http://msh">
+
+  <!-- Get-BuildkitLatestVersion -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-BuildkitLatestVersion</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>BuildkitLatestVersion</command:noun>
+      <maml:description>
+        <maml:para>Gets the latest Buildkit version number.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Uses GitHub APIs to get the latest BuildKit release version from the moby/buildkit GitHub repository.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-BuildkitLatestVersion</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>Returns the latest Buildkit version number.</maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <command:examples>
+      <command:example>
+        <maml:title>------------ Example 1: Get latest Buildkit version ------------</maml:title>
+        <dev:code>PS C:\&gt; Get-BuildkitLatestVersion</dev:code>
+        <dev:remarks>
+          <maml:para>This returns a string of the latest release version of BuildKit, e.g., v1.2.0.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Get-ContainerdLatestVersion -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-ContainerdLatestVersion</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>ContainerdLatestVersion</command:noun>
+      <maml:description>
+        <maml:para>Gets the latest Containerd version number.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Uses GitHub APIs to get the latest Containerd release version from the containerd/containerd GitHub repository.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-ContainerdLatestVersion</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>Returns the latest Containerd version number.</maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <command:examples>
+      <command:example>
+        <maml:title>----------- Example 1: Get latest Containerd version -----------</maml:title>
+        <dev:code>PS C:\&gt; Get-ContainerdLatestVersion</dev:code>
+        <dev:remarks>
+          <maml:para>This returns a string of the latest release version of Containerd, e.g., v1.2.0.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Get-NerdctlLatestVersion -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-NerdctlLatestVersion</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>NerdctlLatestVersion</command:noun>
+      <maml:description>
+        <maml:para>Gets the latest Nerdctl version number.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Uses GitHub APIs to get the latest Nerdctl release version from the containerd/nerdctl GitHub repository.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-NerdctlLatestVersion</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>Returns the latest Nerdctl version number.</maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <command:examples>
+      <command:example>
+        <maml:title>------------ Example 1: Get latest Nerdctl version ------------</maml:title>
+        <dev:code>PS C:\&gt; Get-NerdctlLatestVersion</dev:code>
+        <dev:remarks>
+          <maml:para>This returns a string of the latest release version of Nerdctl, e.g., v1.2.0.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Get-WinCNILatestVersion -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Get-WinCNILatestVersion</command:name>
+      <command:verb>Get</command:verb>
+      <command:noun>WinCNILatestVersion</command:noun>
+      <maml:description>
+        <maml:para>Gets the latest Windows CNI version number.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Uses GitHub APIs to get the latest Windows CNI plugin release version from the microsoft/windows-container-networking repository.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Get-WinCNILatestVersion</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>Returns the latest Windows CNI version number.</maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <command:examples>
+      <command:example>
+        <maml:title>------------ Example 1: Get latest Nerdctl version ------------</maml:title>
+        <dev:code>PS C:\&gt; Get-WinCNILatestVersion</dev:code>
+        <dev:remarks>
+          <maml:para>This returns a string of the latest release version of Windows CNI, e.g., v1.2.0.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Initialize-BuildkitdService -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Initialize-BuildkitdService</command:name>
+      <command:verb>Initialize</command:verb>
+      <command:noun>BuildkitdService</command:noun>
+      <maml:description>
+        <maml:para>Registers the Buildkitd service with a prompt to either register with the Containerd CNI config (0-containerd-nat.conf) or not.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Registers the Buildkitd service with a prompt to either register with the Containerd CNI config (0-containerd-nat.conf) or not.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Initialize-BuildkitdService</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="0" aliases="none">
+          <maml:name>BuildKitPath</maml:name>
+          <maml:description>
+            <maml:para>Path where Buildkit is installed. If not provided, it defaults to Buildkit
+              path in the environment path variable or `$Env:ProgramFiles\Buildkit`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Buildkit path in the environment path variable or
+            $Env:ProgramFiles\Buildkit</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="1" aliases="none">
+          <maml:name>WinCNIPath</maml:name>
+          <maml:description>
+            <maml:para>Path where Windows CNI plugin is installed. If not provided, it defaults to Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Containerd path in the environment path variable or $Env:ProgramFiles\Containerd</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="0" aliases="none">
+        <maml:name>BuildKitPath</maml:name>
+        <maml:description>
+          <maml:para>Path where Buildkit is installed. If not provided, it defaults to Buildkit path in the environment path variable or `$Env:ProgramFiles\Buildkit`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Buildkit path in the environment path variable or
+          $Env:ProgramFiles\Buildkit</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="1" aliases="none">
+        <maml:name>WinCNIPath</maml:name>
+        <maml:description>
+          <maml:para>Path where Windows CNI plugin is installed. If not provided, it defaults to Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Containerd path in the environment path variable or $Env:ProgramFiles\Containerd</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>When the `0-containerd-nat.conf` does not exist, the user is prompted to register buildkitd service with or without this file.</maml:para>
+        <maml:para>- If a user enters `Y` (default), the user consents to register buildkitd service without the default containerd NAT configuration file.</maml:para>
+        <maml:para>- If a user enters `N`, buildkitd service is not registered and the user has to register the service themselves.</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-- Example 1: Initializes Buildkitd service with the defaults --</maml:title>
+        <dev:code>PS C:\&gt; Initialize-BuildkitdService</dev:code>
+        <dev:remarks>
+          <maml:para>Registers buildkitd with the default containerd configurations file `0-containerd-nat.conf` if it is available.</maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>-- Example 2: Initializes Buildkitd service with the defaults --</maml:title>
+        <dev:code>PS C:\&gt; Initialize-BuildkitdService -WinCNIPath '$ENV:ProgramFiles\containerd\cni' -BuildKitPath '$ENV:ProgramFiles\Buildkit'</dev:code>
+        <dev:remarks>
+          <maml:para>Registers buildkitd with the default containerd configurations file `0-containerd-nat.conf` found at `$ENV:ProgramFiles\containerd\cni`.</maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Initialize-ContainerdService -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Initialize-ContainerdService</command:name>
+      <command:verb>Initialize</command:verb>
+      <command:noun>ContainerdService</command:noun>
+      <maml:description>
+        <maml:para>Create a default containerd configuration file called `config.toml` at the Containerd path and registers the containerd service.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Create a default containerd configuration file called `config.toml` at the Containerd path and registers the containerd service.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Initialize-ContainerdService</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="0" aliases="none">
+          <maml:name>ContainerdPath</maml:name>
+          <maml:description>
+            <maml:para>Path where Containerd is installed.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>The containerd path in the environment path variable or $Env:ProgramFiles\containerd</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="0" aliases="none">
+        <maml:name>ContainerdPath</maml:name>
+        <maml:description>
+          <maml:para>Path where Containerd is installed.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>The containerd path in the environment path variable or $Env:ProgramFiles\containerd</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:examples>
+      <command:example>
+        <maml:title>----------- Example 1: Using default Containerd path -----------</maml:title>
+        <dev:code>PS C:\&gt; Initialize-ContainerdService</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>----------------- Example 2: Using custom path -----------------</maml:title>
+        <dev:code>PS C:\&gt; Initialize-ContainerdService -ContainerdPath 'C:\Test\Path\containerd'</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Initialize-NatNetwork -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Initialize-NatNetwork</command:name>
+      <command:verb>Initialize</command:verb>
+      <command:noun>NatNetwork</command:noun>
+      <maml:description>
+        <maml:para>Initializes a NAT network.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Initializes a NAT network.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Initialize-NatNetwork</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="0" aliases="none">
+          <maml:name>NetworkName</maml:name>
+          <maml:description>
+            <maml:para>Name of the new network. Defaults to 'nat'</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>'nat'</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="1" aliases="none">
+          <maml:name>Gateway</maml:name>
+          <maml:description>
+            <maml:para>Gateway IP address. Defaults to default gateway address.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Default gateway address</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="2" aliases="none">
+          <maml:name>CIDR</maml:name>
+          <maml:description>
+            <maml:para>Size of the subnet mask. Defaults to 16</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">Int32</command:parameterValue>
+          <dev:type>
+            <maml:name>Int32</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>16</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="3" aliases="none">
+          <maml:name>WinCNIVersion</maml:name>
+          <maml:description>
+            <maml:para>Windows CNI plugin version to use. Defaults to latest version.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Latest version</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="4" aliases="none">
+          <maml:name>WinCNIPath</maml:name>
+          <maml:description>
+            <maml:para>Absolute path to cni folder.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Path where containerd is installed or $Env:ProgramFiles\Containerd\cni</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="2" aliases="none">
+        <maml:name>CIDR</maml:name>
+        <maml:description>
+          <maml:para>Size of the subnet mask. Defaults to 16</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">Int32</command:parameterValue>
+        <dev:type>
+          <maml:name>Int32</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>16</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="1" aliases="none">
+        <maml:name>Gateway</maml:name>
+        <maml:description>
+          <maml:para>Gateway IP address. Defaults to default gateway address.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Default gateway address</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="0" aliases="none">
+        <maml:name>NetworkName</maml:name>
+        <maml:description>
+          <maml:para>Name of the new network. Defaults to 'nat'</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>'nat'</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="4" aliases="none">
+        <maml:name>WinCNIPath</maml:name>
+        <maml:description>
+          <maml:para>Absolute path to cni folder.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Path where containerd is installed or $Env:ProgramFiles\Containerd\cni</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="3" aliases="none">
+        <maml:name>WinCNIVersion</maml:name>
+        <maml:description>
+          <maml:para>Windows CNI plugin version to use. Defaults to latest version.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Latest version</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>The version provided needs to match the installed version. To avoid any issues, it is safer to install the latest version.</maml:para>
+        <maml:para>If Windowds CNI plugins are not installed at the default or provided path, the user is prompted to install the missing plugins.</maml:para>
+        <maml:para>- If a user enters `Y`, the user to consents to the download and installation of  the missing plugins.</maml:para>
+        <maml:para>- If a user enters `N` (default), execution terminates with an error.</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>------------------ Example 1: Using defaults ------------------</maml:title>
+        <dev:code>PS C:\&gt; Initialize-NatNetwork</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>------------------ Example 2: Using defaults ------------------</maml:title>
+        <dev:code>PS C:\&gt; Initialize-NatNetwork -NetworkName 'natNW' -Gateway '192.168.0.5' -CIDR
+          32</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Install-Buildkit -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Install-Buildkit</command:name>
+      <command:verb>Install</command:verb>
+      <command:noun>Buildkit</command:noun>
+      <maml:description>
+        <maml:para>Downloads and installs Buildkit.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Downloads Buildkit files from containerd releases (https://github.com/moby/buildkit/releases)and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.</maml:para>
+      <maml:para>Once Buildkit is installed and added to the environment path, we can get the path where it is installed using: NOTE: If Buildkit already exists at the specified install path, it will be uninstalled and the specified version will be installed.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Install-Buildkit</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="0" aliases="none">
+          <maml:name>Version</maml:name>
+          <maml:description>
+            <maml:para>Buildkit version to install. Defaults to latest version.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Latest version</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="1" aliases="none">
+          <maml:name>InstallPath</maml:name>
+          <maml:description>
+            <maml:para>Path to install buildkit. Defaults to `$ENV:ProramFiles\buildkit`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$Env:ProgramFiles\Buildkit</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="2" aliases="none">
+          <maml:name>DownloadPath</maml:name>
+          <maml:description>
+            <maml:para>Path to download files. Defaults to user's Downloads folder</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$HOME\Downloads</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="2" aliases="none">
+        <maml:name>DownloadPath</maml:name>
+        <maml:description>
+          <maml:para>Path to download files. Defaults to user's Downloads folder</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$HOME\Downloads</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="1" aliases="none">
+        <maml:name>InstallPath</maml:name>
+        <maml:description>
+          <maml:para>Path to install buildkit. Defaults to `$ENV:ProramFiles\buildkit`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$Env:ProgramFiles\Buildkit</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="0" aliases="none">
+        <maml:name>Version</maml:name>
+        <maml:description>
+          <maml:para>Buildkit version to install. Defaults to latest version.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Latest version</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:examples>
+      <command:example>
+        <maml:title>------------------ Example 1: Using defaults ------------------</maml:title>
+        <dev:code>PS C:\&gt; Install-Buildkit</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>---------------- Example 2: Using custom values ----------------</maml:title>
+        <dev:code>PS C:\&gt; Install-Buildkit -Version "0.12.2" -InstallPath 'C:\Test\Path\buildkit'</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Install-Containerd -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Install-Containerd</command:name>
+      <command:verb>Install</command:verb>
+      <command:noun>Containerd</command:noun>
+      <maml:description>
+        <maml:para>Downloads and installs Containerd.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Downloads Containerd files from containerd releases (https://github.com/containerd/containerd/releases)and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.</maml:para>
+      <maml:para>Once Containerd is installed and added to the environment path, we can get the path where it is installed using: NOTE: If Containerd already exists at the specified install path, it will be uninstalled and the specified version will be installed.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Install-Containerd</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="0" aliases="none">
+          <maml:name>Version</maml:name>
+          <maml:description>
+            <maml:para>ContainerD version to install. Defaults to latest version</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Latest version</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="1" aliases="none">
+          <maml:name>InstallPath</maml:name>
+          <maml:description>
+            <maml:para>Path to install containerd. Defaults to `$ENV:ProramFiles\containerd`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$ENV:ProramFiles\containerd</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="2" aliases="none">
+          <maml:name>DownloadPath</maml:name>
+          <maml:description>
+            <maml:para>Path to download files. Defaults to user's Downloads folder</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$HOME\Downloads</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="2" aliases="none">
+        <maml:name>DownloadPath</maml:name>
+        <maml:description>
+          <maml:para>Path to download files. Defaults to user's Downloads folder</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$HOME\Downloads</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="1" aliases="none">
+        <maml:name>InstallPath</maml:name>
+        <maml:description>
+          <maml:para>Path to install containerd. Defaults to `$ENV:ProramFiles\containerd`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$ENV:ProramFiles\containerd</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="0" aliases="none">
+        <maml:name>Version</maml:name>
+        <maml:description>
+          <maml:para>ContainerD version to install. Defaults to latest version</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Latest version</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:examples>
+      <command:example>
+        <maml:title>------------------ Example 1: Using defaults ------------------</maml:title>
+        <dev:code>PS C:\&gt; Install-Containerd</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>---------------- Example 2: Using custom values ----------------</maml:title>
+        <dev:code>PS C:\&gt; Install-Containerd -Version "1.7.7" -InstallPath 'C:\Test\Path\Containerd'</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Install-ContainerTools -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Install-ContainerTools</command:name>
+      <command:verb>Install</command:verb>
+      <command:noun>ContainerTools</command:noun>
+      <maml:description>
+        <maml:para>Downloads and installs container tool (Containerd, Buildkit, and Nerdctl).</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Downloads container tool (Containerd, Buildkit, and Nerdctl) asynchronously and installs them at the specified location.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Install-ContainerTools</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="0" aliases="none">
+          <maml:name>ContainerDVersion</maml:name>
+          <maml:description>
+            <maml:para>ContainerD version to install</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Latest version</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="1" aliases="none">
+          <maml:name>BuildKitVersion</maml:name>
+          <maml:description>
+            <maml:para>Buildkit version to install</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Latest version</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="2" aliases="none">
+          <maml:name>NerdCTLVersion</maml:name>
+          <maml:description>
+            <maml:para>Nerdctl version to install</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Latest version</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="3" aliases="none">
+          <maml:name>InstallPath</maml:name>
+          <maml:description>
+            <maml:para>Path to Install files. Defaults to Program Files, `$Env:ProgramFiles`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$Env:ProgramFiles</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="4" aliases="none">
+          <maml:name>DownloadPath</maml:name>
+          <maml:description>
+            <maml:para>Path to download files. Defaults to user's Downloads folder, `$HOME\Downloads`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$HOME\Downloads</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="named" aliases="none">
+          <maml:name>CleanUp</maml:name>
+          <maml:description>
+            <maml:para>Cleanup after installation is done</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="1" aliases="none">
+        <maml:name>BuildKitVersion</maml:name>
+        <maml:description>
+          <maml:para>Buildkit version to install</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Latest version</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="named" aliases="none">
+        <maml:name>CleanUp</maml:name>
+        <maml:description>
+          <maml:para>Cleanup after installation is done</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="0" aliases="none">
+        <maml:name>ContainerDVersion</maml:name>
+        <maml:description>
+          <maml:para>ContainerD version to install</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Latest version</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="4" aliases="none">
+        <maml:name>DownloadPath</maml:name>
+        <maml:description>
+          <maml:para>Path to download files. Defaults to user's Downloads folder, `$HOME\Downloads`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$HOME\Downloads</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="3" aliases="none">
+        <maml:name>InstallPath</maml:name>
+        <maml:description>
+          <maml:para>Path to Install files. Defaults to Program Files, `$Env:ProgramFiles`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$Env:ProgramFiles</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="2" aliases="none">
+        <maml:name>NerdCTLVersion</maml:name>
+        <maml:description>
+          <maml:para>Nerdctl version to install</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Latest version</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:examples>
+      <command:example>
+        <maml:title>------------------ Example 1: Using defaults ------------------</maml:title>
+        <dev:code>PS C:\&gt; Install-ContainerTools</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>Example 2: Download Containerd version 1.6.8 and default Nerdctl and Buildkit versions</maml:title>
+        <dev:code>PS C:\&gt; Install-ContainerTools -ContainerDVersion 1.6.8</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>------ Example 3: Cleanup after installation is complete ------</maml:title>
+        <dev:code>PS C:\&gt; Install-ContainerTools -Cleanup</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Install-Nerdctl -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Install-Nerdctl</command:name>
+      <command:verb>Install</command:verb>
+      <command:noun>Nerdctl</command:noun>
+      <maml:description>
+        <maml:para>Downloads and installs Nerdctl.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Downloads Containerd files from nerdctl releases (https://github.com/containerd/nerdctl/releases)and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Install-Nerdctl</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="0" aliases="none">
+          <maml:name>Version</maml:name>
+          <maml:description>
+            <maml:para>Nerdctl version to install. Defaults to latest version.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Latest version</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="1" aliases="none">
+          <maml:name>InstallPath</maml:name>
+          <maml:description>
+            <maml:para>Path to install Nerdctl. Path to install Nerdctl. Defaults to
+              `$ENV:ProramFiles\Nerdctl`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$ENV:ProramFiles\Nerdctl`</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="2" aliases="none">
+          <maml:name>DownloadPath</maml:name>
+          <maml:description>
+            <maml:para>Path to download files. Defaults to user's Downloads folder</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$HOME\Downloads</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="2" aliases="none">
+        <maml:name>DownloadPath</maml:name>
+        <maml:description>
+          <maml:para>Path to download files. Defaults to user's Downloads folder</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$HOME\Downloads</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="1" aliases="none">
+        <maml:name>InstallPath</maml:name>
+        <maml:description>
+          <maml:para>Path to install Nerdctl. Path to install Nerdctl. Defaults to `$ENV:ProramFiles\Nerdctl`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$ENV:ProramFiles\Nerdctl`</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="0" aliases="none">
+        <maml:name>Version</maml:name>
+        <maml:description>
+          <maml:para>Nerdctl version to install. Defaults to latest version.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Latest version</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:examples>
+      <command:example>
+        <maml:title>------------------ Example 1: Using defaults ------------------</maml:title>
+        <dev:code>PS C:\&gt; Install-Nerdctl</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>---------------- Example 2: Using custom values ----------------</maml:title>
+        <dev:code>PS C:\&gt; Install-Nerdctl -Version "1.6.1" -InstallPath 'C:\Test\Path\Nerdctl'</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Install-WinCNIPlugin -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Install-WinCNIPlugin</command:name>
+      <command:verb>Install</command:verb>
+      <command:noun>WinCNIPlugin</command:noun>
+      <maml:description>
+        <maml:para>Downloads and installs Windows CNI plugin.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Downloads Windows CNI plugin from windows-container-networking (https://github.com/microsoft/windows-container-networking/releases)and installs it in the specified location.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Install-WinCNIPlugin</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="0" aliases="none">
+          <maml:name>WinCNIVersion</maml:name>
+          <maml:description>
+            <maml:para>Windows CNI plugin version to use. Defaults to latest version.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Latest version</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="1" aliases="none">
+          <maml:name>WinCNIPath</maml:name>
+          <maml:description>
+            <maml:para>Location to install Windows CNI.</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>Path where containerd is installed or `$Env:ProgramFiles\Containerd`</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="1" aliases="none">
+        <maml:name>WinCNIPath</maml:name>
+        <maml:description>
+          <maml:para>Location to install Windows CNI.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Path where containerd is installed or `$Env:ProgramFiles\Containerd`</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="0" aliases="none">
+        <maml:name>WinCNIVersion</maml:name>
+        <maml:description>
+          <maml:para>Windows CNI plugin version to use. Defaults to latest version.</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Latest version</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:examples>
+      <command:example>
+        <maml:title>------------------ Example 1: Using defaults ------------------</maml:title>
+        <dev:code>PS C:\&gt; Install-WinCNIPlugin</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+      <command:example>
+        <maml:title>---------------- Example 2: Using custom values ----------------</maml:title>
+        <dev:code>PS C:\&gt; Install-WinCNIPlugin -WinCNIVersion "0.2.0"</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Show-ContainerTools -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Show-ContainerTools</command:name>
+      <command:verb>List</command:verb>
+      <command:noun>ContainerTools</command:noun>
+      <maml:description>
+        <maml:para>List container tools (Containerd, Buildkit, and Nerdctl) install status.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>List container tools (Containerd, Buildkit, Nerdctl) and shows if the tool is installed, the installed version and the latest available version.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Show-ContainerTools</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:returnValues>
+      <command:returnValue>
+        <dev:type>
+          <maml:name>System.Array</maml:name>
+        </dev:type>
+        <maml:description>
+          <maml:para>Returns an array of PSCustomObject containing:</maml:para>
+          <maml:para>- The Name of the container tool. Either Containerd, Buildkit, or Nerdctl.</maml:para>
+          <maml:para>- whether the tool is installed or not.</maml:para>
+          <maml:para>- Installed version</maml:para>
+          <maml:para>- Latest available released version</maml:para>
+        </maml:description>
+      </command:returnValue>
+    </command:returnValues>
+    <maml:alertSet>
+      <maml:alert>
+        <maml:para>This information may not be accurate if the tools have been installed in a different location and/or the paths have not been added to environment path</maml:para>
+      </maml:alert>
+    </maml:alertSet>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Show-ContainerTools
+
+          Tool Installed Version LatestVersion
+          ---- --------- ------- -------------
+          containerd True v1.7.7 v1.7.7
+          buildkit False - v0.12.2
+          nerdctl True unknown v1.6.1</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Start-BuildkitdService -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Start-BuildkitdService</command:name>
+      <command:verb>Start</command:verb>
+      <command:noun>BuildkitdService</command:noun>
+      <maml:description>
+        <maml:para>Starts Buildkitd service.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Starts Buildkitd service and waits for 30 seconds for the service to start. If the service does not start within the this time, execution terminates with an error.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Start-BuildkitdService</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Start-BuildkitdService</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Start-ContainerdService -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Start-ContainerdService</command:name>
+      <command:verb>Start</command:verb>
+      <command:noun>ContainerdService</command:noun>
+      <maml:description>
+        <maml:para>Starts Containerd service.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Starts Containerd service and waits for 30 seconds for the service to start. If the service does not start within the this time, execution terminates with an error.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Start-ContainerdService</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Start-ContainerdService</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Stop-BuildkitdService -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Stop-BuildkitdService</command:name>
+      <command:verb>Stop</command:verb>
+      <command:noun>BuildkitdService</command:noun>
+      <maml:description>
+        <maml:para>Stops Buildkitd service.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Stops Buildkitd service and waits for 30 seconds for the service to stop. If the service does not stop within the this time, execution terminates with an error.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Stop-BuildkitdService</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Stop-BuildkitdService</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Stop-ContainerdService -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Stop-ContainerdService</command:name>
+      <command:verb>Stop</command:verb>
+      <command:noun>ContainerdService</command:noun>
+      <maml:description>
+        <maml:para>Stops Containerd service.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>Stops Containerd service and waits for 30 seconds for the service to stop. If the service does not stop within the this time, execution terminates with an error.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Stop-ContainerdService</maml:name>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Stop-ContainerdService</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Uninstall-Buildkit -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Uninstall-Buildkit</command:name>
+      <command:verb>Uninstall</command:verb>
+      <command:noun>Buildkit</command:noun>
+      <maml:description>
+        <maml:para>Uninstalls Buildkit.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>To uninstall Buildkit, this comand stops buildkitd service and unregisters buildkitd service. The Buildkit directory is then deleted and Buildkit is removed from the environment path.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Uninstall-Buildkit</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="0" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Buildkit path</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>The Buildkit path in the environment path variable or `$Env:ProgramFiles\Buildkit`</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="0" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>Buildkit path</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>The Buildkit path in the environment path variable or `$Env:ProgramFiles\Buildkit`</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Uninstall-Buildkit</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Uninstall-Containerd -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Uninstall-Containerd</command:name>
+      <command:verb>Uninstall</command:verb>
+      <command:noun>Containerd</command:noun>
+      <maml:description>
+        <maml:para>Uninstalls Containerd.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>To uninstall Containerd, this function first stops Containerd service and unregisters Containerd service. The Containerd directory is then deleted and Containerd is removed from the environment path.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Uninstall-Containerd</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="0" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Containerd path</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>The Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd`</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="0" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>Containerd path</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>The Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd`</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Uninstall-Containerd</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+
+  <!-- Uninstall-Nerdctl -->
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+    <command:details>
+      <command:name>Uninstall-Nerdctl</command:name>
+      <command:verb>Uninstall</command:verb>
+      <command:noun>Nerdctl</command:noun>
+      <maml:description>
+        <maml:para>Uninstalls Nerdctl.</maml:para>
+      </maml:description>
+    </command:details>
+    <maml:description>
+      <maml:para>To uninstall Nerdctl, the Nerdctl directory is deleted and Nerdctl is removed from the environment path.</maml:para>
+    </maml:description>
+    <command:syntax>
+      <command:syntaxItem>
+        <maml:name>Uninstall-Nerdctl</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="0" aliases="none">
+          <maml:name>Path</maml:name>
+          <maml:description>
+            <maml:para>Nerdctl path</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>The Nerdctl path in the environment path variable or $Env:ProgramFiles\Nerdctl</dev:defaultValue>
+        </command:parameter>
+      </command:syntaxItem>
+    </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="0" aliases="none">
+        <maml:name>Path</maml:name>
+        <maml:description>
+          <maml:para>Nerdctl path</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>The Nerdctl path in the environment path variable or $Env:ProgramFiles\Nerdctl</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:examples>
+      <command:example>
+        <maml:title>-------------------------- Example 1 --------------------------</maml:title>
+        <dev:code>PS C:\&gt; Uninstall-Nerdctl</dev:code>
+        <dev:remarks>
+          <maml:para></maml:para>
+        </dev:remarks>
+      </command:example>
+    </command:examples>
+  </command:command>
+</helpItems>
