@@ -1,5 +1,5 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
@@ -14,13 +14,12 @@ Downloads and installs Containerd.
 ## SYNTAX
 
 ```
-Install-Containerd [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>]
- [<CommonParameters>]
+Install-Containerd [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-Setup] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 
-Downloads Containerd files from [containerd releases](https://github.com/containerd/containerd/releases) and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.
+Downloads Containerd files from [Containerd releases](https://github.com/containerd/containerd/releases) and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.
 
 Once Containerd is installed and added to the environment path, we can get the path where it is installed using:
 
@@ -68,7 +67,7 @@ Accept wildcard characters: False
 
 ### -InstallPath
 
-Path to install containerd. Defaults to `$ENV:ProramFiles\containerd`
+Path to install Containerd. Defaults to `$ENV:ProramFiles\containerd`
 
 ```yaml
 Type: String
@@ -84,7 +83,7 @@ Accept wildcard characters: False
 
 ### -Version
 
-ContainerD version to install. Defaults to latest version
+Containerd version to install. Defaults to latest version
 
 ```yaml
 Type: String
@@ -98,22 +97,26 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### CommonParameters
+### -Setup
 
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+Register and start Containerd Service once Containerd installation is done
 
-## INPUTS
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
 
-### None
-
-## OUTPUTS
-
-## NOTES
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 
 ## RELATED LINKS
 
 - [Get-ContainerdLatestVersion](Get-ContainerdLatestVersion.md)
-- [Initialize-ContainerdService](Initialize-ContainerdService.md)
+- [Register-ContainerdService](Register-ContainerdService.md)
 - [Start-ContainerdService](Start-ContainerdService.md)
 - [Stop-ContainerdService](Stop-ContainerdService.md)
 - [Uninstall-Containerd](Uninstall-Containerd.md)

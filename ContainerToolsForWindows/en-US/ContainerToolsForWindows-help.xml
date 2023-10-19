@@ -28,7 +28,7 @@
           <maml:name>String</maml:name>
         </dev:type>
         <maml:description>
-          <maml:para>Returns the latest Buildkit version number.</maml:para>
+          <maml:para>This is a string of the latest Buildkit release version.</maml:para>
         </maml:description>
       </command:returnValue>
     </command:returnValues>
@@ -41,6 +41,28 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Install-Buildkit</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Register-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Start-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Stop-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-Buildkit</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Get-ContainerdLatestVersion -->
@@ -70,7 +92,7 @@
           <maml:name>String</maml:name>
         </dev:type>
         <maml:description>
-          <maml:para>Returns the latest Containerd version number.</maml:para>
+          <maml:para>This is a string of the latest Containerd release version.</maml:para>
         </maml:description>
       </command:returnValue>
     </command:returnValues>
@@ -83,6 +105,28 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Install-Containerd</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Register-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Start-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Stop-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-Containerd</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Get-NerdctlLatestVersion -->
@@ -112,7 +156,7 @@
           <maml:name>String</maml:name>
         </dev:type>
         <maml:description>
-          <maml:para>Returns the latest Nerdctl version number.</maml:para>
+          <maml:para>This is a string of the latest Nerdctl release version.</maml:para>
         </maml:description>
       </command:returnValue>
     </command:returnValues>
@@ -125,6 +169,16 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Install-Nerdctl</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-Nerdctl</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Get-WinCNILatestVersion -->
@@ -154,7 +208,7 @@
           <maml:name>String</maml:name>
         </dev:type>
         <maml:description>
-          <maml:para>Returns the latest Windows CNI version number.</maml:para>
+          <maml:para>This is a string of the latest Windows CNI version release version.</maml:para>
         </maml:description>
       </command:returnValue>
     </command:returnValues>
@@ -167,16 +221,30 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Install-WinCNIPlugin</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Initialize-NatNetwork</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-WinCNIPlugin</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
-  <!-- Initialize-BuildkitdService -->
+  <!-- Register-BuildkitdService -->
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
     xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
     xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
     xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
-      <command:name>Initialize-BuildkitdService</command:name>
-      <command:verb>Initialize</command:verb>
+      <command:name>Register-BuildkitdService</command:name>
+      <command:verb>Register</command:verb>
       <command:noun>BuildkitdService</command:noun>
       <maml:description>
         <maml:para>Registers the Buildkitd service with a prompt to either register with the Containerd CNI config (0-containerd-nat.conf) or not.</maml:para>
@@ -187,7 +255,7 @@
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
-        <maml:name>Initialize-BuildkitdService</maml:name>
+        <maml:name>Register-BuildkitdService</maml:name>
         <command:parameter required="false" variableLength="true" globbing="false"
           pipelineInput="False" position="0" aliases="none">
           <maml:name>BuildKitPath</maml:name>
@@ -200,8 +268,7 @@
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>Buildkit path in the environment path variable or
-            $Env:ProgramFiles\Buildkit</dev:defaultValue>
+          <dev:defaultValue>Buildkit path in the environment path variable or $Env:ProgramFiles\Buildkit</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false"
           pipelineInput="False" position="1" aliases="none">
@@ -216,11 +283,21 @@
           </dev:type>
           <dev:defaultValue>Containerd path in the environment path variable or $Env:ProgramFiles\Containerd</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Start</maml:name>
+          <maml:description>
+            <maml:para>Specify to start Buildkitd service after registration is complete</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="false" variableLength="true" globbing="false"
-        pipelineInput="False" position="0" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="0" aliases="none">
         <maml:name>BuildKitPath</maml:name>
         <maml:description>
           <maml:para>Path where Buildkit is installed. If not provided, it defaults to Buildkit path in the environment path variable or `$Env:ProgramFiles\Buildkit`</maml:para>
@@ -230,8 +307,7 @@
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>Buildkit path in the environment path variable or
-          $Env:ProgramFiles\Buildkit</dev:defaultValue>
+        <dev:defaultValue>Buildkit path in the environment path variable or $Env:ProgramFiles\Buildkit</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false"
         pipelineInput="False" position="1" aliases="none">
@@ -246,10 +322,27 @@
         </dev:type>
         <dev:defaultValue>Containerd path in the environment path variable or $Env:ProgramFiles\Containerd</dev:defaultValue>
       </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Start</maml:name>
+        <maml:description>
+          <maml:para>Specify to start Buildkitd service after registration is complete</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
     </command:parameters>
     <maml:alertSet>
       <maml:alert>
         <maml:para>When the `0-containerd-nat.conf` does not exist, the user is prompted to register buildkitd service with or without this file.</maml:para>
+        <maml:para></maml:para>
+        <maml:para>
+          Buildkit conf file not found at ~\cni\conf\0-containerd-nat.conf. Do you want to register buildkit service without containerd cni configuration? [Y] Yes [N] No [?] Help (default is "Y"):
+        </maml:para>
+        <maml:para></maml:para>
         <maml:para>- If a user enters `Y` (default), the user consents to register buildkitd service without the default containerd NAT configuration file.</maml:para>
         <maml:para>- If a user enters `N`, buildkitd service is not registered and the user has to register the service themselves.</maml:para>
       </maml:alert>
@@ -257,29 +350,51 @@
     <command:examples>
       <command:example>
         <maml:title>-- Example 1: Initializes Buildkitd service with the defaults --</maml:title>
-        <dev:code>PS C:\&gt; Initialize-BuildkitdService</dev:code>
+        <dev:code>PS C:\&gt; Register-BuildkitdService</dev:code>
         <dev:remarks>
           <maml:para>Registers buildkitd with the default containerd configurations file `0-containerd-nat.conf` if it is available.</maml:para>
         </dev:remarks>
       </command:example>
       <command:example>
         <maml:title>-- Example 2: Initializes Buildkitd service with the defaults --</maml:title>
-        <dev:code>PS C:\&gt; Initialize-BuildkitdService -WinCNIPath '$ENV:ProgramFiles\containerd\cni' -BuildKitPath '$ENV:ProgramFiles\Buildkit'</dev:code>
+        <dev:code>PS C:\&gt; Register-BuildkitdService -WinCNIPath '$ENV:ProgramFiles\containerd\cni' -BuildKitPath '$ENV:ProgramFiles\Buildkit'</dev:code>
         <dev:remarks>
           <maml:para>Registers buildkitd with the default containerd configurations file `0-containerd-nat.conf` found at `$ENV:ProgramFiles\containerd\cni`.</maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-BuildkitLatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Install-Buildkit</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Start-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Stop-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-Buildkit</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
-  <!-- Initialize-ContainerdService -->
+  <!-- Register-ContainerdService -->
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
     xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
     xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
     xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
-      <command:name>Initialize-ContainerdService</command:name>
-      <command:verb>Initialize</command:verb>
+      <command:name>Register-ContainerdService</command:name>
+      <command:verb>Register</command:verb>
       <command:noun>ContainerdService</command:noun>
       <maml:description>
         <maml:para>Create a default containerd configuration file called `config.toml` at the Containerd path and registers the containerd service.</maml:para>
@@ -290,7 +405,7 @@
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
-        <maml:name>Initialize-ContainerdService</maml:name>
+        <maml:name>Register-ContainerdService</maml:name>
         <command:parameter required="false" variableLength="true" globbing="false"
           pipelineInput="False" position="0" aliases="none">
           <maml:name>ContainerdPath</maml:name>
@@ -304,11 +419,21 @@
           </dev:type>
           <dev:defaultValue>The containerd path in the environment path variable or $Env:ProgramFiles\containerd</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Start</maml:name>
+          <maml:description>
+            <maml:para>Specify to start Containerd service after registration is complete</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="false" variableLength="true" globbing="false"
-        pipelineInput="False" position="0" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="0" aliases="none">
         <maml:name>ContainerdPath</maml:name>
         <maml:description>
           <maml:para>Path where Containerd is installed.</maml:para>
@@ -320,23 +445,57 @@
         </dev:type>
         <dev:defaultValue>The containerd path in the environment path variable or $Env:ProgramFiles\containerd</dev:defaultValue>
       </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Start</maml:name>
+        <maml:description>
+          <maml:para>Specify to start Containerd service after registration is complete</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
     </command:parameters>
     <command:examples>
       <command:example>
         <maml:title>----------- Example 1: Using default Containerd path -----------</maml:title>
-        <dev:code>PS C:\&gt; Initialize-ContainerdService</dev:code>
+        <dev:code>PS C:\&gt; Register-ContainerdService</dev:code>
         <dev:remarks>
           <maml:para></maml:para>
         </dev:remarks>
       </command:example>
       <command:example>
         <maml:title>----------------- Example 2: Using custom path -----------------</maml:title>
-        <dev:code>PS C:\&gt; Initialize-ContainerdService -ContainerdPath 'C:\Test\Path\containerd'</dev:code>
+        <dev:code>PS C:\&gt; Register-ContainerdService -ContainerdPath 'C:\Test\Path\containerd'</dev:code>
         <dev:remarks>
           <maml:para></maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-ContainerdLatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Install-Containerd</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Start-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Stop-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-Containerd</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Initialize-NatNetwork -->
@@ -496,7 +655,11 @@
       <maml:alert>
         <maml:para>The version provided needs to match the installed version. To avoid any issues, it is safer to install the latest version.</maml:para>
         <maml:para>If Windowds CNI plugins are not installed at the default or provided path, the user is prompted to install the missing plugins.</maml:para>
-        <maml:para>- If a user enters `Y`, the user to consents to the download and installation of  the missing plugins.</maml:para>
+        <maml:para></maml:para>
+        <maml:para>Windows CNI plugins have not been installed. Do you want to install the Windows CNI plugins? [Y] Yes [N] No [?] Help (default is "N"):
+        </maml:para>
+        <maml:para></maml:para>
+        <maml:para>- If a user enters `Y`, the user to consents to the download and installation of the missing plugins.</maml:para>
         <maml:para>- If a user enters `N` (default), execution terminates with an error.</maml:para>
       </maml:alert>
     </maml:alertSet>
@@ -517,8 +680,21 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-WinCNILatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Install-WinCNIPlugin</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-WinCNIPlugin</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
-
   <!-- Install-Buildkit -->
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
     xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
@@ -534,7 +710,12 @@
     </command:details>
     <maml:description>
       <maml:para>Downloads Buildkit files from containerd releases (https://github.com/moby/buildkit/releases)and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.</maml:para>
-      <maml:para>Once Buildkit is installed and added to the environment path, we can get the path where it is installed using: NOTE: If Buildkit already exists at the specified install path, it will be uninstalled and the specified version will be installed.</maml:para>
+      <maml:para>Once Buildkit is installed and added to the environment path, we can get the path where it is installed using:</maml:para>
+      <maml:para></maml:para>
+      <maml:para>
+        ((Get-Command -Name "build*.exe" | Where-Object {$_.Source -like " buildkit*"} | Select-Object -Unique).Source | Split-Path -Parent).TrimEnd("\bin")
+      NOTE: If Buildkit already exists at the specified install path, it will be uninstalled and the specified version will be installed.
+    </maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
@@ -578,6 +759,32 @@
           </dev:type>
           <dev:defaultValue>$HOME\Downloads</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="named" aliases="none">
+          <maml:name>Setup</maml:name>
+          <maml:description>
+            <maml:para>Register and start Buildkitd Service once Buildkit installation is done.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="named" aliases="none">
+          <maml:name>WinCNIPath</maml:name>
+          <maml:description>
+            <maml:para>Path where Windows CNI plugins are installed. Defaults to
+              $ENV:ProgramFiles\Containerd\cni</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>None</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
@@ -620,6 +827,33 @@
         </dev:type>
         <dev:defaultValue>Latest version</dev:defaultValue>
       </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="named" aliases="none">
+        <maml:name>Setup</maml:name>
+        <maml:description>
+          <maml:para>Register and start Buildkitd Service once Buildkit installation is done.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="named" aliases="none">
+        <maml:name>WinCNIPath</maml:name>
+        <maml:description>
+          <maml:para>Path where Windows CNI plugins are installed. Defaults to
+            $ENV:ProgramFiles\Containerd\cni</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>None</dev:defaultValue>
+      </command:parameter>
     </command:parameters>
     <command:examples>
       <command:example>
@@ -637,6 +871,28 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-BuildkitLatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Register-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Start-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Stop-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-Buildkit</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Install-Containerd -->
@@ -654,7 +910,13 @@
     </command:details>
     <maml:description>
       <maml:para>Downloads Containerd files from containerd releases (https://github.com/containerd/containerd/releases)and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.</maml:para>
-      <maml:para>Once Containerd is installed and added to the environment path, we can get the path where it is installed using: NOTE: If Containerd already exists at the specified install path, it will be uninstalled and the specified version will be installed.</maml:para>
+      <maml:para>Once Containerd is installed and added to the environment path, we can get the path where it is installed using:</maml:para>
+      <maml:para></maml:para>
+      <maml:para>
+          ((Get-Command -Name containerd.exe).Source | Split-Path -Parent).TrimEnd("\bin")
+
+        NOTE: If Containerd already exists at the specified install path, it will be uninstalled and the specified version will be installed.
+      </maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
@@ -698,6 +960,18 @@
           </dev:type>
           <dev:defaultValue>$HOME\Downloads</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="named" aliases="none">
+          <maml:name>Setup</maml:name>
+          <maml:description>
+            <maml:para>Register and start Containerd Service once Containerd installation is done</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
@@ -740,6 +1014,19 @@
         </dev:type>
         <dev:defaultValue>Latest version</dev:defaultValue>
       </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="named" aliases="none">
+        <maml:name>Setup</maml:name>
+        <maml:description>
+          <maml:para>Register and start Containerd Service once Containerd installation is done</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
     </command:parameters>
     <command:examples>
       <command:example>
@@ -757,6 +1044,28 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-ContainerdLatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Register-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Start-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Stop-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-Containerd</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Install-ContainerTools -->
@@ -960,6 +1269,20 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Install-Containerd</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Install-Buildkit</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Install-Nerdctl</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Install-Nerdctl -->
@@ -998,8 +1321,7 @@
           pipelineInput="False" position="1" aliases="none">
           <maml:name>InstallPath</maml:name>
           <maml:description>
-            <maml:para>Path to install Nerdctl. Path to install Nerdctl. Defaults to
-              `$ENV:ProramFiles\Nerdctl`</maml:para>
+            <maml:para>Path to install Nerdctl. Defaults to `$ENV:ProramFiles\Nerdctl`</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1041,7 +1363,7 @@
         pipelineInput="False" position="1" aliases="none">
         <maml:name>InstallPath</maml:name>
         <maml:description>
-          <maml:para>Path to install Nerdctl. Path to install Nerdctl. Defaults to `$ENV:ProramFiles\Nerdctl`</maml:para>
+          <maml:para>Path to install Nerdctl. Defaults to `$ENV:ProramFiles\Nerdctl`</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1080,6 +1402,16 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-NerdctlLatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-Nerdctl</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Install-WinCNIPlugin -->
@@ -1173,6 +1505,16 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-WinCNILatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Initialize-NatNetwork</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Show-ContainerTools -->
@@ -1182,7 +1524,7 @@
     xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
       <command:name>Show-ContainerTools</command:name>
-      <command:verb>List</command:verb>
+      <command:verb>Show</command:verb>
       <command:noun>ContainerTools</command:noun>
       <maml:description>
         <maml:para>List container tools (Containerd, Buildkit, and Nerdctl) install status.</maml:para>
@@ -1194,19 +1536,52 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Show-ContainerTools</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="named" aliases="none">
+          <maml:name>Latest</maml:name>
+          <maml:description>
+            <maml:para>Show latest release version</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="named" aliases="none">
+        <maml:name>Latest</maml:name>
+        <maml:description>
+          <maml:para>Show latest release version</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <maml:name>System.Array</maml:name>
+          <maml:name>
+            [System.Array](https://learn.microsoft.com/en-us/dotnet/api/system.array?view=net-7.0)</maml:name>
         </dev:type>
         <maml:description>
-          <maml:para>Returns an array of PSCustomObject containing:</maml:para>
-          <maml:para>- The Name of the container tool. Either Containerd, Buildkit, or Nerdctl.</maml:para>
-          <maml:para>- whether the tool is installed or not.</maml:para>
-          <maml:para>- Installed version</maml:para>
-          <maml:para>- Latest available released version</maml:para>
+          <maml:para>
+            Returns an array of PSCustomObject:</maml:para>
+          <maml:para>
+            Name            Type        Description 
+            --------        -------     ------- 
+            Tool            String      Name of the container tool. Either Containerd, Buildkit, or Nerdctl. 
+            Installed       Boolean     Specifies whether the tool is installed or not. 
+            Version         String      Installed version. 
+            LatestVersion   String      Latest available version
+          </maml:para>
         </maml:description>
       </command:returnValue>
     </command:returnValues>
@@ -1218,18 +1593,24 @@
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
-        <dev:code>PS C:\&gt; Show-ContainerTools
-
-          Tool Installed Version LatestVersion
-          ---- --------- ------- -------------
-          containerd True v1.7.7 v1.7.7
-          buildkit False - v0.12.2
-          nerdctl True unknown v1.6.1</dev:code>
+        <dev:code>PS C:\&gt; Show-ContainerTools -Latest
+        Tool        Installed   Version     LatestVersion
+        ------      ------      ------      ------
+        containerd  True        v1.7.7      v1.7.7
+        buildkit    False       -           v0.12.2
+        nerdctl     True        unknown     v1.6.1
+        </dev:code>
         <dev:remarks>
           <maml:para></maml:para>
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Container Tools For Windows</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Start-BuildkitdService -->
@@ -1262,6 +1643,33 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Start-Service</maml:linkText>
+        <maml:uri>
+          https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-service?view=powershell-7.3</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Get-BuildkitLatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Install-Buildkit</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Register-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Stop-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-Buildkit</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Start-ContainerdService -->
@@ -1294,6 +1702,33 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Start-Service</maml:linkText>
+        <maml:uri>
+          https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-service?view=powershell-7.3</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Get-ContainerdLatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Install-Containerd</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Register-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Stop-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-Containerd</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Stop-BuildkitdService -->
@@ -1326,6 +1761,33 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Stop-Service</maml:linkText>
+        <maml:uri>
+          https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/stop-service?view=powershell-7.3</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Get-BuildkitLatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Install-Buildkit</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Register-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Start-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-Buildkit</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Stop-ContainerdService -->
@@ -1358,9 +1820,34 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Stop-Service</maml:linkText>
+        <maml:uri>
+          https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/stop-service?view=powershell-7.3</maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Get-ContainerdLatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Install-Containerd</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Register-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Start-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Uninstall-Containerd</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
-
-  <!-- Uninstall-Buildkit -->
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
     xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
     xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
@@ -1374,7 +1861,7 @@
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>To uninstall Buildkit, this comand stops buildkitd service and unregisters buildkitd service. The Buildkit directory is then deleted and Buildkit is removed from the environment path.</maml:para>
+      <maml:para>To uninstall Buildkit, this command stops buildkitd service and unregisters buildkitd service. The Buildkit directory is then deleted and Buildkit is removed from the environment path.</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
@@ -1418,6 +1905,28 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-BuildkitLatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Install-Buildkit</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Register-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Start-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Stop-BuildkitdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Uninstall-Containerd -->
@@ -1478,6 +1987,28 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-ContainerdLatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Install-Containerd</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Register-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Start-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Stop-ContainerdService</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 
   <!-- Uninstall-Nerdctl -->
@@ -1538,5 +2069,15 @@
         </dev:remarks>
       </command:example>
     </command:examples>
+    <command:relatedLinks>
+      <maml:navigationLink>
+        <maml:linkText>Get-NerdctlLatestVersion</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+      <maml:navigationLink>
+        <maml:linkText>Install-Nerdctl</maml:linkText>
+        <maml:uri></maml:uri>
+      </maml:navigationLink>
+    </command:relatedLinks>
   </command:command>
 </helpItems>

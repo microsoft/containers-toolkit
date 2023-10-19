@@ -1,5 +1,5 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
@@ -9,7 +9,7 @@ schema: 2.0.0
 
 ## SYNOPSIS
 
-Returns the latest Buildkit version number.
+Gets the latest BuildKit version number.
 
 ## SYNTAX
 
@@ -19,11 +19,11 @@ Get-BuildkitLatestVersion
 
 ## DESCRIPTION
 
-Returns the latest Buildkit version number.
+Uses GitHub API to get the latest BuildKit release version from the moby/buildkit GitHub repository.
 
 ## EXAMPLES
 
-### Example 1: Get latest Buildkit version
+### Example 1: Get latest BuildKit version
 
 This returns a string of the latest release version of BuildKit, e.g., v1.2.0.
 
@@ -39,16 +39,16 @@ v1.2.0
 
 ## INPUTS
 
-### None
-
 ## OUTPUTS
 
-### [String](https://learn.microsoft.com/en-us/dotnet/api/system.string?view=net-7.0)
+### String
+
+This is a string of the latest BuildKit release version.
 
 ## RELATED LINKS
 
-- [Install-Buildkit](Install-Buildkit.md)
-- [Initialize-BuildkitdService](Initialize-BuildkitdService.md)
+- [Install-BuildKit](Install-BuildKit.md)
+- [Register-BuildkitdService](Register-BuildkitdService.md)
 - [Start-BuildkitdService](Start-BuildkitdService.md)
 - [Stop-BuildkitdService](Stop-BuildkitdService.md)
-- [Uninstall-Buildkit](Uninstall-Buildkit.md)
+- [Uninstall-BuildKit](Uninstall-BuildKit.md)

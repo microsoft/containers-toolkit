@@ -1,5 +1,5 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
@@ -9,7 +9,7 @@ schema: 2.0.0
 
 ## SYNOPSIS
 
-Downloads and installs container tool (Containerd, Buildkit, and Nerdctl).
+Downloads and installs container tool (Containerd, BuildKit, and nerdctl).
 
 ## SYNTAX
 
@@ -21,21 +21,21 @@ Install-ContainerTools [[-ContainerDVersion] <String>] [[-BuildKitVersion] <Stri
 
 ## DESCRIPTION
 
-Downloads container tool (Containerd, Buildkit, and Nerdctl) asynchronously and installs them at the specified location.
+Downloads container tool (Containerd, BuildKit, and nerdctl) asynchronously and installs them at the specified location.
 
 ## EXAMPLES
 
 ### Example 1: Using defaults
 
-Install the latest versions of Containerd, Buildkit, and Nerdctl at the default path
+Install the latest versions of Containerd, BuildKit, and nerdctl at the default path
 
 ```powershell
 PS C:\> Install-ContainerTools
 ```
 
-### Example 2: Download Containerd version 1.6.8 and default Nerdctl and Buildkit versions
+### Example 2: Download Containerd version 1.6.8 and default nerdctl and BuildKit versions
 
-Download Containerd version 1.6.8 and default Nerdctl and Buildkit versions
+Download Containerd version 1.6.8 and default nerdctl and BuildKit versions
 
 ```powershell
 PS C:\> Install-ContainerTools -ContainerDVersion 1.6.8
@@ -43,7 +43,7 @@ PS C:\> Install-ContainerTools -ContainerDVersion 1.6.8
 
 ### Example 3: Cleanup after installation is complete
 
-Deletes donwloaded files after installation is complete to save on disk space.
+Deletes downloaded files after installation is complete to save on disk space.
 
 ```powershell
 PS C:\> Install-ContainerTools -Cleanup
@@ -53,7 +53,7 @@ PS C:\> Install-ContainerTools -Cleanup
 
 ### -BuildKitVersion
 
-Buildkit version to install
+BuildKit version to install
 
 ```yaml
 Type: String
@@ -85,7 +85,7 @@ Accept wildcard characters: False
 
 ### -ContainerDVersion
 
-ContainerD version to install
+Containerd version to install
 
 ```yaml
 Type: String
@@ -133,7 +133,7 @@ Accept wildcard characters: False
 
 ### -NerdCTLVersion
 
-Nerdctl version to install
+nerdctl version to install
 
 ```yaml
 Type: String
@@ -142,17 +142,13 @@ Aliases:
 
 Required: False
 Position: 2
-Default value: Latest version 
+Default value: Latest version
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### CommonParameters
-
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
-
 ## RELATED LINKS
 
 - [Install-Containerd](Install-Containerd.md)
-- [Install-Buildkit](Install-Buildkit.md)
+- [Install-BuildKit](Install-BuildKit.md)
 - [Install-Nerdctl](Install-Nerdctl.md)

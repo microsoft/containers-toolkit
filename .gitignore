@@ -1,3 +1,6 @@
 # IDEs and editors
 /.vs
 /.vscode
+
+# Tests
+/TestResults

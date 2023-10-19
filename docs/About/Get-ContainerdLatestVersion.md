@@ -1,5 +1,5 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
@@ -9,7 +9,7 @@ schema: 2.0.0
 
 ## SYNOPSIS
 
-Returns the latest Containerd version number.
+Gets the latest Containerd version number.
 
 ## SYNTAX
 
@@ -19,7 +19,7 @@ Get-ContainerdLatestVersion
 
 ## DESCRIPTION
 
-Returns the latest Containerd version number.
+Uses GitHub API to get the latest Containerd release version from the containerd/containerd GitHub repository.
 
 ## EXAMPLES
 
@@ -39,16 +39,16 @@ v1.2.0
 
 ## INPUTS
 
-### None
-
 ## OUTPUTS
 
-### [String](https://learn.microsoft.com/en-us/dotnet/api/system.string?view=net-7.0)
+### String
+
+This is a string of the latest Containerd release version.
 
 ## RELATED LINKS
 
 - [Install-Containerd](Install-Containerd.md)
-- [Initialize-ContainerdService](Initialize-ContainerdService.md)
+- [Register-ContainerdService](Register-ContainerdService.md)
 - [Start-ContainerdService](Start-ContainerdService.md)
 - [Stop-ContainerdService](Stop-ContainerdService.md)
 - [Uninstall-Containerd](Uninstall-Containerd.md)

@@ -1,5 +1,5 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
@@ -25,7 +25,7 @@ Downloads Windows CNI plugin from [windows-container-networking](https://github.
 
 ### Example 1: Using defaults
 
-Installs lateest Windows CNI plugin at the default path.
+Installs latest Windows CNI plugin at the default path.
 
 ```powershell
 PS C:\> Install-WinCNIPlugin
@@ -72,10 +72,6 @@ Default value: Latest version
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
-
-### CommonParameters
-
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## RELATED LINKS
 

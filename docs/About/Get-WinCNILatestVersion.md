@@ -1,5 +1,5 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
@@ -9,7 +9,7 @@ schema: 2.0.0
 
 ## SYNOPSIS
 
-Returns the latest Windows CNI version number.
+Gets the latest Windows CNI version number.
 
 ## SYNTAX
 
@@ -19,11 +19,11 @@ Get-WinCNILatestVersion
 
 ## DESCRIPTION
 
-Returns the latest Windows CNI version number.
+Uses GitHub API to get the latest Windows CNI plugin release version from the microsoft/windows-container-networking repository.
 
 ## EXAMPLES
 
-### Example 1: Get latest Nerdctl version
+### Example 1: Get latest nerdctl version
 
 This returns a string of the latest release version of Windows CNI, e.g., v1.2.0.
 
@@ -35,17 +35,12 @@ PS C:\> Get-WinCNILatestVersion
 v1.2.0
 ```
 
-## PARAMETERS
+### String
 
-## INPUTS
-
-### None
-
-## OUTPUTS
-
-### [String](https://learn.microsoft.com/en-us/dotnet/api/system.string?view=net-7.0)
+This is a string of the latest Windows CNI version release version.
 
 ## RELATED LINKS
 
 - [Install-WinCNIPlugin](Install-WinCNIPlugin.md)
+- [Uninstall-WinCNIPlugin](Uninstall-WinCNIPlugin.md)
 - [Initialize-NatNetwork](Initialize-NatNetwork.md)

@@ -1,5 +1,5 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
@@ -20,7 +20,7 @@ Initialize-NatNetwork [[-NetworkName] <String>] [[-Gateway] <String>] [[-CIDR] <
 
 ## DESCRIPTION
 
-Initializes a NAT network. 
+Initializes a NAT network.
 
 ## EXAMPLES
 
@@ -123,20 +123,11 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### CommonParameters
-
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
-
-## INPUTS
-
-### None
-
-## OUTPUTS
-
 ## NOTES
+
 The version provided needs to match the installed version. To avoid any issues, it is safer to install the latest version.
 
-If Windowds CNI plugins are not installed at the default or provided path, the user is prompted to install the missing plugins.
+If Windows CNI plugins are not installed at the default or provided path, the user is prompted to install the missing plugins.
 
 ```Output
 Windows CNI plugins have not been installed.
@@ -151,3 +142,4 @@ Do you want to install the Windows CNI plugins?
 
 - [Get-WinCNILatestVersion](Get-WinCNILatestVersion.md)
 - [Install-WinCNIPlugin](Install-WinCNIPlugin.md)
+- [Uninstall-WinCNIPlugin](Uninstall-WinCNIPlugin.md)

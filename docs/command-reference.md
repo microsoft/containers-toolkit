@@ -3,23 +3,23 @@
 ## Table of Contents
 
 - [General](#general)
-  - [Show-ContainerTools](#Show-ContainerTools)
+  - [Show-ContainerTools](#show-containertools)
   - [Install-ContainerTools](#install-containertools)
 - [Containerd](#containerd)
   - [Get-ContainerdLatestVersion](#get-containerdlatestversion)
   - [Install-Containerd](#install-containerd)
-  - [Initialize-ContainerdService](#initialize-containerdservice)
+  - [Register-ContainerdService](#register-containerdservice)
   - [Start-ContainerdService](#start-containerdservice)
   - [Stop-ContainerdService](#stop-containerdservice)
   - [Uninstall-Containerd](#uninstall-containerd)
 - [BuildKit](#buildkit)
   - [Get-BuildkitLatestVersion](#get-buildkitlatestversion)
-  - [Install-Buildkit](#install-buildkit)
-  - [Initialize-BuildkitdService](#initialize-buildkitdservice)
-  - [Start-BuildkitdService](#Start-BuildkitdService)
-  - [Stop-BuildkitdService](#Stop-BuildkitdService)
-  - [Uninstall-Buildkit](#uninstall-buildkit)
-- [Nerdctl](#nerdctl)
+  - [Install-BuildKit](#install-buildkit)
+  - [Register-BuildkitdService](#register-buildkitdservice)
+  - [Start-BuildkitdService](#start-buildkitdservice)
+  - [Stop-BuildkitdService](#stop-buildkitdservice)
+  - [Uninstall-BuildKit](#uninstall-buildkit)
+- [nerdctl](#nerdctl)
   - [Get-NerdctlLatestVersion](#get-nerdctllatestversion)
   - [Install-Nerdctl](#install-nerdctl)
   - [Uninstall-Nerdctl](#uninstall-nerdctl)
@@ -32,7 +32,7 @@
 
 #### Show-ContainerTools
 
-List container tools (Containerd, Buildkit, Nerdctl) and shows if the tool is installed, the installed version and the latest available version.
+List container tools (Containerd, BuildKit, nerdctl) and shows if the tool is installed, the installed version and the latest available version.
 
 **Parameters**
 
@@ -42,21 +42,21 @@ None
 
 | Name | Type | Description |
 | -------- | ------- | ------- |
-|Tool| String | Name of the container tool. Either Containerd, Buildkit, or Nerdctl. |
-|Installed| Boolean | Specfies whether the tool is installed or not. |
-|Version| String | Installed version. |
-|LatestVersion| String | Latest available version |
+| Tool | String | Name of the container tool. Either Containerd, BuildKit, or nerdctl. |
+| Installed | Boolean | Specifies whether the tool is installed or not. |
+| Version | String | Installed version. |
+| LatestVersion | String | Latest available version |
 
 #### Install-ContainerTools
 
-Downloads container tool (Containerd, Buildkit, Nerdctl) asynchronously and installs them at the specified location
+Downloads container tool (Containerd, BuildKit, nerdctl) asynchronously and installs them at the specified location
 
 **Parameters**
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
-| ContainerDVersion | String | Containerd version to install | Latest version |
-| BuildKitVersion | String | Buildkit version to install | Latest version |
-| NerdctlVersion | String | Nerdctl version to install | Latest version |
+| ContainerdVersion | String | Containerd version to install | Latest version |
+| BuildKitVersion | String | BuildKit version to install | Latest version |
+| nerdctlVersion | String | nerdctl version to install | Latest version |
 | InstallPath | String | Path to install container tools | `$Env:ProgramFiles` |
 | DownloadPath | String | Path to download container tools  | `$HOME\Downloads` |
 | Cleanup | Switch | Specifies whether to cleanup after installation is done  | `False` |
@@ -69,7 +69,7 @@ None
 
 #### Get-ContainerdLatestVersion
 
-Returns the latest containerd version number.
+Returns the latest Containerd version number.
 
 **Parameters**
 
@@ -81,7 +81,7 @@ String
 
 #### Install-Containerd
 
-Downloads Containerd files from [containerd releases](https://github.com/containerd/containerd/releases) and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.
+Downloads Containerd files from [Containerd releases](https://github.com/containerd/containerd/releases) and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.
 
 Once Containerd is installed and added to the environment path, we can get the path where it is installed using:
 
@@ -98,20 +98,22 @@ Once Containerd is installed and added to the environment path, we can get the p
 | Version | String | Containerd version to install | Latest version |
 | InstallPath | String | Path to install Containerd | `$Env:ProgramFiles\containerd` |
 | DownloadPath | String | Path to download Containerd  | `$HOME\Downloads` |
+| Setup | Switch | Register and start Containerd Service once Containerd installation is done  |  |
 
 **Output**
 
 None
 
-#### Initialize-ContainerdService
+#### Register-ContainerdService
 
-Create a default containerd configuration file called `config.toml` at the Containerd path and registers the containerd service.
+Create a default Containerd configuration file called `config.toml` at the Containerd path and registers the Containerd service.
 
 **Parameters**
 
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
-| ContainerdPath | String | Path where Containerd is installed | The containerd path in the environment path variable or `$Env:ProgramFiles\containerd` |
+| ContainerdPath | String | Path where Containerd is installed | The Containerd path in the environment path variable or `$Env:ProgramFiles\containerd` |
+| Start | Switch | Start Containerd service after registration is complete | |
 
 **Output**
 
@@ -154,7 +156,7 @@ Does the following:
 
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
-| Path | String | Path where Containerd is installed | The containerd path in the environment path variable or `$Env:ProgramFiles\containerd` |
+| Path | String | Path where Containerd is installed | The Containerd path in the environment path variable or `$Env:ProgramFiles\containerd` |
 
 **Output**
 
@@ -164,7 +166,7 @@ None
 
 #### Get-BuildkitLatestVersion
 
-Returns the latest Buildkit version number.
+Returns the latest BuildKit version number.
 
 **Parameters**
 
@@ -174,40 +176,42 @@ None
 
 String
 
-#### Install-Buildkit
+#### Install-BuildKit
 
-Downloads Buildkit files from [containerd releases](https://github.com/moby/buildkit/releases) and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.
+Downloads BuildKit files from [Containerd releases](https://github.com/moby/buildkit/releases) and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.
 
-Once Buildkit is installed and added to the environment path, we can get the path where it is installed using:
+Once BuildKit is installed and added to the environment path, we can get the path where it is installed using:
 
 ```PowerShell
 ((Get-Command -Name buildctl.exe).Source | Split-Path -Parent).TrimEnd("\bin")
 ```
 
-**NOTE:** If Buildkit already exists at the specified install path, it will be uninstalled and the specified version will be installed.
+**NOTE:** If BuildKit already exists at the specified install path, it will be uninstalled and the specified version will be installed.
 
 **Parameters**
 
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
-| Version | String | Buildkit version to install | Latest version |
-| InstallPath | String | Path to install Buildkit | `$Env:ProgramFiles\Buildkit` |
-| DownloadPath | String | Path to download Buildkit | $HOME\Downloads |
+| Version | String | BuildKit version to install | Latest version |
+|InstallPath | String | Path to install BuildKit | `$Env:ProgramFiles\BuildKit` |
+|DownloadPath | String | Path to download BuildKit | $HOME\Downloads |
+| Setup | Switch | Register and start buildkitd Service once Containerd installation is done  |  |
 
 **Output**
 
 None
 
-#### Initialize-BuildkitdService
+#### Register-BuildkitdService
 
-Registers the Buildkitd service with a prompt to either register with the Containerd CNI config (0-containerd-nat.conf) or not.
+Registers the buildkitd service with a prompt to either register with the Containerd CNI configurations (0-containerd-nat.conf) or not.
 
 **Parameters**
 
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
-| BuildkitPath | String | Path where Buildkit is installed | The Buildkit path in the environment path variable or `$Env:ProgramFiles\Buildkit` |
+| BuildkitPath | String | Path where BuildKit is installed | The BuildKit path in the environment path variable or `$Env:ProgramFiles\BuildKit` |
 | WinCNIPath | String | Path to Windows CNI plugin | The Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd` |
+| Start | Switch | Start buildkitd service after registration is complete | |
 
 **Output**
 
@@ -215,7 +219,7 @@ None
 
 #### Start-BuildkitdService
 
-Starts Buildkit service and waits for 30 seconds for the service to start. If the service does not start within the this time, execution terminates with an error.
+Starts BuildKit service and waits for 30 seconds for the service to start. If the service does not start within the this time, execution terminates with an error.
 
 **Parameters**
 
@@ -227,7 +231,7 @@ None
 
 #### Stop-BuildkitdService
 
-Stops Buildkit service
+Stops BuildKit service
 **Parameters**
 
 None
@@ -236,30 +240,30 @@ None
 
 None
 
-#### Uninstall-Buildkit
+#### Uninstall-BuildKit
 
 Does the following:
 
 1. Stops buildkitd service
 2. Unregisters buildkitd service
-3. Deletes Buildkit directory
-4. Removes Buildkit from the environment path
+3. Deletes BuildKit directory
+4. Removes BuildKit from the environment path
 
 **Parameters**
 
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
-| Path | String | Path where Buildkit is installed | The Buildkit path in the environment path variable or `$Env:ProgramFiles\Buildkit` |
+| Path | String | Path where BuildKit is installed | The BuildKit path in the environment path variable or `$Env:ProgramFiles\BuildKit` |
 
 **Output**
 
 None
 
-### Nerdctl
+### nerdctl
 
 #### Get-NerdctlLatestVersion
 
-Returns the latest Nerdctl version number.
+Returns the latest nerdctl version number.
 
 **Parameters**
 
@@ -277,9 +281,9 @@ Downloads Containerd files from [nerdctl releases](https://github.com/containerd
 
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
-| Version | String | Nerdctl version to install | Latest version |
-| InstallPath | String | Path to install Nerdctl | $Env:ProgramFiles\Nerdctl |
-| DownloadPath | String | Path to download Nerdctl  | $HOME\Downloads |
+| Version | String | nerdctl version to install | Latest version |
+| InstallPath | String | Path to install nerdctl | $Env:ProgramFiles\nerdctl |
+| DownloadPath | String | Path to download nerdctl  | $HOME\Downloads |
 
 **Output**
 
@@ -287,13 +291,13 @@ None
 
 #### Uninstall-Nerdctl
 
-Deletes the Nerdctl directory and removes it from the enviroment variables.
+Deletes the nerdctl directory and removes it from the environment variables.
 
 **Parameters**
 
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
-| Path | String | Path where Nerdctl is installed | The Nerdctl path in the environment path variable or `$Env:ProgramFiles\Buildkit` |
+| Path | String | Path where nerdctl is installed | The nerdctl path in the environment path variable or `$Env:ProgramFiles\BuildKit` |
 
 **Output**
 
@@ -322,7 +326,7 @@ Downloads Windows CNI plugin from [windows-container-networking](https://github.
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
 | WinCNIVersion | String | Windows CNI version to install | Latest version |
-| WinCNIPath | String | Location to install Windows CNI | Path where containerd is installed or `$Env:ProgramFiles\Containerd`|
+| WinCNIPath | String | Location to install Windows CNI | Path where Containerd is installed or `$Env:ProgramFiles\Containerd`|
 
 **Output**
 
@@ -338,11 +342,11 @@ Initializes a NAT network.
 
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
-| NetworkName | String | Name of the network. If a network with a similar name exists, the function tesrminates with an error message |  Default: `nat` |
+| NetworkName | String | Name of the network. If a network with a similar name exists, the function terminates with an error message |  Default: `nat` |
 | Gateway | String | Gateway IP address | Default gateway address |
 | CIDR | Int | Size of the subnet mask | 16 |
 | WinCNIVersion | String | Windows CNI version to use | Latest version |
-| WinCNIPath | String | Absolute path to cni directory ~\cni. Not ~\cni\bin | Path where containerd is installed or `$Env:ProgramFiles\Containerd\cni` |
+| WinCNIPath | String | Absolute path to cni directory ~\cni. Not ~\cni\bin | Path where Containerd is installed or `$Env:ProgramFiles\Containerd\cni` |
 
 **Output**
 

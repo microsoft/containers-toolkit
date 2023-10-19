@@ -1,4 +1,4 @@
-﻿---
+---
 Module Name: ContainerToolsForWindows
 Module Guid: 8a534dc0-6e6f-431b-9de8-29d4659af987
 Download Help Link: {{ Update Download Link }}
@@ -16,7 +16,7 @@ Locale: en-US
 
 ### [Get-BuildkitLatestVersion](Get-BuildkitLatestVersion.md)
 
-Gets the latest Buildkit version number.
+Gets the latest BuildKit version number.
 
 ### [Get-ContainerdLatestVersion](Get-ContainerdLatestVersion.md)
 
@@ -24,27 +24,27 @@ Gets the latest Containerd version number.
 
 ### [Get-NerdctlLatestVersion](Get-NerdctlLatestVersion.md)
 
-Gets the latest Nerdctl version number.
+Gets the latest nerdctl version number.
 
 ### [Get-WinCNILatestVersion](Get-WinCNILatestVersion.md)
 
 Returns the latest Windows CNI version number.
 
-### [Initialize-BuildkitdService](Initialize-BuildkitdService.md)
+### [Register-BuildkitdService](Register-BuildkitdService.md)
 
-Registers the Buildkitd service with a prompt to either register with the Containerd CNI config (0-containerd-nat.conf) or not.
+Registers the buildkitd service with a prompt to either register with the Containerd CNI configuration (0-containerd-nat.conf) or not.
 
-### [Initialize-ContainerdService](Initialize-ContainerdService.md)
+### [Register-ContainerdService](Register-ContainerdService.md)
 
-Create a default containerd configuration file called `config.toml` at the Containerd path and registers the containerd service.
+Create a default Containerd configuration file called `config.toml` at the Containerd path and registers the Containerd service.
 
 ### [Initialize-NatNetwork](Initialize-NatNetwork.md)
 
 Initializes a NAT network.
 
-### [Install-Buildkit](Install-Buildkit.md)
+### [Install-BuildKit](Install-BuildKit.md)
 
-Downloads and installs Buildkit.
+Downloads and installs BuildKit.
 
 ### [Install-Containerd](Install-Containerd.md)
 
@@ -52,11 +52,11 @@ Downloads and installs Containerd.
 
 ### [Install-ContainerTools](Install-ContainerTools.md)
 
-Downloads and installs container tool (Containerd, Buildkit, and Nerdctl).
+Downloads and installs container tool (Containerd, BuildKit, and nerdctl).
 
 ### [Install-Nerdctl](Install-Nerdctl.md)
 
-Downloads and installs Nerdctl.
+Downloads and installs nerdctl.
 
 ### [Install-WinCNIPlugin](Install-WinCNIPlugin.md)
 
@@ -64,11 +64,11 @@ Downloads and installs Windows CNI plugin.
 
 ### [Show-ContainerTools](Show-ContainerTools.md)
 
-List container tools (Containerd, Buildkit, and Nerdctl) install status.
+List container tools (Containerd, BuildKit, and nerdctl) install status.
 
 ### [Start-BuildkitdService](Start-BuildkitdService.md)
 
-Starts Buildkitd service.
+Starts buildkitd service.
 
 ### [Start-ContainerdService](Start-ContainerdService.md)
 
@@ -76,15 +76,15 @@ Starts Containerd service.
 
 ### [Stop-BuildkitdService](Stop-BuildkitdService.md)
 
-Stops Buildkitd service.
+Stops buildkitd service.
 
 ### [Stop-ContainerdService](Stop-ContainerdService.md)
 
 Stops Containerd service.
 
-### [Uninstall-Buildkit](Uninstall-Buildkit.md)
+### [Uninstall-BuildKit](Uninstall-BuildKit.md)
 
-Uninstalls Buildkit.
+Uninstalls BuildKit.
 
 ### [Uninstall-Containerd](Uninstall-Containerd.md)
 
@@ -92,4 +92,4 @@ Uninstalls Containerd.
 
 ### [Uninstall-Nerdctl](Uninstall-Nerdctl.md)
 
-Uninstalls Nerdctl.
+Uninstalls nerdctl.
