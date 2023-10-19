@@ -1,11 +1,11 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
 ---
 
-# Initialize-BuildkitdService
+# Register-BuildkitdService
 
 ## SYNOPSIS
 
@@ -14,7 +14,7 @@ Registers the Buildkitd service with a prompt to either register with the Contai
 ## SYNTAX
 
 ```
-Initialize-BuildkitdService [[-BuildKitPath] <String>] [[-WinCNIPath] <String>] [<CommonParameters>]
+Register-BuildkitdService [[-BuildKitPath] <String>] [[-WinCNIPath] <String>] [-Start] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -26,7 +26,7 @@ Registers the Buildkitd service with a prompt to either register with the Contai
 ### Example 1: Initializes Buildkitd service with the defaults
 
 ```powershell
-PS C:\> Initialize-BuildkitdService
+PS C:\> Register-BuildkitdService
 ```
 
 Registers buildkitd with the default containerd configurations file `0-containerd-nat.conf` if it is available.
@@ -34,7 +34,7 @@ Registers buildkitd with the default containerd configurations file `0-container
 ### Example 2: Initializes Buildkitd service with the defaults
 
 ```powershell
-PS C:\> Initialize-BuildkitdService -WinCNIPath '$ENV:ProgramFiles\containerd\cni' -BuildKitPath '$ENV:ProgramFiles\Buildkit'
+PS C:\> Register-BuildkitdService -WinCNIPath '$ENV:ProgramFiles\containerd\cni' -BuildKitPath '$ENV:ProgramFiles\Buildkit'
 ```
 
 Registers buildkitd with the default containerd configurations file `0-containerd-nat.conf` found at `$ENV:ProgramFiles\containerd\cni`.
@@ -73,15 +73,21 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### CommonParameters
+### -Start
 
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+Specify to start Buildkitd service after registration is complete
 
-## INPUTS
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
 
-### None
-
-## OUTPUTS
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 
 ## NOTES
 

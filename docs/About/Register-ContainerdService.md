@@ -1,11 +1,11 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
 ---
 
-# Initialize-ContainerdService
+# Register-ContainerdService
 
 ## SYNOPSIS
 
@@ -14,7 +14,7 @@ Create a default containerd configuration file called `config.toml` at the Conta
 ## SYNTAX
 
 ```
-Initialize-ContainerdService [[-ContainerdPath] <String>] [<CommonParameters>]
+Register-ContainerdService [[-ContainerdPath] <String>] [-Start] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -28,7 +28,7 @@ Create a default containerd configuration file called `config.toml` at the Conta
 Creates the config.toml file at the default containerd path and registers the containerd service.
 
 ```powershell
-PS C:\> Initialize-ContainerdService
+PS C:\> Register-ContainerdService
 ```
 
 ### Example 2: Using custom path
@@ -36,7 +36,7 @@ PS C:\> Initialize-ContainerdService
 Creates the config.toml file at the provided containerd path and registers the containerd service. If containerd does not exist at the provided path, execution fails with an error.
 
 ```powershell
-PS C:\> Initialize-ContainerdService -ContainerdPath 'C:\Test\Path\containerd'
+PS C:\> Register-ContainerdService -ContainerdPath 'C:\Test\Path\containerd'
 ```
 
 ## PARAMETERS
@@ -57,17 +57,21 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### CommonParameters
+### -Start
 
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+Specify to start Containerd service after registration is complete
 
-## INPUTS
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
 
-### None
-
-## OUTPUTS
-
-## NOTES
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 
 ## RELATED LINKS
 

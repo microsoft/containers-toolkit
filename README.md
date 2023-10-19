@@ -55,7 +55,11 @@ Import-Module -Name <absolute-path>\ContainerToolsForWindows.psd1 -Force
     Import-Module -Name ContainerToolsForWindows -Force
     ```
 
-3. Get the module details
+4. Get the module details
+
+    ```PowerShell
+    Get-Help ContainerToolsForWindows
+    ```
 
     ```PowerShell
     Get-Module -Name ContainerToolsForWindows
@@ -66,30 +70,80 @@ Import-Module -Name <absolute-path>\ContainerToolsForWindows.psd1 -Force
 1. [Command reference](./docs/command-reference.md)
 2. Detailed command reference can be found in the [About](./docs/About/) section
 
+#### List of available commands
+
+```PowerShell
+Get-Command -Module ContainerToolsForWindows
+```
+
+### Examples
+
+1. Get help for Install-Containerd command
+
+    ```PowerShell
+    Get-Help Install-Containerd
+    ```
+
+2. List container tools (Containerd, Buildkit, and Nerdctl) install status
+
+    ```PowerShell
+    Show-ContainerTools
+    ```
+
+3. Installs Containerd version 1.7.7 at 'C:\Test\Path\containerd' and adds 'C:\Test\Path\containerd' in the environment path.
+
+    ```powershell
+    Install-Containerd -Version "1.7.7" -InstallPath 'C:\Test\Path\Containerd'
+    ```
+
+### Important Notes
+
+To use these tools (Containerd, Buildkit, and NerdCtl), ensure that Containers and HyperV Windows features are enabled.
+
+To get the features to enable, use:
+
+```PowerShell
+Get-WindowsOptionalFeature -Online | `
+    Where-Object { $_.FeatureName -like 'containers' -or $_.FeatureName -match "Microsoft-Hyper-V(-All)?$" } | `
+    Select-Object FeatureName, Possible, State, RestartNeeded
+```
+
+To enable a feature:
+
+```PowerShell
+Enable-WindowsOptionalFeature -Online -FeatureName '<Feature-Name-Here>' -All -NoRestart
+```
+
 ## TODO
 
 - [ ] Rename this module: The current name for this module might cause confusion with repo named windows-containers-tools
+- [ ] Pipeline configuration
+- [ ] Replace Github username in URL: <https://github.com/...>
+- [ ] Publish module to PSGallery
+- [ ] Fix Code analysis warnings
+- [ ] Rootless installation
+- [ ] Dev install: (Hacks) Add functions in Containerd and Buildkit to build from source files. (Is this really necessary? May be an overkill)
 - [x] Update README.md (Documentation)
 - [x] Update ContainerToolsForWindows/ContainerToolsForWindows.Format.ps1xml (Documentation)
 - [x] Update ContainerToolsForWindows/en-US/about_ContainerToolsForWindows.help.txt (Documentation)
-- [ ] Publish module to PSGallery
-- [ ] Dev install: (Hacks) Add functions in Containerd and Buildkit to build from source files. (Is this really necessary? May be an overkill)
 - [x] Use latest version in download
-- [ ] Add Pester test
-- [ ] Pipeline configuration
-- [ ] Rootless installation
+- [x] Add Pester test
 
 ## Contribution
 
-## Similar Projects
+## Related Projects
 
-- [Install-ContainerdRuntime
-](https://github.com/microsoft/Windows-Containers/blob/Main/helpful_tools/Install-ContainerdRuntime/install-containerd-runtime.ps1)
+This project builds on work done by others to create a PowerShell module.
+
+- [Install-ContainerdRuntime](https://github.com/microsoft/Windows-Containers/blob/Main/helpful_tools/Install-ContainerdRuntime/install-containerd-runtime.ps1)
+- [sig-windows-tools- Install-Containerd.ps1](https://github.com/kubernetes-sigs/sig-windows-tools/blob/master/hostprocess/Install-Containerd.ps1)
 - [containerd-installer](https://github.com/lippertmarkus/containerd-installer)
 - [Install MCR on Windows Servers](https://docs.mirantis.com/mcr/20.10/install/mcr-windows.html)
 - [Stevedore](https://github.com/slonopotamus/stevedore)
+- [setup_buildkitd_on_windows.ps1] <https://gist.github.com/gabriel-samfira/6e56238ad11c24f490ac109bdd378471>
+- [Windows Containers on Windows 10 without Docker (using Containerd)](https://www.jamessturtevant.com/posts/Windows-Containers-on-Windows-10-without-Docker-using-Containerd/)
 
-## References
+## Container tools repositories
 
 - [Containerd](https://github.com/containerd/containerd)
 - [Buildkit](https://github.com/moby/buildkit)

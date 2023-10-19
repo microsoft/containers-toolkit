@@ -1,5 +1,5 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
@@ -9,7 +9,7 @@ schema: 2.0.0
 
 ## SYNOPSIS
 
-Returns the latest Nerdctl version number.
+Gets the latest Nerdctl version number.
 
 ## SYNTAX
 
@@ -19,7 +19,7 @@ Get-NerdctlLatestVersion
 
 ## DESCRIPTION
 
-Returns the latest Nerdctl version number.
+Uses GitHub APIs to get the latest Nerdctl release version from the containerd/nerdctl GitHub repository.
 
 ## EXAMPLES
 
@@ -39,11 +39,11 @@ v1.2.0
 
 ## INPUTS
 
-### None
-
 ## OUTPUTS
 
-### [String](https://learn.microsoft.com/en-us/dotnet/api/system.string?view=net-7.0)
+### String
+
+This is a string of the latest Nerdctl release version.
 
 ## RELATED LINKS
 

@@ -1,0 +1,15 @@
+{
+    "url": "https://api.github.com/repos/moby/buildkit/releases/125880858",
+    "assets_url": "https://api.github.com/repos/moby/buildkit/releases/125880858/assets",
+    "upload_url": "https://uploads.github.com/repos/moby/buildkit/releases/125880858/assets{?name,label}",
+    "html_url": "https://github.com/moby/buildkit/releases/tag/v0.12.3",
+    "id": 125880858,
+    "node_id": "RE_kwDOBYqZiM4HgMoa",
+    "tag_name": "v0.12.3",
+    "target_commitish": "master",
+    "name": "v0.12.3",
+    "draft": false,
+    "prerelease": false,
+    "created_at": "2023-10-19T16:49:00Z",
+    "published_at": "2023-10-19T22:10:02Z"
+}

@@ -3,21 +3,21 @@
 ## Table of Contents
 
 - [General](#general)
-  - [Show-ContainerTools](#Show-ContainerTools)
+  - [Show-ContainerTools](#show-containertools)
   - [Install-ContainerTools](#install-containertools)
 - [Containerd](#containerd)
   - [Get-ContainerdLatestVersion](#get-containerdlatestversion)
   - [Install-Containerd](#install-containerd)
-  - [Initialize-ContainerdService](#initialize-containerdservice)
+  - [Register-ContainerdService](#register-containerdservice)
   - [Start-ContainerdService](#start-containerdservice)
   - [Stop-ContainerdService](#stop-containerdservice)
   - [Uninstall-Containerd](#uninstall-containerd)
 - [BuildKit](#buildkit)
   - [Get-BuildkitLatestVersion](#get-buildkitlatestversion)
   - [Install-Buildkit](#install-buildkit)
-  - [Initialize-BuildkitdService](#initialize-buildkitdservice)
-  - [Start-BuildkitdService](#Start-BuildkitdService)
-  - [Stop-BuildkitdService](#Stop-BuildkitdService)
+  - [Register-BuildkitdService](#register-buildkitdservice)
+  - [Start-BuildkitdService](#start-buildkitdservice)
+  - [Stop-BuildkitdService](#stop-buildkitdservice)
   - [Uninstall-Buildkit](#uninstall-buildkit)
 - [Nerdctl](#nerdctl)
   - [Get-NerdctlLatestVersion](#get-nerdctllatestversion)
@@ -98,12 +98,13 @@ Once Containerd is installed and added to the environment path, we can get the p
 | Version | String | Containerd version to install | Latest version |
 | InstallPath | String | Path to install Containerd | `$Env:ProgramFiles\containerd` |
 | DownloadPath | String | Path to download Containerd  | `$HOME\Downloads` |
+| Setup | Switch | Register and start Containerd Service once Containerd installation is done  |  |
 
 **Output**
 
 None
 
-#### Initialize-ContainerdService
+#### Register-ContainerdService
 
 Create a default containerd configuration file called `config.toml` at the Containerd path and registers the containerd service.
 
@@ -112,6 +113,7 @@ Create a default containerd configuration file called `config.toml` at the Conta
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
 | ContainerdPath | String | Path where Containerd is installed | The containerd path in the environment path variable or `$Env:ProgramFiles\containerd` |
+| Start | Switch | Start Containerd service after registration is complete | |
 
 **Output**
 
@@ -193,12 +195,13 @@ Once Buildkit is installed and added to the environment path, we can get the pat
 | Version | String | Buildkit version to install | Latest version |
 | InstallPath | String | Path to install Buildkit | `$Env:ProgramFiles\Buildkit` |
 | DownloadPath | String | Path to download Buildkit | $HOME\Downloads |
+| Setup | Switch | Register and start Buildkitd Service once Containerd installation is done  |  |
 
 **Output**
 
 None
 
-#### Initialize-BuildkitdService
+#### Register-BuildkitdService
 
 Registers the Buildkitd service with a prompt to either register with the Containerd CNI config (0-containerd-nat.conf) or not.
 
@@ -208,6 +211,7 @@ Registers the Buildkitd service with a prompt to either register with the Contai
 | -------- | ------- | ------- | ------- |
 | BuildkitPath | String | Path where Buildkit is installed | The Buildkit path in the environment path variable or `$Env:ProgramFiles\Buildkit` |
 | WinCNIPath | String | Path to Windows CNI plugin | The Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd` |
+| Start | Switch | Start Buildkitd service after registration is complete | |
 
 **Output**
 
