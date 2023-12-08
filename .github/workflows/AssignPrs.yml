@@ -1,0 +1,28 @@
+name: Auto Assign PR Maintainer
+on:
+  pull_request:
+    types: [opened, edited]
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+jobs:
+  run:
+      runs-on: ubuntu-latest
+      permissions:
+        issues: write
+        pull-requests: write
+      steps:
+      - uses: wow-actions/auto-assign@v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          assignees: |
+            bobsira
+            charitykathure
+            iankingori
+            profnandaa
+            tinamor
+          skipDraft: true
+          skipKeywords: wip, draft
+          addReviewers: false
+          numberOfAssignees: 1

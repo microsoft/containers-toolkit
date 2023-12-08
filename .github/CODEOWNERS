@@ -1,0 +1,14 @@
+# <https://help.github.com/articles/about-codeowners/>
+
+# Area: Documentation
+docs/   @tinamor
+
+# Area: Test
+# @tinamor
+
+
+# Tools
+ContainerToolsForWindows/Public/BuildkitTools.psm1              @profnandaa
+ContainerToolsForWindows/Public/ontainerdTools.psm1             @charitykathure
+ContainerToolsForWindows/Public/ContainerNetworkTools.psm1      @iankingori
+ContainerToolsForWindows/Public/NerdctlTools.psm1               @tinamor

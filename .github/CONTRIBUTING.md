@@ -10,7 +10,7 @@ There are many ways in which you can contribute, beyond writing code. The goal o
 - [Reporting Issues](#reporting-issues)
   - [Writing a Good Bug Report](#writing-a-good-bug-report)
 - [Contributing to Documentation](#contributing-to-documentation)
-  - [Quick steps if you're changing an existing cmdlet](#quick-steps-if-youre-changing-an-existing-cmdlet)
+  - [Quick steps if you're changing an existing cmdlet](#quick-steps-if-you-are-changing-an-existing-cmdlet)
   - [Spellchecking documentation](#spellchecking-documentation)
   - [Checking links in documentation](#checking-links-in-documentation)
 - [Contributing to Code](#contributing-to-code)
@@ -33,36 +33,36 @@ By participating, you are expected to uphold this code. Please report unacceptab
 
 ## Reporting Issues
 
-Before filing a new issue, please search our [open issues](https://github.com/microsoft/windows-container-tools/issues) to check if it already exists.
+Before filing a new issue, please search our [open issues](https://github.com/microsoft/windows-container-tools/issues) to check if it already exists. If you do find an existing issue, please include your own feedback in the discussion. Do consider upvoting (👍 reaction) the original post, as this helps us prioritize popular issues in our backlog.
 
-If you do find an existing issue, please include your own feedback in the discussion. Do consider upvoting (👍 reaction) the original post, as this helps us prioritize popular issues in our backlog.
+If you cannot find your issue already, [open a new issue](/issues/new).
 
-- Check if the issue you are going to file already exists in our [GitHub issues](/issues)
-- If you can't find your issue already, [open a new issue](/issues/new).
-  - Provide as much context as you can about what you're running into.
-  - Provide project and platform versions depending on what seems relevant.
+- Provide as much context as you can about what you are running into.
+- Provide project and platform versions depending on what seems relevant.
+
+If you know how to fix the issue, feel free to send a pull request our way. (This Contribution Guide applies to that pull request, you may want to give it a read!)
 
 ### Writing a Good Bug Report
 
-Good bug reports make it easier for maintainers to verify and root cause the underlying problem. The better a bug report, the faster the problem will be resolved. Ideally, a bug report should contain the following information:
+Good bug reports make it easier for maintainers to verify and triage the underlying problem. The better a bug report, the faster the problem will be resolved. Ideally, a bug report should contain the following information:
 
 - A high-level description of the problem.
 - A _minimal reproduction_, i.e. the smallest size of code/configuration required to reproduce the wrong behavior.
 - A description of the _expected behavior_, contrasted with the _actual behavior_ observed.
-- Information on the environment: OS/distro, CPU arch, SDK version, etc.
+- Information on the environment: PowerShell version, package version, etc.
 - Additional information, e.g. is it a regression from previous versions? are there any known workarounds?
 
 Your question serve as a resource to others searching for help.
 
 ## Contributing to Documentation
 
-### Quick steps if you're changing an existing cmdlet
+### Quick steps if you are changing an existing cmdlet
 
 If you made a change to an existing cmdlet and would like to update the documentation using PlatyPS,
 here are the quick steps:
 
-1. Install `PlatyPS` if you don't have it - `Install-Module PlatyPS`.
-1. Clone the [Microsoft/containers-toolkits](https://github.com/Microsoft/containers-toolkit) repository if you don't already have it.
+1. Install `PlatyPS` if you do not have it - `Install-Module PlatyPS`.
+1. Clone the [Microsoft/containers-toolkits](https://github.com/Microsoft/containers-toolkit) repository if you do not already have it.
 1. Start your local build of PowerShell
 (with the change to the cmdlet you made).
 1. Find the [cmdlet's Markdown file](../About/) in Docs. For example: docs\About\Get-BuildkitLatestVersion.md
@@ -77,7 +77,7 @@ here are the quick steps:
         New-ExternalHelp -Path $commandsDir -OutputPath $enUSDir -Force
         ```
 
-1. Create a Pull Request to the [Microsoft/containers-toolkits](https://github.com/Microsoft/containers-toolkit) repositor with the changes
+1. Create a Pull Request to the [Microsoft/containers-toolkits](https://github.com/Microsoft/containers-toolkit) repository with the changes
         - Make sure you squash your commits
         - Sign your commits
 1. Link your Docs PR to your original change PR.
@@ -251,23 +251,23 @@ We use and recommend the following workflow:
     - You can skip this step for trivial changes.
     - Reuse an existing issue on the topic, if there is one.
     - Get agreement from the team and the community that your proposed change is a good one.
-    - Clearly state that you are going to take on implementing it, if that's the case. You can request that the issue be assigned to you. Note: The issue filer and the implementer don't have to be the same person.
-2. Create a personal fork of the repository on GitHub (if you don't already have one).
-3. In your fork, create a branch off of main (`git checkout -b mybranch`).
+    - Clearly state that you are going to take on implementing it, if that's the case. You can request that the issue be assigned to you. Note: The issue filer and the implementer do not have to be the same person.
+1. Create a personal fork of the repository on GitHub (if you do not already have one).
+1. In your fork, create a branch off of main (`git checkout -b mybranch`).
     - Name the branch so that it clearly communicates your intentions, such as issue-123 or githubhandle-issue.
     - Branches are useful since they isolate your changes from incoming changes from upstream. They also enable you to create multiple PRs from the same fork.
-4. Make and commit your changes to your branch.
-5. Add new tests corresponding to your change, if applicable.
-6. Build the repository with your changes.
+1. Make and commit your changes to your branch.
+1. Add new tests corresponding to your change, if applicable.
+1. Build the repository with your changes.
     - Make sure that the builds are clean.
     - Make sure that the tests are all passing, including your new tests.
     - Fix any linting/styling issues.
         Run the [Code Analyser script](../../build/scripts/script-analyzer.ps1)
-7. Create a pull request (PR) against the [`microsoft/containers-toolkit`](https://github.com/microsoft/containers-toolkit/compare) repository's **main** branch.
+1. Create a pull request (PR) against the [`microsoft/containers-toolkit`](https://github.com/microsoft/containers-toolkit/compare) repository's **main** branch.
     - State in the description what issue or improvement your change is addressing.
     - Check if all the tests are passing.
-8. Wait for feedback or approval of your changes from the team.
-9. When the team has signed off, and all checks are green, your PR will be merged.
+1. Wait for feedback or approval of your changes from the team.
+1. When the team has signed off, and all checks are green, your PR will be merged.
     - The next official build will include your change.
     - You can delete the branch you used for making the change.
 
