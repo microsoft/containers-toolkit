@@ -1,5 +1,5 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
@@ -13,9 +13,18 @@ Downloads and installs Buildkit.
 
 ## SYNTAX
 
+### Install (Default)
+
 ```
 Install-Buildkit [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>]
  [<CommonParameters>]
+```
+
+### Setup
+
+```
+Install-Buildkit [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-Setup]
+ [-WinCNIPath <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -98,22 +107,42 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### CommonParameters
+### -Setup
 
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+Register and start Buildkitd Service once Buildkit installation is done.
 
-## INPUTS
+```yaml
+Type: SwitchParameter
+Parameter Sets: Setup
+Aliases:
 
-### None
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 
-## OUTPUTS
+### -WinCNIPath
 
-## NOTES
+Path where Windows CNI plugins are installed. Defaults to $ENV:ProgramFiles\Containerd\cni
+
+```yaml
+Type: String
+Parameter Sets: Setup
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 
 ## RELATED LINKS
 
 - [Get-BuildkitLatestVersion](Get-BuildkitLatestVersion.md)
-- [Initialize-BuildkitdService](Initialize-BuildkitdService.md)
+- [Register-BuildkitdService](Register-BuildkitdService.md)
 - [Start-BuildkitdService](Start-BuildkitdService.md)
 - [Stop-BuildkitdService](Stop-BuildkitdService.md)
 - [Uninstall-Buildkit](Uninstall-Buildkit.md)

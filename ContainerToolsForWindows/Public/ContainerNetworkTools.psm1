@@ -1,5 +1,5 @@
-$ModuleParentPath = Split-Path -Parent $PSScriptRoot
-Import-Module -Name "$ModuleParentPath\Private\SetupUtilities.psm1" -Force
+﻿$ModuleParentPath = Split-Path -Parent $PSScriptRoot
+Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 # $ErrorActionPreference = 'Stop'
 
@@ -9,10 +9,10 @@ function Get-WinCNILatestVersion {
 }
 
 function Install-WinCNIPlugin {
-    param( 
+    param(
         [parameter(HelpMessage = "Windows CNI plugin version to use. Defaults to latest version")]
         [string]$WinCNIVersion,
-        
+
         [parameter(HelpMessage = "Path to cni folder ~\cni . Not ~\cni\bin")]
         [String]$WinCNIPath
     )
@@ -21,9 +21,19 @@ function Install-WinCNIPlugin {
         $containerdPath = Get-DefaultInstallPath -Tool "containerd"
         $WinCNIPath = "$containerdPath\cni"
     }
+    $WinCNIPath = $WinCNIPath -replace '(\\bin)$', ''
+
+    if (!(Test-EmptyDirectory -Path $WinCNIPath)) {
+        Write-Warning "Windows CNI plugin already exists at $WinCNIPath or the directory is not empty"
+    }
 
     # Uninstall if tool exists at specified location. Requires user consent
-    Uninstall-ContainerTool -Tool "WinCNIPlugin" -Path $WinCNIPath
+    try {
+        Uninstall-WinCNIPlugin -Path $WinCNIPath | Out-Null
+    }
+    catch {
+        Throw "Windows CNI plugin installation cancelled. $_"
+    }
 
     if (!$WinCNIVersion) {
         # Get default version
@@ -32,26 +42,28 @@ function Install-WinCNIPlugin {
     $WinCNIVersion = $WinCNIVersion.TrimStart('v')
     Write-Output "Downloading CNI plugin version $WinCNIVersion at $WinCNIPath"
 
-    $parentPath = Split-Path -Parent $WinCNIPath
-    New-Item -Path $parentPath -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
+    New-Item -Path $WinCNIPath -ItemType Directory -Force -ErrorAction Ignore | Out-Null
 
     # NOTE: We download plugins from instead of  https://github.com/containernetworking/plugins/releases.
     # The latter causes an error in Nerdctl: "networking setup error has occurred. incompatible CNI versions"
-    
+
     # Download file from repo
     $cniZipFile = "windows-container-networking-cni-amd64-v${WinCNIVersion}.zip"
-    $Uri = "https://github.com/microsoft/windows-container-networking/releases/download/v$WinCNIVersion/$cniZipFile"
-    try {
-        Invoke-WebRequest -Uri $Uri -OutFile $parentPath\$cniZipFile
-    }
-    catch {
-        Throw "Could not download file $Uri. $_"
-    }
+    $DownloadPath = "$HOME\Downloads\$cniZipFile"
+    $DownloadParams = @(
+        @{
+            Feature      = "WinCNIPlugin"
+            Uri          = "https://github.com/microsoft/windows-container-networking/releases/download/v$WinCNIVersion/$cniZipFile"
+            Version      = $WinCNIVersion
+            DownloadPath = $DownloadPath
+        }
+    )
+    Get-InstallationFiles -Files $DownloadParams
 
     # Expand zip file and install Win CNI plugin
     $WinCNIBin = "$WinCNIPath\bin"
-    Expand-Archive -Path $parentPath\$cniZipFile -DestinationPath $WinCNIBin -Force
-    Remove-Item -Path $parentPath\$cniZipFile -Force -ErrorAction SilentlyContinue
+    Expand-Archive -Path $DownloadPath -DestinationPath $WinCNIBin -Force
+    Remove-Item -Path $DownloadPath -Force -ErrorAction Ignore
 
     Write-Output "Windows CNI plugin version $WinCNIVersion successfully installed at $WinCNIPath"
 }
@@ -60,7 +72,7 @@ function Initialize-NatNetwork {
     param(
         [parameter(HelpMessage = "Name of the new network. Defaults to 'nat''")]
         [String]$NetworkName = "nat",
-        
+
         [parameter(HelpMessage = "Gateway IP address. Defaults to default gateway address'")]
         [String]$Gateway,
 
@@ -74,44 +86,42 @@ function Initialize-NatNetwork {
         [parameter(HelpMessage = "Absolute path to cni folder ~\cni. Not ~\cni\bin")]
         [String]$WinCNIPath
     )
-    
+
     Write-Information "Creating NAT network"
 
-    $WinCNIPath = $WinCNIPath.TrimEnd('\bin')
     if (!$WinCNIPath) {
         $ContainerdPath = Get-DefaultInstallPath -Tool "containerd"
         $WinCNIPath = "$ContainerdPath\cni"
     }
-
+    $WinCNIPath = $WinCNIPath -replace '(\\bin)$', ''
     $cniConfDir = "$WinCNIPath\conf"
 
     # Install missing WinCNI plugins
-    if (!(Get-ChildItem -Path "$WinCNIPath\bin")) {
+    if (Test-EmptyDirectory -Path "$WinCNIPath\bin") {
         Install-MissingPlugin -WinCNIVersion $WinCNIVersion
     }
 
-    if (!(Test-Path $cniConfDir)) { 
-        New-Item -ItemType 'Directory' -Path $cniConfDir -Force | Out-Null 
-    }
+    New-Item -ItemType 'Directory' -Path $cniConfDir -Force | Out-Null
 
     # Import HNS module
-    Import-HNSModule
+    try {
+        Import-HNSModule
+    }
+    catch {
+        Throw "Could not import HNS module. $_"
+    }
 
     # Check of NAT exists
-    $natInfo = Get-HnsNetwork -ErrorAction SilentlyContinue | Where-Object { $_.Name -eq $networkName }
+    $natInfo = Get-HnsNetwork -ErrorAction Ignore | Where-Object { $_.Name -eq $networkName }
     if ($null -ne $natInfo) {
-        Write-Error "$networkName already exists. To remove the existing network use the `Remove-HNSNetwork` command "
-        $natInfo | Select-Object Name, ID, Type, `
-            @{l = "Gateway"; e = { $_.Subnets.GatewayAddress } }, `
-            @{l = "Subnet Mask"; e = { $_.Subnets.AddressPrefix } }
-        return
+        Throw "$networkName already exists. To view existing networks, use `Get-HnsNetwork`. To remove the existing network use the `Remove-HNSNetwork` command."
     }
 
     # Set default gateway if gateway us null and generate subnet mash=k from Gateway
     if (!$gateway) {
         $gateway = (Get-NetRoute -DestinationPrefix "0.0.0.0/0").NextHop
     }
-    $gateway -match '\.\d*$' | Out-Null; $networkIdentifier = $gateway.TrimEnd($Matches[0]) + ".0"
+    $networkIdentifier = $gateway -replace "\.\d*$", ".0"
     $subnet = "$networkIdentifier/$CIDR"
 
     # Set default WinCNI version of null
@@ -136,11 +146,10 @@ function Initialize-NatNetwork {
         Write-Output "Successfully created new NAT network called '$($hnsNetwork.Name)' with Gateway $($hnsNetwork.Subnets.GatewayAddress), and Subnet Mask $($hnsNetwork.Subnets.AddressPrefix)"
     }
     catch {
-        Write-Error "Could not create a new NAT network $networkName with Gateway $gateway and Subnet mask $subnet. $_"
+        Throw "Could not create a new NAT network $networkName with Gateway $gateway and Subnet mask $subnet. $_"
     }
 }
 
-# NEEDSDOC: Update help documentation
 function Uninstall-WinCNIPlugin {
     param(
         [parameter(HelpMessage = "Windows CNI plugin path")]
@@ -151,16 +160,44 @@ function Uninstall-WinCNIPlugin {
         $ContainerdPath = Get-DefaultInstallPath -Tool "containerd"
         $Path = "$ContainerdPath\cni"
     }
-    
-    Write-Output "Uninstalling Windows CNI plugin"
-    $pathItems = Get-ChildItem -Path $Path -ErrorAction SilentlyContinue
-    if (!$pathItems.Name.Length) {
-        Write-Error "Windows CNI plugin does not exist at $Path or the directory is empty"
+
+    $Path = $Path -replace '(\\bin\\?)$', ''
+    if (Test-EmptyDirectory -Path $path) {
+        Write-Output "Windows CNI plugin does not exist at $Path or the directory is empty"
         return
     }
 
-    # Remove the folder where nerdctl was installed
-    Get-Item -Path $Path -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+    $tool = 'WinCNIPlugin'
+    $consent = Uninstall-ContainerToolConsent -Tool $tool -Path $Path
+    if ($consent) {
+        Write-Warning "Uninstalling preinstalled Windows CNI plugin at the path $path"
+        try {
+            Uninstall-WinCNIPluginHelper -Path $path
+        }
+        catch {
+            Throw "Could not uninstall $tool. $_"
+        }
+    }
+    else{
+        Throw "Windows CNI plugin uninstallation cancelled."
+    }
+}
+
+function Uninstall-WinCNIPluginHelper {
+    param(
+        [ValidateNotNullOrEmpty()]
+        [parameter(HelpMessage = "Windows CNI plugin path")]
+        [String]$Path
+    )
+
+    Write-Output "Uninstalling Windows CNI plugin"
+    if (Test-EmptyDirectory -Path $Path) {
+        Write-Error "Windows CNI plugin does not exist at $Path or the directory is empty."
+        return
+    }
+
+    # Remove the folder where WinCNI plugins are installed
+    Remove-Item $Path -Recurse -Force -ErrorAction Ignore
 
     Write-Output "Successfully uninstalled Windows CNI plugin."
 }
@@ -168,42 +205,32 @@ function Uninstall-WinCNIPlugin {
 function Import-HNSModule {
     try {
         # https://www.powershellgallery.com/packages/HNS/0.2.4
-        if ($null -eq (Get-Command -Name "*HNS*" -ErrorAction SilentlyContinue | Where-Object { $_.Source -eq "HNS" })) {
+        if ($null -eq ( Get-Module -ListAvailable -Name 'HNS')) {
             Install-Module -Name HNS -Scope CurrentUser -AllowClobber -Force
         }
 
-        if ($null -eq (Get-Module -Name HNS -ErrorAction SilentlyContinue)) {
-            Import-Module -Name HNS -Force
-        }
-    }
-    catch [System.IO.FileNotFoundException] {
-        Throw "Could not import HNS module. $_"
+        Import-Module -Name HNS -DisableNameChecking -Force
     }
     catch {
-        $path = "$Env:ProgramFiles\containerd\cni\hns.psm1"
+        $WinCNIPath = "$Env:ProgramFiles\containerd\cni"
+        $path = "$WinCNIPath\hns.psm1"
         if (!(Test-Path -Path $path)) {
-            $Uri = "https://raw.githubusercontent.com/microsoft/SDN/master/Kubernetes/windows/hns.psm1"
-            try {
-                Invoke-WebRequest -Uri $Uri -OutFile $path
-            }
-            catch {
-                Throw "Could not download HNS module from $Uri. $_"
-            }
+            $DownloadParams = @(
+                @{
+                    Feature      = "HNS.psm1"
+                    Uri          = 'https://raw.githubusercontent.com/microsoft/SDN/master/Kubernetes/windows/hns.psm1'
+                    DownloadPath = $WinCNIPath
+                }
+            )
+            Get-InstallationFiles -Files $DownloadParams
         }
 
-        try {
-            if ($null -eq (Get-Module -Name HNS -ErrorAction SilentlyContinue)) {
-                Import-Module $path -Force
-            }
-        }
-        catch {
-            Throw "Could not import HNS module. $_"
-        }
-    } 
+        Import-Module $path -DisableNameChecking -Force
+    }
 }
 
 function Install-MissingPlugin {
-    param( 
+    param(
         [parameter(HelpMessage = "Windows CNI plugin version to use. Defaults to latest version")]
         [string]$WinCNIVersion
     )
@@ -211,9 +238,11 @@ function Install-MissingPlugin {
     $title = "Windows CNI plugins have not been installed."
     $question = "Do you want to install the Windows CNI plugins?"
     $choices = '&Yes', '&No'
-    $consent = $Host.UI.PromptForChoice($title, $question, $choices, 1)
+    $consent = (Get-Host).UI.PromptForChoice($title, $question, $choices, 1)
     switch ([ActionConsent]$consent) {
-        [ActionConsent]::Yes { Install-WinCNIPlugin -WinCNIVersion $WinCNIVersion }
+        ([ActionConsent]::Yes) {
+            Install-WinCNIPlugin -WinCNIVersion $WinCNIVersion
+        }
         Default {
             $downloadPath = "https://github.com/microsoft/windows-container-networking"
             Throw "Windows CNI plugins have not been installed. To install, run the command `Install-WinCNIPlugin` or download from $downloadPath, then rerun this command"
@@ -222,7 +251,7 @@ function Install-MissingPlugin {
 }
 
 
-# FIXME: Causes error when user tries to run container with this network config
+# FIXME: Nerdctl- Warning when user tries to run container with this network config
 function Set-DefaultCNICInfig ($WinCNIVersion, $networkName, $gateway, $subnet, $cniConfDir) {
     # CurrentEndpointCount   : 1
     # MaxConcurrentEndpoints : 1
@@ -253,5 +282,5 @@ function Set-DefaultCNICInfig ($WinCNIVersion, $networkName, $gateway, $subnet, 
 
 Export-ModuleMember -Function Get-WinCNILatestVersion
 Export-ModuleMember -Function Install-WinCNIPlugin
-Export-ModuleMember -Function Uninstall-WinCNIPlugin
+Export-ModuleMember -Function Uninstall-WinCNIPlugin, Uninstall-WinCNIPluginHelper
 Export-ModuleMember -Function Initialize-NatNetwork

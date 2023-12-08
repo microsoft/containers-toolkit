@@ -1,5 +1,16 @@
+﻿###########################################################################
+#                                                                         #
+#   Module Name: containerd.psm1                                          #
+#                                                                         #
+#   Description: Wrappers for containerd setup functions.                 #
+#                                                                         #
+#   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+###########################################################################
+
+
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
-Import-Module -Name "$ModuleParentPath\Private\SetupUtilities.psm1" -Force
+Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 function Get-ContainerdLatestVersion {
     $latestVersion = Get-LatestToolVersion -Repository "containerd/containerd"
@@ -12,14 +23,26 @@ function Install-Containerd {
         [string]$Version,
 
         [parameter(HelpMessage = "Path to install containerd. Defaults to ~\program files\containerd")]
-        [string]$InstallPath = "$Env:ProgramFiles\containerd",
-        
+        [string]$InstallPath = "$Env:ProgramFiles\Containerd",
+
         [parameter(HelpMessage = "Path to download files. Defaults to user's Downloads folder")]
-        [string]$DownloadPath = "$HOME\Downloads"
+        [string]$DownloadPath = "$HOME\Downloads",
+
+        [Parameter(HelpMessage = "Register and start Containerd Service")]
+        [switch] $Setup
     )
 
+    if (!(Test-EmptyDirectory -Path $InstallPath)) {
+        Write-Warning "Containerd already exists at $InstallPath or the directory is not empty"
+    }
+
     # Uninstall if tool exists at specified location. Requires user consent
-    Uninstall-ContainerTool -Tool "ContainerD" -Path $InstallPath
+    try {
+        Uninstall-Containerd -Path $InstallPath | Out-Null
+    }
+    catch {
+        Throw "Containerd installation cancelled. $_"
+    }
 
     if (!$Version) {
         # Get default version
@@ -27,35 +50,52 @@ function Install-Containerd {
     }
     $Version = $Version.TrimStart('v')
     Write-Output "Downloading and installing Containerd v$version at $InstallPath"
-    
-    # Download file from repo
-    $containerdTarFile = "containerd-${version}-windows-amd64.tar.gz"
-    try {
-        $Uri = "https://github.com/containerd/containerd/releases/download/v$version/$($containerdTarFile)"
-        Invoke-WebRequest -Uri $Uri -OutFile "$DownloadPath\$containerdTarFile" -Verbose
-    }
-    catch {
-        if ($_.ErrorDetails.Message -eq "Not found") {
-            Throw "Buildkit download failed. Invalid URL: $uri"
-        }
 
-        Throw "Buildkit download failed. $_"
-    }
+    $containerdTarFile = "containerd-${version}-windows-amd64.tar.gz"
+    $DownloadPath = "$DownloadPath\$($containerdTarFile)"
+
+    # Download files
+    $DownloadParams = @(
+        @{
+            Feature      = "Containerd"
+            Uri          = "https://github.com/containerd/containerd/releases/download/v$version/$($containerdTarFile)"
+            Version      = $version
+            DownloadPath = $DownloadPath
+        }
+    )
+    Get-InstallationFiles -Files $DownloadParams
 
     # Untar and install tool
     $params = @{
         Feature      = "containerd"
         InstallPath  = $InstallPath
-        DownloadPath = "$DownloadPath\$containerdTarFile"
+        DownloadPath = $DownloadPath
         EnvPath      = "$InstallPath\bin"
         cleanup      = $true
     }
     Install-RequiredFeature @params
 
-    Write-Output "Containerd v$version successfully installed at $InstallPath"
-    containerd.exe -v
+    Write-Output "Containerd v$version successfully installed at $InstallPath `n"
 
-    Write-Output "For containerd usage: run 'containerd -h'"
+    $showCommands = $true
+    try {
+        if ($Setup) {
+            Register-ContainerdService -ContainerdPath $InstallPath -Start
+            Start-ContainerdService
+            $showCommands = $false
+        }
+    }
+    catch {
+        Write-Warning "Failed to setup Containerd service. $_"
+    }
+
+    if ($showCommands) {
+        $commands = (Get-command -Name '*containerd*' | Where-Object { $_.Source -like 'containerToolsForWindows' -and $_.Name -ne 'Install-Containerd' }).Name
+        $message = "Other useful Containerd commands: $($commands -join ', ').`nTo learn more about each command, run Get-Help <command-name>, e.g., 'Get-Help Register-ContainerdService'"
+        Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
+    }
+
+    Write-Host "For containerd usage: run 'containerd -h'" -ForegroundColor DarkGreen
 }
 
 # YAGNI: Is this necessary?
@@ -64,140 +104,145 @@ function Build-ContainerdFromSource {
 }
 
 function Start-ContainerdService {
-    Set-Service containerd -StartupType Automatic
-    try {
-        Start-Service containerd
-
-        # Waiting for containerd to come to steady state
-        (Get-Service containerd -ErrorAction SilentlyContinue).WaitForStatus('Running', '00:00:30')
-    }
-    catch {
-        Throw "Couldn't start Containerd service. $_"
-    } 
+    Invoke-ServiceAction -Service 'Containerd' -Action 'Start'
 }
 
 function Stop-ContainerdService {
-    $containerdStatus = Get-Service containerd -ErrorAction SilentlyContinue
-    if (!$containerdStatus) {
-        Write-Warning "Containerd service does not exist as an installed service."
-        return
-    }
-
-    try {
-        Stop-Service containerd -NoWait
-
-        # Waiting for containerd to come to steady state
-        (Get-Service containerd -ErrorAction SilentlyContinue).WaitForStatus('Stopped', '00:00:30')
-    }
-    catch {
-        Throw "Couldn't stop Containerd service. $_"
-    } 
+    Invoke-ServiceAction -Service 'Containerd' -Action 'Stop'
 }
 
-function Initialize-ContainerdService {
+function Register-ContainerdService {
     param(
-        [string]
         [parameter(HelpMessage = "Containerd path")]
-        $ContainerdPath
+        [String]$ContainerdPath,
+
+        [parameter(HelpMessage = "Specify to start Containerd service after registration is complete")]
+        [Switch]$Start
     )
 
-    Write-Output "Configuring the containerd service"
+    Write-Output "Configuring containerd service"
     if (!$ContainerdPath) {
         $ContainerdPath = Get-DefaultInstallPath -Tool "containerd"
     }
 
-    $pathItems = Get-ChildItem -Path $ContainerdPath -ErrorAction SilentlyContinue
-    if (!$pathItems.Name.Length) {
+    if (Test-EmptyDirectory -Path $ContainerdPath) {
         Throw "Containerd does not exist at $ContainerdPath or the directory is empty"
     }
 
+    $containerdExecutable = "$ContainerdPath\bin\containerd.exe"
+    Add-MpPreference -ExclusionProcess $containerdExecutable
+
     #Configure containerd service
     $containerdConfigFile = "$ContainerdPath\config.toml"
-    $containerdDefault = containerd.exe config default
-    $containerdDefault | Out-File "$ContainerdPath\config.toml" -Encoding ascii
+    Invoke-Expression -Command "& '$containerdExecutable' config default" | Out-File $containerdConfigFile -Encoding ascii
     Write-Information -InformationAction Continue -MessageData "Review containerd configutations at $containerdConfigFile"
 
-    Add-MpPreference -ExclusionProcess "$ContainerdPath\containerd.exe"
-
-    # Review the configuration. Depending on setup you may want to adjust:
-    # - the sandbox_image (Kubernetes pause image)
-    # - cni bin_dir and conf_dir locations
-    # Get-Content $containerdConfigFile
-
     # Register containerd service
-    containerd.exe --register-service --log-level debug --service-name containerd --log-file "$env:TEMP\containerd.log"
-    if ($LASTEXITCODE -gt 0) {
-        Throw "Failed to register containerd service. $_"
+    $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "--register-service --log-level debug --service-name containerd --log-file `"$env:TEMP\containerd.log`""
+    if ($output.ExitCode -ne 0) {
+        Throw "Failed to register containerd service. $($output.StandardError.ReadToEnd())"
     }
 
-    Get-Service *containerd* | Select-Object Name, DisplayName, ServiceName, ServiceType, StartupType, Status, RequiredServices, ServicesDependedOn
+    $containerdService = Get-Service -Name containerd -ErrorAction SilentlyContinue
+    if ($null -eq $containerdService ) {
+        Throw "Failed to register containerd service. $($Error[0].Exception.Message)"
+    }
 
-    sc.exe query containerd
-
+    Set-Service containerd -StartupType Automatic
     Write-Output "Successfully registered Containerd service."
-    Write-Information -InformationAction Continue -MessageData "To start containerd service, run 'Start-Service containerd' or 'Start-ContainerdService'"
+
+    if ($Start) {
+        Start-ContainerdService
+        Write-Output "Successfully started Containerd service."
+    }
+    else {
+        Write-Information -InformationAction Continue -MessageData "To start containerd service, run 'Start-Service containerd' or 'Start-ContainerdService'"
+    }
 }
 
 function Uninstall-Containerd {
     param(
-        [string]
         [parameter(HelpMessage = "Containerd path")]
-        $Path
+        [String]$Path
     )
-    Write-Output "Uninstalling containerd"
 
+    $tool = 'Containerd'
     if (!$Path) {
-        $Path = Get-DefaultInstallPath -Tool "containerd"
+        $Path = Get-DefaultInstallPath -Tool $tool
     }
 
-    $pathItems = Get-ChildItem -Path $Path -ErrorAction SilentlyContinue
-    if (!$pathItems.Name.Length) {
-        Write-Warning "Containerd does not exist at $Path or the directory is empty"
+    if (Test-EmptyDirectory -Path $path) {
+        Write-Output "$tool does not exist at $Path or the directory is empty"
+        return
+    }
+
+    $consent = Uninstall-ContainerToolConsent -Tool $tool -Path $Path
+    if ($consent) {
+        Write-Warning "Uninstalling preinstalled $tool at the path $path"
+        try {
+            Uninstall-ContainerdHelper -Path $path
+        }
+        catch {
+            Throw "Could not uninstall $tool. $_"
+        }
+    }
+    else{
+        Throw "$tool uninstallation cancelled."
+    }
+}
+
+function Uninstall-ContainerdHelper {
+    param(
+        [ValidateNotNullOrEmpty()]
+        [parameter(Mandatory = $true, HelpMessage = "Containerd path")]
+        [String]$Path
+    )
+
+    if (Test-EmptyDirectory -Path $Path) {
+        Write-Error "Containerd does not exist at $Path or the directory is empty."
         return
     }
 
     try {
-        Stop-ContainerdService
+        if (Test-ServiceRegistered -Service 'containerd') {
+            Stop-ContainerdService
+            Unregister-Containerd -ContainerdPath $Path
+        }
     }
     catch {
-        Write-Warning "$_"
+        Throw "Could not stop or unregister containerd service. $_"
     }
 
-    # Unregister containerd service
-    Unregister-Containerd
-
     # Delete the containerd key
-    $regkey = "HKLM:\SYSTEM\CurrentControlSet\Services\containerd"
-    Get-Item -path $regkey -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+    Remove-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\containerd" -Recurse -Force -ErrorAction Ignore
 
-    # Remove the folder where containerd service was installed
-    Get-Item -Path $Path -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+    # Remove the folder where containerd is installed and related folders
+    Remove-Item -Path $Path -Recurse -Force
+
+    # FIXME: Access to the path denied
+    Remove-Item -Path "$ENV:ProgramData\Containerd" -Recurse -Force -ErrorAction Ignore
 
     # Remove from env path
     Remove-FeatureFromPath -Feature "containerd"
 
     Write-Output "Successfully uninstalled Containerd."
 }
-function Unregister-Containerd {
-    $scQueryResult = (sc.exe query containerd) | Select-String -Pattern "SERVICE_NAME: containerd"
-    if (!$scQueryResult) {
+
+function Unregister-Containerd ($containerdPath) {
+    if (!(Test-ServiceRegistered -Service 'Containerd')) {
         Write-Warning "Containerd service does not exist as an installed service."
         return
     }
+
     # Unregister containerd service
-    containerd.exe --unregister-service
-    if ($LASTEXITCODE -gt 0) {
-        Write-Warning "Could not unregister containerd service. $_"
+    $containerdExecutable = "$ContainerdPath\bin\containerd.exe"
+    $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "--unregister-service"
+    if ($output.ExitCode -ne 0) {
+        Throw "Could not unregister containerd service. $($output.StandardError.ReadToEnd())"
     }
     else {
         Start-Sleep -Seconds 15
     }
-    
-    # # Delete containerd service
-    # sc.exe delete containerd
-    # if ($LASTEXITCODE -gt 0) {
-    #     Write-Warning "Could not delete containerd service. $_"
-    # }
 }
 
 
@@ -205,5 +250,5 @@ Export-ModuleMember -Function Get-ContainerdLatestVersion
 Export-ModuleMember -Function Install-Containerd
 Export-ModuleMember -Function Start-ContainerdService -Alias Start-Containerd
 Export-ModuleMember -Function Stop-ContainerdService -Alias Stop-Containerd
-Export-ModuleMember -Function Initialize-ContainerdService
-Export-ModuleMember -Function Uninstall-Containerd
+Export-ModuleMember -Function Register-ContainerdService
+Export-ModuleMember -Function Uninstall-Containerd, Uninstall-ContainerdHelper

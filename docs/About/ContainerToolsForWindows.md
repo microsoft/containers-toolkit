@@ -30,11 +30,11 @@ Gets the latest Nerdctl version number.
 
 Returns the latest Windows CNI version number.
 
-### [Initialize-BuildkitdService](Initialize-BuildkitdService.md)
+### [Register-BuildkitdService](Register-BuildkitdService.md)
 
 Registers the Buildkitd service with a prompt to either register with the Containerd CNI config (0-containerd-nat.conf) or not.
 
-### [Initialize-ContainerdService](Initialize-ContainerdService.md)
+### [Register-ContainerdService](Register-ContainerdService.md)
 
 Create a default containerd configuration file called `config.toml` at the Containerd path and registers the containerd service.
 
