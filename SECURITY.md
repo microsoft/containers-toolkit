@@ -13,5 +13,4 @@ change.
 
 Please refer to the [Security Policy][security policy]
 
-
 [Security Policy]: <https://github.com/microsoft/containers-toolkit/security/policy>)
