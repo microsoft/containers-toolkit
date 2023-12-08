@@ -14,79 +14,52 @@
 ## Table of contents
 
 1. [Introduction](#introduction)
-2. [Usage](#usage)
-    - [Installing and importing Containers-Toolkit module](#installing-and-importing-containers-toolkit-module)
-        - [](#download-source-files)
-    - [Command reference](#command-reference)
-3. [Important Notes](#important-notes)
-4. [Contribution](#contribution)
-5. [Related Projects](#related-projects)
+1. [Prerequisites](#prerequisites)
+1. [Installation and Setup](#installation-and-setup)
+1. [Usage](#usage)
+1. [Important Notes](#important-notes)
+1. [Contribution](#contribution)
 
 ## Introduction
 
-Containers-Toolkit is a Windows PowerShell module for downloading, installing, and setting up default configs for Containerd, BuildKit, Windows CNI plugin, and nerdctl.
+Containers-Toolkit is a Windows PowerShell module for downloading, installing, and configuring Containerd, Buildkit, nerdctl, and Windows CNI plugins for container networks. It also allows you to get a list of the container tools and their installation statuses.
 
-## Usage
+Configurations done with these functions are default configurations that allow you to get started with interacting with the tools. Further configurations may be necessary.
+You can find documentation for these functions here: [Containers-Toolkit Documentation](https://github.com/microsoft/containers-toolkit/tree/main/docs/command-reference.md)
 
-### Installing and importing Containers-Toolkit module
+## Prerequisites
 
-#### Install the module from PowerShell Gallery
+This module requires `ThreadJob` and `HNS` modules.
 
-> COMING SOON: We are currently working on publishing this module to PS Gallery to make it easier to import the module
-
-#### Download Source files
-
-> Coming soon
-
-#### Clone the repo
-
-**Option 1:**  Clone containers-toolkit into one of the folder locations in the `$env:PSModulePath` environment variable.
-
-1. To get a possible module path:
-
-    ```PowerShell
-    $env:PSModulePath -split ";"
-    ```
-
-2. Clone the repo
-
-    ```PowerShell
-    cd <selected-module-path>
-    git clone https://github.com/microsoft/containers-toolkit.git
-    ```
-
-3. Import the module
-
-    ```PowerShell
-    Import-Module -Name containers-toolkit -Force
-    ```
-
-**Option 2:** Clone containers-toolkit to a folder location of choice and add the new module location to the Windows PowerShell module path
-
-1. Clone the repo
-
-    ```PowerShell
-    git clone https://github.com/microsoft/containers-toolkit.git
-    ```
-
-1. Add the directory to Windows PowerShell module path
-
-    ```PowerShell
-    $env:PSModulePath += ";<path-to-module-directory>"
-    ```
-
-1. Install module dependencies
+1. `ThreadJob` module
 
     ```powershell
     Install-Module -Name ThreadJob -Force
-    Install-Module -Name HNS -AllowClobber -Force
     ```
 
-1. Import the module
+1. `HNS` module
 
-    ```PowerShell
-    Import-Module -Name containers-toolkit -Force
-    ```
+    To install the HNS module, follow the [instructions here](./docs/FAQs.md#2-new-hnsnetwork-command-does-not-exist)
+
+    **Reference:**
+    - [HostNetworkingService](https://docs.microsoft.com/en-us/powershell/module/hostnetworkingservice/?view=windowsserver2022-ps)
+    - [Container Network Management with Host Network Service (HNS)](https://learn.microsoft.com/en-us/virtualization/windowscontainers/container-networking/architecture#container-network-management-with-host-network-service)
+
+## Installation and Setup
+
+### Install Containers-Toolkit module from PowerShell Gallery
+
+> COMING SOON: We are currently working on publishing this module to PS Gallery to make it easier to import the module
+
+### Download signed source files
+
+> Coming soon
+
+### Downloading the source code from Containers-Toolkit repository
+
+To use the module, fork/clone the repository to your local machine and [setup your development environment](./CONTRIBUTING.md#setup-development-environment)
+
+## Usage
 
 ### Get the module details
 
@@ -149,42 +122,29 @@ Get-Command -Module containers-toolkit
     Enable-WindowsOptionalFeature -Online -FeatureName '<Feature-Name-Here>' -All -NoRestart
     ```
 
-1. Requires PowerShell modules [HNS](https://www.powershellgallery.com/packages/HNS) and [ThreadJob](https://www.powershellgallery.com/packages/ThreadJob)
+1. Requires PowerShell modules [HNS](https://raw.githubusercontent.com/microsoft/SDN/master/Kubernetes/windows/hns.v2.psm1) and [ThreadJob](https://www.powershellgallery.com/packages/ThreadJob)
 
 ## FAQs
 
-1. Error when running Import-Module
-    - [Error when running Import-Module](https://vnote42.net/2019/07/30/error-when-running-import-module/)
-    - [Unblock a script to run it without changing the execution policy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy?view=powershell-7.4#example-7-unblock-a-script-to-run-it-without-changing-the-execution-policy)
-    - [Unblock-File](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/unblock-file?view=powershell-7.4)
-
-## TODO
-
-- [ ] Set up GitWorkflow files:
-  - [GitHub Repository Structure Best Practices](https://medium.com/code-factory-berlin/github-repository-structure-best-practices-248e6effc405)
-  - Setup ARM64 [self-hosted runner](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners)
-  - Dependabot to update version in main + Licence
-- [ ] Pipeline configuration:
-  - Code Analysis with [DevSkim](https://aka.ms/DevSkim)
-- [ ] Publish module to PSGallery
-- [ ] Fix Code analysis warnings
-- [ ] Dev install: (Hacks) Add functions in Containerd and BuildKit to build from source files. (Is this really necessary? May be an overkill)
-- [ ] Publish to Microsoft Learn: [MicrosoftDocs
-/
-Virtualization-Documentation](https://github.com/MicrosoftDocs/Virtualization-Documentation/tree/live/virtualization/windowscontainers)
-  - [Contribute to the Microsoft Learn platform](https://learn.microsoft.com/en-us/contribute/content/?source=recommendations)
-- [x] Rename this module to containerstoolkit: The current name for this module might cause confusion with repository named windows-containers-tools
-- [x] Update README.md (Documentation)
-- [x] Update containers-toolkit/containers-toolkit.Format.ps1xml (Documentation)
-- [x] Update Containers-Toolkit/Containers-ToolkitlsForWindows.help.txt (Documentation)
-- [x] Use Containers-Toolkit
-- [x] Add Pester test
-- [x] Replace GitHub username in URL: <https://github.com/...>
-- [ ] ~~Rootless installation~~: Not needed for Windows
+Please visit the [FAQs.md](./docs/FAQs.md) to see the how to resolve common issues.
 
 ## Contribution
 
-## Related Projects
+Please look into the [Contribution Guide](./CONTRIBUTING.md) to know how to develop and contribute.
+
+## Legal and Licensing
+
+PowerShell is licensed under the [MIT license](./LICENSE).
+
+## Code of Conduct
+
+Please see our [Code of Conduct](./CODE_OF_CONDUCT.md) before participating in this project.
+
+## Security Policy
+
+For any security issues, please see our [Security Policy](./SECURITY.md).
+
+## Attributions
 
 This project builds on work done by others to create a PowerShell module.
 

@@ -92,7 +92,7 @@ function Install-ContainerTools {
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess($InstallPath, $WhatIfMessage)) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             Write-Output "Tools to install: $toInstallString"
 
             # Global Variables needed for the script

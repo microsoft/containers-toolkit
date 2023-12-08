@@ -20,6 +20,9 @@ LONG DESCRIPTION
     configurations may be necessary.
     You can find documentation for these functions here:
         https://github.com/microsoft/containers-toolkit/tree/main/docs/command-reference.md
+    This module requires the ThreadJob and HNS modules. To install these modules, refer to
+        https://github.com/microsoft/containers-toolkit/tree/main/docs/README.md#prerequisites
+
 
 KEYWORDS
     - Containerd
@@ -28,4 +31,3 @@ KEYWORDS
     - Windows CNI
     - Windows Containers
     - Microsoft Windows
-

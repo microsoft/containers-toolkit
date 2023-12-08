@@ -42,18 +42,18 @@ function Install-Containerd {
         # Check if Containerd is alread installed
         $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
 
-        $WhatIfMessage = "Containerd will be installed"
+        $WhatIfMessage = "Containerd will be installed at $InstallPath"
         if ($isInstalled) {
-            $WhatIfMessage = "Containerd will be uninstalled and reinstalled"
+            $WhatIfMessage = "Containerd will be uninstalled from and reinstalled at $InstallPath"
         }
         if ($Setup) {
             <# Action when this condition is true #>
-            $WhatIfMessage = "Containerd will be installed and containerd service will be registered and started"
+            $WhatIfMessage = "Containerd will be installed at $InstallPath and containerd service will be registered and started"
         }
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess($InstallPath, $WhatIfMessage)) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
                 $errMsg = "Containerd already exists at $InstallPath or the directory is not empty"
@@ -142,7 +142,7 @@ function Start-ContainerdService {
     param()
 
     process {
-        if ($PSCmdlet.ShouldProcess($InstallPath, "")) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, "Starts containerd service")) {
             Invoke-ServiceAction -Service 'Containerd' -Action 'Start'
         }
         else {
@@ -160,7 +160,7 @@ function Stop-ContainerdService {
     param()
 
     process {
-        if ($PSCmdlet.ShouldProcess($InstallPath, "")) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, "Stop containerd service")) {
             Invoke-ServiceAction -Service 'Containerd' -Action 'Stop'
         }
         else {
@@ -200,7 +200,7 @@ function Register-ContainerdService {
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess($containerdExecutable, $WhatIfMessage)) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             if (Test-EmptyDirectory -Path $ContainerdPath) {
                 Throw "Containerd does not exist at $ContainerdPath or the directory is empty"
             }
@@ -233,7 +233,7 @@ function Register-ContainerdService {
             Write-Debug "Containerd config file: $containerdConfigFile"
 
             $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "config default"
-            $output.StandardOutput.ReadToEnd() | Out-File -FilePath $containerdConfigFile  -Encoding ascii -Force
+            $output.StandardOutput.ReadToEnd() | Out-File -FilePath $containerdConfigFile -Encoding ascii -Force
 
             # Check config file is not empty
             $isEmptyConfig = Test-ConfFileEmpty -Path  "$containerdConfigFile"
@@ -294,11 +294,11 @@ function Uninstall-Containerd {
             $Path = Get-DefaultInstallPath -Tool $tool
         }
 
-        $WhatIfMessage = "Containerd will be uninstalled and containerd service will be stopped and unregistered"
+        $WhatIfMessage = "Containerd will be uninstalled from $path and containerd service will be stopped and unregistered"
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess($Path, $WhatIfMessage)) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             if (Test-EmptyDirectory -Path $path) {
                 Write-Output "$tool does not exist at $Path or the directory is empty"
                 return

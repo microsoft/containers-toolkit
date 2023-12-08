@@ -1,35 +1,53 @@
 {
-    "rules": {
-        "spelling": {
-            "language": "en",
-            "skipPatterns": [
-                "/[0-9]+/g", // numbers
-                "/\\bhttp(s)?:\\/\\/[^\\s)>]+/", // URL
-                // "/\\b[a-z\\d]{7,40}\\b/", // commit hash
-                "/\\([^)]+?\\)/", // inside parentheses
-                // // '/"[^"]+?"/', // inside quotation marks
-                // // "/`[^`]+?`/", // inside backticks
-                "/\\b(?:[A-Z]){2,}\\b/g", // acronyms
-                "/\\b(?:[a-zA-Z]+-[a-zA-Z]+)\\b/g", // hyphenated words/ function names
-                // "/\b\\S*\\.\\S{2,4}/g", // filenames
-                "/\\$[\\w]+(:\\w)?/g", // PowerShell variables
-                "/-\\w+\\b/g", // FIXME: PowerShell Cmdlets/function parameter names
-                "/\\b\\w+[./]\\w+\\b/g", // paths // FIXME: Does not work for \ in paths
-                "containers-toolkit",
-                "PowerShell",
-                "/Cmdlets/i",
-                "Containerd",
-                "BuildKit",
-                "buildkitd",
-                "nerdctl",
-                "WinCNIPlugin",
-                "NatNetwork",
-                "/nat/i",
-                "cni",
-                "HNS",
-                "CIDR",
-                "subnet"
-            ]
-        }
+  "plugins": {},
+  "filters": {},
+  "rules": {
+    "spelling": {
+      "language": "en",
+      "skipPatterns": [
+        "/[0-9]+/g", // numbers
+        "/\\bhttp(s)?:\\/\\/[^\\s)>]+/", // URL
+        // "/\\b[a-z\\d]{7,40}\\b/",     // commit hash
+        "/\\([^)]+?\\)/", // inside parentheses
+        // "/\"[^\"]+?\"/",              // inside quotation marks
+        // "/`[^`]+?`/",                 // inside backticks
+        "/\\b(?:[A-Z]){2,}\\b/g", // acronyms
+        "/\\b(?:[a-zA-Z]+-[a-zA-Z]+)\\b/g", // hyphenated words/ function names
+        // "/\\b\\S*\\.\\S{2,4}/g",      // filenames
+        "/\\$[\\w]+(:\\w)?/g", // PowerShell variables
+        "/-\\w+\\b/g", // FIXME: PowerShell Cmdlets/function parameter names
+        "/\\b\\w+[./]\\w+\\b/g", // paths //  FIXME: (Note: Does not work for \ in paths)
+        "about_Preference_Variables",
+        "CIDR",
+        "Containers[\\s\\.\\-]ToolKit/gi",
+        "/Cmdlet/gi",
+        "cni",
+        "/Containerd/gi",
+        "/BuildKit/gi",
+        "/buildkitd/gi",
+        "/H(ost)?N(etworking)?S(ervice)?/g",
+        "/Hyper[\\s-]?V/g",
+        "/moby/gi",
+        "/nat/gi",
+        "NatNetwork",
+        "nerdctl",
+        "PowerShell",
+        "/PSCustomObject/gi",
+        "subnet",
+        "ThreadJob",
+        "/unregisters/gi",
+        "WinCNIPlugin",
+
+        // Parameter names
+        "DownloadPath",
+        "InstallPath",
+        "LatestVersion",
+        "NetworkName",
+        "RegisterServices",
+        "WhatIf",
+        "WinCNIPath",
+        "WinCNIVersion"
+      ]
     }
+  }
 }

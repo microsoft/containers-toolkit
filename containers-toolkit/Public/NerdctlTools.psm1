@@ -89,9 +89,9 @@ function Install-Nerdctl {
             $toInstall += $dependencies
         }
 
-        $WhatIfMessage = "nerdctl will be installed"
+        $WhatIfMessage = "nerdctl will be installed at $installPath"
         if ($isInstalled) {
-            $WhatIfMessage = "nerdctl will be uninstalled and reinstalled"
+            $WhatIfMessage = "nerdctl will be uninstalled from and reinstalled at $installPath"
         }
         if ($dependencies) {
             <# Action when this condition is true #>
@@ -100,7 +100,7 @@ function Install-Nerdctl {
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess($InstallPath, $WhatIfMessage)) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
                 $errMsg = "nerdctl already exists at $InstallPath or the directory is not empty"
@@ -194,11 +194,11 @@ function Uninstall-Nerdctl {
             $Path = Get-DefaultInstallPath -Tool "nerdctl"
         }
 
-        $WhatIfMessage = "nerdctl will be uninstalled"
+        $WhatIfMessage = "nerdctl will be uninstalled from $Path"
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess($Path, $WhatIfMessage)) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             if (Test-EmptyDirectory -Path $path) {
                 Write-Output "$tool does not exist at $Path or the directory is empty"
                 return

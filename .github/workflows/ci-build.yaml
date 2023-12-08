@@ -100,7 +100,7 @@ jobs:
         shell: pwsh
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
-          $requiredModules = @('Pester', 'ThreadJob', 'HNS')
+          $requiredModules = @('Pester', 'ThreadJob')
           $missingModules = $requiredModules | Where-Object { -not (Get-Module -ListAvailable -Name $_) }
 
           if ($missingModules) {
@@ -167,4 +167,4 @@ jobs:
 
       - name: Post results
         run: |
-          cat coveragereport/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+          cat coveragereport/SummaryGithub.md >> $env:GITHUB_STEP_SUMMARY
