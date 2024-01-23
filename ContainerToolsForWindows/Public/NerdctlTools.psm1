@@ -1,5 +1,16 @@
+﻿###########################################################################
+#                                                                         #
+#   Module Name: NerdctlTools.psm1                                        #
+#                                                                         #
+#   Description: Wrappers for NerdctlTools setup functions.               #
+#                                                                         #
+#   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+###########################################################################
+
+
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
-Import-Module -Name "$ModuleParentPath\Private\SetupUtilities.psm1" -Force
+Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 function Get-NerdctlLatestVersion {
     $latestVersion = Get-LatestToolVersion -Repository "containerd/nerdctl"
@@ -15,14 +26,23 @@ function Install-Nerdctl {
         [String]
         [parameter(HelpMessage = "Path to install nerdctl. Defaults to ~\program files\nerdctl")]
         $InstallPath = "$Env:ProgramFiles\nerdctl",
-        
+
         [String]
         [parameter(HelpMessage = "Path to download files. Defaults to user's Downloads folder")]
         $DownloadPath = "$HOME\Downloads"
     )
 
+    if (!(Test-EmptyDirectory -Path $InstallPath)) {
+        Write-Warning "$Nerdctl already exists at $InstallPath or the directory is not empty"
+    }
+
     # Uninstall if tool exists at specified location. Requires user consent
-    Uninstall-ContainerTool -Tool "Nerdctl" -Path $InstallPath
+    try {
+        Uninstall-Nerdctl -Path $InstallPath | Out-Null
+    }
+    catch {
+        Throw "Nerdctl installation cancelled. $_"
+    }
 
     if (!$Version) {
         $Version = Get-NerdctlLatestVersion
@@ -32,31 +52,28 @@ function Install-Nerdctl {
 
     # Download file from repo
     $nerdctlTarFile = "nerdctl-$version-windows-amd64.tar.gz"
-    try {
-        $Uri = "https://github.com/containerd/nerdctl/releases/download/v${version}/$nerdctlTarFile"
-        Invoke-WebRequest -Uri $Uri -OutFile $DownloadPath\$nerdctlTarFile -Verbose
-    }
-    catch {
-        if ($_.ErrorDetails.Message -eq "Not found") {
-            Throw "Nerdctl download failed. Invalid URL: $uri"
+    $DownloadPath = "$DownloadPath\$nerdctlTarFile"
+    $DownloadParams = @(
+        @{
+            Feature      = "nerdctl"
+            Uri          = "https://github.com/containerd/nerdctl/releases/download/v${version}/$nerdctlTarFile"
+            Version      = $version
+            DownloadPath = $DownloadPath
         }
-
-        Throw "Nerdctl download failed. $_"
-    }
+    )
+    Get-InstallationFiles -Files $DownloadParams
 
     # Untar and install tool
     $params = @{
         Feature      = "nerdctl"
         InstallPath  = $InstallPath
-        DownloadPath = "$DownloadPath\$nerdctlTarFile"
+        DownloadPath = $DownloadPath
         EnvPath      = $InstallPath
         cleanup      = $true
     }
     Install-RequiredFeature @params
 
     Write-Output "Nerdctl v$version successfully installed at $InstallPath"
-    nerdctl.exe -v
-
     Write-Output "For nerdctl usage: run 'nerdctl -h'"
 }
 
@@ -71,7 +88,7 @@ function Initialize-NerdctlToml {
     # https://github.com/containerd/nerdctl/blob/main/docs/config.md
     $nerdctlConfig = @"
 {}
-"@ 
+"@
 
     $nerdctlConfig | Set-Content $Path -Force
 }
@@ -81,20 +98,50 @@ function Uninstall-Nerdctl {
         [parameter(HelpMessage = "Nerdctl path")]
         [String]$Path
     )
-
     if (!$Path) {
         $Path = Get-DefaultInstallPath -Tool "nerdctl"
     }
-    
-    Write-Output "Uninstalling nerdctl"
-    $pathItems = Get-ChildItem -Path $Path -ErrorAction SilentlyContinue
-    if (!$pathItems.Name.Length) {
-        Write-Error "Nerdctl does not exist at $Path or the directory is empty"
+
+    $tool = 'Nerdctl'
+    if (!$Path) {
+        $Path = Get-DefaultInstallPath -Tool $tool
+    }
+
+    if (Test-EmptyDirectory -Path $path) {
+        Write-Output "$tool does not exist at $Path or the directory is empty"
         return
     }
 
-    # Remove the folder where nerdctl was installed
-    Get-Item -Path $Path -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+    $consent = Uninstall-ContainerToolConsent -Tool $tool -Path $Path
+    if ($consent) {
+        Write-Warning "Uninstalling preinstalled $tool at the path $path"
+        try {
+            Uninstall-NerdctlHelper -Path $path
+        }
+        catch {
+            Throw "Could not uninstall $tool. $_"
+        }
+    }
+    else{
+        Throw "$tool uninstallation cancelled."
+    }
+}
+
+function Uninstall-NerdctlHelper {
+    param(
+        [ValidateNotNullOrEmpty()]
+        [parameter(Mandatory = $true, HelpMessage = "Nerdctl path")]
+        [String]$Path
+    )
+
+    if (Test-EmptyDirectory -Path $Path) {
+        Write-Error "Nerdctl does not exist at $Path or the directory is empty."
+        return
+    }
+
+    # Remove the folder where nerdctl is installed and related folders
+    Remove-Item -Path $Path -Recurse -Force
+    Remove-Item -Path "$ENV:ProgramData\nerdctl" -Recurse -Force -ErrorAction Ignore
 
     # Remove from env path
     Remove-FeatureFromPath -Feature "nerdctl"
@@ -105,3 +152,4 @@ function Uninstall-Nerdctl {
 Export-ModuleMember -Function Get-NerdctlLatestVersion
 Export-ModuleMember -Function Install-Nerdctl
 Export-ModuleMember -Function Uninstall-Nerdctl
+Export-ModuleMember -Function Uninstall-NerdctlHelper

@@ -1,0 +1,111 @@
+---
+external help file: ContainerToolsForWindows-help.xml
+Module Name: ContainerToolsForWindows
+online version:
+schema: 2.0.0
+---
+
+# Register-BuildkitdService
+
+## SYNOPSIS
+
+Registers the buildkitd service with a prompt to either register with the Containerd CNI configurations (0-containerd-nat.conf) or not.
+
+## SYNTAX
+
+```
+Register-BuildkitdService [[-BuildKitPath] <String>] [[-WinCNIPath] <String>] [-Start] [<CommonParameters>]
+```
+
+## DESCRIPTION
+
+Registers the buildkitd service with a prompt to either register with the Containerd CNI configurations (0-containerd-nat.conf) or not.
+
+## EXAMPLES
+
+### Example 1: Initializes buildkitd service with the defaults
+
+```powershell
+PS C:\> Register-BuildkitdService
+```
+
+Registers buildkitd with the default Containerd configurations file `0-containerd-nat.conf` if it is available.
+
+### Example 2: Initializes buildkitd service with the defaults
+
+```powershell
+PS C:\> Register-BuildkitdService -WinCNIPath '$ENV:ProgramFiles\containerd\cni' -BuildKitPath '$ENV:ProgramFiles\Buildkit'
+```
+
+Registers buildkitd with the default Containerd configurations file `0-containerd-nat.conf` found at `$ENV:ProgramFiles\containerd\cni`.
+
+## PARAMETERS
+
+### -BuildKitPath
+
+Path where BuildKit is installed. If not provided, it defaults to BuildKit path in the environment path variable or `$Env:ProgramFiles\Buildkit`
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 0
+Default value: Buildkit path in the environment path variable or $Env:ProgramFiles\Buildkit
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WinCNIPath
+
+Path where Windows CNI plugin is installed. If not provided, it defaults to Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd`
+
+```yaml
+Type: String
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 1
+Default value: Containerd path in the environment path variable or $Env:ProgramFiles\Containerd
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Start
+
+Specify to start buildkitd service after registration is complete
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+## NOTES
+
+When the `0-containerd-nat.conf` does not exist, the user is prompted to register buildkitd service with or without this file.
+
+```Output
+Buildkit conf file not found at ~\cni\conf\0-containerd-nat.conf.
+Do you want to register buildkit service without Containerd cni configuration?
+[Y] Yes  [N] No  [?] Help (default is "Y"):
+```
+
+- If a user enters `Y` (default), the user consents to register buildkitd service without the default Containerd NAT configuration file.
+- If a user enters `N`, buildkitd service is not registered and the user has to register the service themselves.
+
+## RELATED LINKS
+
+- [Get-BuildkitLatestVersion](Get-BuildkitLatestVersion.md)
+- [Install-Buildkit](Install-Buildkit.md)
+- [Start-BuildkitdService](Start-BuildkitdService.md)
+- [Stop-BuildkitdService](Stop-BuildkitdService.md)
+- [Uninstall-Buildkit](Uninstall-Buildkit.md)

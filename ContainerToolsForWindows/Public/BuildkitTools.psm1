@@ -1,4 +1,4 @@
-###########################################################################
+﻿###########################################################################
 #                                                                         #
 #   Module Name: BuildkitTools.psm1                                       #
 #                                                                         #
@@ -8,10 +8,8 @@
 #                                                                         #
 ###########################################################################
 
-# Reference: https://gist.github.com/gabriel-samfira/6e56238ad11c24f490ac109bdd378471
-
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
-Import-Module -Name "$ModuleParentPath\Private\SetupUtilities.psm1" -Force
+Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 function Get-BuildkitLatestVersion {
     $latestVersion = Get-LatestToolVersion -Repository "moby/buildkit"
@@ -19,19 +17,41 @@ function Get-BuildkitLatestVersion {
 }
 
 function Install-Buildkit {
-    param(
+    [CmdletBinding(DefaultParameterSetName = 'Install')]
+    param (
+        [Parameter(ParameterSetName = 'Install')]
+        [Parameter(ParameterSetName = 'Setup')]
         [parameter(HelpMessage = "Buildkit version to use. Defaults to latest version")]
-        [string]$Version = $latestVersion,
+        [string]$Version,
 
+        [Parameter(ParameterSetName = 'Install')]
+        [Parameter(ParameterSetName = 'Setup')]
         [parameter(HelpMessage = "Path to install buildkit. Defaults to ~\program files\buildkit")]
-        [string]$InstallPath = "$Env:ProgramFiles\buildkit",
-        
+        [string]$InstallPath = "$Env:ProgramFiles\Buildkit",
+
+        [Parameter(ParameterSetName = 'Install')]
+        [Parameter(ParameterSetName = 'Setup')]
         [parameter(HelpMessage = "Path to download files. Defaults to user's Downloads folder")]
-        [string]$DownloadPath = "$HOME\Downloads"
+        [string]$DownloadPath = "$HOME\Downloads",
+
+        [Parameter(ParameterSetName = 'Setup')]
+        [switch]$Setup,
+
+        [Parameter(ParameterSetName = 'Setup')]
+        [string]$WinCNIPath
     )
 
+    if (!(Test-EmptyDirectory -Path $InstallPath)) {
+        Write-Warning "Buildkit already exists at $InstallPath or the directory is not empty"
+    }
+
     # Uninstall if tool exists at specified location. Requires user consent
-    Uninstall-ContainerTool -Tool "Buildkit" -Path $InstallPath
+    try {
+        Uninstall-Buildkit -Path $InstallPath | Out-Null
+    }
+    catch {
+        Throw "Buildkit installation cancelled. $_"
+    }
 
     if (!$Version) {
         $Version = Get-BuildkitLatestVersion
@@ -42,20 +62,22 @@ function Install-Buildkit {
 
     # Download file from repo
     $buildkitTarFile = "buildkit-v${Version}.windows-amd64.tar.gz"
-    try {
-        $Uri = "https://github.com/moby/buildkit/releases/download/v${Version}/$($BuildKitTarFile)"
-        Invoke-WebRequest -Uri $Uri -OutFile $DownloadPath\$buildkitTarFile -Verbose
-    }
-    catch {
-        if ($_.ErrorDetails.Message -eq "Not found") {
-            Throw "Buildkit download failed. Invalid URL: $uri"
+    $DownloadPath = "$DownloadPath\$buildkitTarFile"
+
+    # Download files
+    $DownloadParams = @(
+        @{
+            Feature      = "Buildkit"
+            Uri          = "https://github.com/moby/buildkit/releases/download/v${Version}/$($BuildKitTarFile)"
+            Version      = $version
+            DownloadPath = $DownloadPath
         }
+    )
+    Get-InstallationFiles -Files $DownloadParams
 
-        Throw "Buildkit download failed. $_"
-    }
-
+    # Untar downloaded file at install path
     $params = @{
-        Feature      = "buildkit"
+        Feature      = "Buildkit"
         InstallPath  = $InstallPath
         DownloadPath = "$DownloadPath\$buildkitTarFile"
         EnvPath      = "$InstallPath\bin"
@@ -63,10 +85,30 @@ function Install-Buildkit {
     }
     Install-RequiredFeature @params
 
-    Write-Output "Successfully installed Buildkit v$Version at $InstallPath"
+    Write-Output "Successfully installed Buildkit v$Version at $InstallPath`n"
 
+    # Register Buildkitd service
+    $showCommands = $true
+    try {
+        if ($Setup) {
+            Register-BuildkitdService -BuildKitPath $InstallPath -WinCNIPath $WinCNIPath -Start
+            Start-BuildkitdService
+            $showCommands = $false
+        }
+    }
+    catch {
+        Write-Warning "Failed to registed and start Buildkitd service. $_"
+    }
+
+    if ($showCommands) {
+        $commands = (Get-command -Name '*buildkit*' | Where-Object { $_.Source -like 'containerToolsForWindows' -and $_.Name -ne 'Install-Buildkit' }).Name
+        $message = "Other useful Buildkit commands: $($commands -join ', ').`nTo learn more about each command, run Get-Help <command-name>, e.g., 'Get-Help Register-BuildkitdService'`n"
+        Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
+    }
+
+    # Show buildkit binaries help
     Get-ChildItem -Path "C:\Program Files\buildkit\bin" | ForEach-Object {
-        $message = Write-Output "For buildctl usage: run '$($_.Name) -h'"
+        $message = "For buildctl usage: run '$($_.Name) -h'"
         Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
     }
 }
@@ -77,64 +119,41 @@ function Build-BuildkitFromSource {
 }
 
 function Start-BuildkitdService {
-    Set-Service buildkit -StartupType Automatic
-    try {
-        Start-Service buildkit -Force
-
-        # Waiting for buildkit to come to steady state
-        (Get-Service buildkit -ErrorAction SilentlyContinue).WaitForStatus('Running', '00:00:30')
-    }
-    catch {
-        Write-Error "Couldn't start Buildkit service. $_"
-    } 
+    Invoke-ServiceAction -Service 'Buildkitd' -Action 'Start'
 }
 
 function Stop-BuildkitdService {
-    $buildkitStatus = Get-Service buildkit -ErrorAction SilentlyContinue
-    if (!$buildkitStatus) {
-        Write-Warning "Buildkit service does not exist as an installed service."
-        return
-    }
-
-    try {
-        Stop-Service buildkit -NoWait -Force
-
-        # Waiting for buildkit to come to steady state
-        (Get-Service buildkit -ErrorAction SilentlyContinue).WaitForStatus('Stopped', '00:00:30')
-    }
-    catch {
-        Throw "Couldn't stop Buildkit service. $_"
-    } 
+    Invoke-ServiceAction -Service 'Buildkitd' -Action 'Stop'
 }
 
-function Initialize-BuildkitdService {
+function Register-BuildkitdService {
     param(
         [parameter(HelpMessage = "Windows CNI plugin path")]
-        [String]$WinCNIPath, 
+        [String]$WinCNIPath,
 
-        [ValidateNotNullOrEmpty()]
         [parameter(HelpMessage = "Buildkit path")]
-        [String]$BuildKitPath
+        [String]$BuildKitPath,
+
+        [parameter(HelpMessage = "Specify to start Buildkitd service after registration is complete")]
+        [Switch]$Start
     )
     if (!$BuildKitPath) {
         $BuildKitPath = Get-DefaultInstallPath -Tool "Buildkit"
     }
 
-    $pathItems = Get-ChildItem -Path $BuildKitPath -ErrorAction SilentlyContinue
-    if (!$pathItems.Name.Length) {
+    if (Test-EmptyDirectory -Path $BuildKitPath) {
         Throw "Buildkit does not exist at $BuildKitPath or the directory is empty"
     }
-    
-    Add-MpPreference -ExclusionProcess "$BuildkitPath\buildctl.exe"
 
     # If buildkitd is not installed, terminate execution
-    if (!(CheckBuildkitdExists -BuildkitPath $BuildkitPath)) {
-        Write-Warning "Buildkitd executable not installed."
+    if (!(Test-BuildkitdServiceExists -BuildkitPath $BuildkitPath)) {
+        Write-Error "Buildkitd executable not installed."
         return
     }
+    Write-Output "Configuring buildkitd service"
 
-    Write-Output "Configuring the buildkit service"
-    Add-MpPreference -ExclusionProcess "$BuildkitPath\buildkitd.exe"
+    $buildkitdExecutable = "$BuildKitPath\bin\buildkitd.exe"
+    Add-MpPreference -ExclusionProcess $buildkitdExecutable
 
     if (!$WinCNIPath) {
         $containerdPath = Get-DefaultInstallPath -Tool "containerd"
@@ -146,37 +165,46 @@ function Initialize-BuildkitdService {
 
     # Register buildkit service
     $command = "buildkitd.exe --register-service --debug --containerd-worker=true --containerd-cni-config-path=`"$cniConfPath`" --containerd-cni-binary-dir=`"$cniBinDir`" --service-name buildkitd"
-    if (!(Test-Path -Path $cniConfPath)) {
+    if (Test-ConfFileEmpty -Path $cniConfPath) {
         $consent = Get-ConsentToRegisterBuildkit -Path $cniConfPath
 
         switch ([ActionConsent]$consent) {
-            [ActionConsent]::Yes { 
+            ([ActionConsent]::Yes) {
                 Write-Warning "Containerd conf file not found at $cniConfPath. Buildkit service will be registered without Containerd cni configurations."
-                $command = "buildkitd.exe --register-service --debug --containerd-worker=true  --service-name buildkitd"
+                $command = "buildkitd.exe --register-service --debug --containerd-worker=true --service-name buildkitd"
             }
             Default {
-                Write-Warning "Failed to register buildkit service. Containerd conf file not found at $cniConfPath. Create the file to resolve this issue, then run this command $command"
-                return
+                Throw "Failed to register buildkit service. Containerd conf file not found at $cniConfPath. Create the file to resolve this issue, then run this command $command"
             }
-        } 
-    }
-    
-    Invoke-Expression -Command $command
-    if ($LASTEXITCODE -gt 0) {
-        Write-Error "Failed to register buildkitd service."
+        }
     }
 
-    sc.exe config buildkitd depend=containerd
-    if ($LASTEXITCODE -gt 0) {
-        Write-Error "Failed to set dependency for buildkitd on containerd."
+    $arguments = ($command -split " " | Select-Object -Skip 1) -join " "
+    $output = Invoke-ExecutableCommand -Executable $buildkitdExecutable -Arguments $arguments
+    if ($output.ExitCode -ne 0) {
+        Throw "Failed to register buildkitd service. $($output.StandardError.ReadToEnd())"
     }
 
-    Get-Service *buildkitd* | Select-Object Name, DisplayName, ServiceName, ServiceType, StartupType, Status, RequiredServices, ServicesDependedOn
+    $buildkitdService = Get-Service buildkitd -ErrorAction SilentlyContinue
+    if ($null -eq $buildkitdService ) {
+        Throw "Failed to register buildkitd service. $($Error[0].Exception.Message)"
+    }
 
-    sc.exe query buildkitd
+    Set-Service buildkitd -StartupType Automatic
+    Write-Output "Successfully registered Buildkitd service.".
 
-    Write-Output "Successfully registered Buildkitd service."
-    Write-Information -InformationAction Continue -MessageData "To start buildkitd service, run 'Start-Service buildkitd' or 'Start-BuildkitdService'"
+    $output = Invoke-ExecutableCommand -Executable 'sc.exe' -arguments 'config buildkitd depend=containerd'
+    if ($output.ExitCode -ne 0) {
+        Write-Error "Failed to set dependency for buildkitd on containerd. $($output.StandardOutput.ReadToEnd())"
+    }
+
+    if ($Start) {
+        Start-BuildkitdService
+        Write-Output "Successfully started Buildkitd service."
+    }
+    else {
+        Write-Information -InformationAction Continue -MessageData "To start buildkitd service, run 'Start-Service buildkitd' or 'Start-BuildkitdService'"
+    }
 
     # YAGNI: Do we need a buildkitd.toml on Windows?
 }
@@ -184,41 +212,77 @@ function Initialize-BuildkitdService {
 function Uninstall-Buildkit {
     param(
         [parameter(HelpMessage = "Buildkit path")]
-        [String] $Path
+        [String]$Path
     )
-    
-    Write-Output "Uninstalling buildkit"
-    if (!$path) {
-        $path = Get-DefaultInstallPath -Tool "Buildkit"
+
+    $tool = 'Buildkit'
+    if (!$Path) {
+        $Path = Get-DefaultInstallPath -Tool $tool
     }
 
-    $pathItems = Get-ChildItem -Path $Path -ErrorAction SilentlyContinue
-    if (!$pathItems.Name.Length) {
-        Write-Warning "Buildkit does not exist at $Path or the directory is empty"
+    if (Test-EmptyDirectory -Path $path) {
+        Write-Output "$tool does not exist at $Path or the directory is empty"
+        return
+    }
+
+    $consent = Uninstall-ContainerToolConsent -Tool $tool -Path $Path
+    if ($consent) {
+        Write-Warning "Uninstalling preinstalled $tool at the path $path"
+        try {
+            Uninstall-BuildkitHelper -Path $path
+        }
+        catch {
+            Throw "Could not uninstall $tool. $_"
+        }
+    }
+    else{
+        Throw "$tool uninstallation cancelled."
+    }
+}
+
+function Uninstall-BuildkitHelper {
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Buildkit path")]
+        [String]$Path
+    )
+
+    if (Test-EmptyDirectory -Path $Path) {
+        Write-Error "Buildkit does not exist at $Path or the directory is empty."
         return
     }
 
     try {
-        Stop-BuildkitdService
+        if (Test-ServiceRegistered -Service 'Buildkitd') {
+            Stop-BuildkitdService
+            Unregister-Buildkitd
+        }
     }
     catch {
-        Write-Warning "$_"
+        Throw "Could not stop or unregister buildkitd service. $_"
     }
 
-    # Unregister buildkit service
-    Unregister-Buildkitd
-
     # Delete the buildkit key
-    $regkey = "HKLM:\SYSTEM\CurrentControlSet\Services\buildkit"
-    Get-Item -path $regkey -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -Verbose
+    Remove-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\buildkit" -Recurse -Force -ErrorAction Ignore
 
-    # Remove the folder where buildkit service was installed
-    Get-Item -Path $Path -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
+    # Remove the folder where buildkit is installed and related folders
+    Remove-Item -Path $Path -Recurse -Force
+
+    # FIXME: Access to the path denied
+    Remove-Item -Path "$ENV:ProgramData\Buildkit" -Recurse -Force -ErrorAction Ignore
 
     # Remove from env path
     Remove-FeatureFromPath -Feature "buildkit"
 
     Write-Output "Successfully uninstalled buildkit."
+}
+
+function Test-ConfFileEmpty($Path) {
+    if (!(Test-Path -LiteralPath $Path)) {
+        return $true
+    }
+
+    $isFileNotEmpty = (([System.IO.File]::ReadAllText($Path)) -match '\S')
+    return (-not $isFileNotEmpty )
 }
 
 function Get-ConsentToRegisterBuildkit ($path) {
@@ -228,42 +292,37 @@ function Get-ConsentToRegisterBuildkit ($path) {
         $title = "Buildkit conf file not found at $path."
         $question = "Do you want to register buildkit service without containerd cni configuration?"
         $choices = '&Yes', '&No'
-        $consent = $Host.UI.PromptForChoice($title, $question, $choices, 0)
+        $consent = (Get-Host).UI.PromptForChoice($title, $question, $choices, 0)
 
-        $retry -- 
-        
+        $retry --
+
     } while (($retry -gt 0 ) -and ($consent -eq [ActionConsent]::No))
 
     return $consent
 }
 
-function CheckBuildkitdExists($buildkitPath) {
-    $cmdRes = Get-Command -Name "buildkitd.exe" -ErrorAction SilentlyContinue
-    $pathExists = Test-Path -Path "$BuildkitPath\buildkitd.exe"
+function Test-BuildkitdServiceExists($buildkitPath) {
+    $cmdRes = Get-Command -Name "buildkitd.exe" -ErrorAction Ignore
+    $pathExists = Test-Path -Path "$BuildkitPath\bin\buildkitd.exe"
 
     return ($cmdRes -or $pathExists)
 }
 
-function Unregister-Buildkitd {
-    $scQueryResult = (sc.exe query buildkitd) | Select-String -Pattern "SERVICE_NAME: buildkitd"
-    if (!$scQueryResult) {
-        Write-Warning "Containerd service does not exist as an installed service."
+function Unregister-Buildkitd($buildkitPath) {
+    if (!(Test-ServiceRegistered -Service 'buildkitd')) {
+        Write-Warning "Buildkitd service does not exist as an installed service."
         return
     }
+
     # Unregister buildkit service
-    buildkitd.exe --unregister-service
-    if ($LASTEXITCODE -gt 0) {
-        Throw "Could not unregister buildkitd service. $_"
+    $buildkitdExecutable = "$buildkitPath\bin\buildkitd.exe"
+    $output = Invoke-ExecutableCommand -Executable $buildkitdExecutable -Arguments "--unregister-service"
+    if ($output.ExitCode -ne 0) {
+        Throw "Could not unregister buildkitd service. $($output.StandardError.ReadToEnd())"
     }
     else {
         Start-Sleep -Seconds 15
     }
-
-    # # Delete buildkit service
-    # sc.exe delete buildkit
-    # if ($LASTEXITCODE -gt 0) {
-    #     Throw "Could not delete buildkitd service. $_"
-    # }
 }
 
 
@@ -271,5 +330,5 @@ Export-ModuleMember -Function Get-BuildkitLatestVersion
 Export-ModuleMember -Function Install-Buildkit
 Export-ModuleMember -Function Start-BuildkitdService -Alias Start-Buildkitd
 Export-ModuleMember -Function Stop-BuildkitdService -Alias Stop-Buildkitd
-Export-ModuleMember -Function Initialize-BuildkitdService 
-Export-ModuleMember -Function Uninstall-Buildkit
+Export-ModuleMember -Function Register-BuildkitdService -Alias Register-Buildkitd
+Export-ModuleMember -Function Uninstall-Buildkit, Uninstall-BuildkitHelper

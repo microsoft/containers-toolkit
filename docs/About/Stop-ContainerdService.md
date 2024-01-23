@@ -1,5 +1,5 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
@@ -8,6 +8,7 @@ schema: 2.0.0
 # Stop-ContainerdService
 
 ## SYNOPSIS
+
 Stops Containerd service.
 
 ## SYNTAX
@@ -30,21 +31,11 @@ Stop Containerd Service.
 PS C:\> Stop-ContainerdService
 ```
 
-## PARAMETERS 
-
-## INPUTS
-
-### None
-
-## OUTPUTS
-
-## NOTES
-
 ## RELATED LINKS
 
 - [Stop-Service](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/stop-service?view=powershell-7.3)
 - [Get-ContainerdLatestVersion](Get-ContainerdLatestVersion.md)
 - [Install-Containerd](Install-Containerd.md)
-- [Initialize-ContainerdService](Initialize-ContainerdService.md)
+- [Register-ContainerdService](Register-ContainerdService.md)
 - [Start-ContainerdService](Start-ContainerdService.md)
 - [Uninstall-Containerd](Uninstall-Containerd.md)

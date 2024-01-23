@@ -1,5 +1,5 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
@@ -31,21 +31,11 @@ Start Containerd Service.
 PS C:\> Start-ContainerdService
 ```
 
-## PARAMETERS
-
-## INPUTS
-
-### None
-
-## OUTPUTS
-
-## NOTES
-
 ## RELATED LINKS
 
 - [Start-Service](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-service?view=powershell-7.3)
 - [Get-ContainerdLatestVersion](Get-ContainerdLatestVersion.md)
 - [Install-Containerd](Install-Containerd.md)
-- [Initialize-ContainerdService](Initialize-ContainerdService.md)
+- [Register-ContainerdService](Register-ContainerdService.md)
 - [Stop-ContainerdService](Stop-ContainerdService.md)
 - [Uninstall-Containerd](Uninstall-Containerd.md)

@@ -1,5 +1,5 @@
-﻿---
-external help file: ContainerToolsForWindows.psm1-help.xml
+---
+external help file: ContainerToolsForWindows-help.xml
 Module Name: ContainerToolsForWindows
 online version:
 schema: 2.0.0
@@ -9,7 +9,7 @@ schema: 2.0.0
 
 ## SYNOPSIS
 
-Uninstalls Nerdctl.
+Uninstalls nerdctl.
 
 ## SYNTAX
 
@@ -19,13 +19,13 @@ Uninstall-Nerdctl [[-Path] <String>] [<CommonParameters>]
 
 ## DESCRIPTION
 
-To uninstall Nerdctl, the Nerdctl directory is deleted and Nerdctl is removed from the environment path.
+To uninstall nerdctl, the nerdctl directory is deleted and nerdctl is removed from the environment path.
 
 ## EXAMPLES
 
 ### Example 1
 
-Uninstall Nerdctl from the default path.
+Uninstall nerdctl from the default path.
 
 ```powershell
 PS C:\> Uninstall-Nerdctl
@@ -35,7 +35,7 @@ PS C:\> Uninstall-Nerdctl
 
 ### -Path
 
-Nerdctl path
+nerdctl path
 
 ```yaml
 Type: String
@@ -44,22 +44,10 @@ Aliases:
 
 Required: False
 Position: 0
-Default value: The Nerdctl path in the environment path variable or $Env:ProgramFiles\Nerdctl
+Default value: The nerdctl path in the environment path variable or $Env:ProgramFiles\Nerdctl
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
-
-### CommonParameters
-
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
-
-## INPUTS
-
-### None
-
-## OUTPUTS
-
-## NOTES
 
 ## RELATED LINKS
 
