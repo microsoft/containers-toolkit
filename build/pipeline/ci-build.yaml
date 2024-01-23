@@ -61,3 +61,9 @@ jobs:
         inputs:
           summaryFileLocation: "$(TestResultsDirectory)/coverage.xml"
           pathToSources: $(ModuleDirectory)
+
+      - task: PublishPipelineArtifact@1
+        inputs:
+          targetPath: $(ModuleDirectory)
+          publishLocation: 'pipeline'
+          artifact: 'PowerShell Module Files'
