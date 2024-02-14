@@ -17,53 +17,50 @@ ContainerToolsForWindows is a Windows PowerShell module for downloading, install
 ### Importing the module
 
 #### Option 1
-
-You can manually import this module using:
-
+Manually import this module using:
 ```PowerShell
 Import-Module -Name <absolute-path>\ContainerToolsForWindows.psd1 -Force
 ```
 
 #### Option 2
+Clone containers-toolkit into one of the folder locations in the `$env:PSModulePath` environment variable.
 
----
-**Option 2a:**
+To get a possible module path:
+```PowerShell
+$env:PSModulePath
+```
 
-1. Alternatively, you can add it to the Windows PowerShell module path. To get the possible module paths, use:
+```PowerShell
+cd <module path>
+git clone https://github.com/microsoft/containers-toolkit.git
+```
+```PowerShell
+Import-Module -Name ContainerToolsForWindows -Force
+```
 
-    ```PowerShell
-    $env:PSModulePath
-    ```
+#### Option 3
+Clone containers-toolkit to a folder location of choice and add the new module location to the Windows PowerShell module path
 
-2. Move the folder to any of the paths from the above PS command
+```PowerShell
+cd <module path>
+git clone https://github.com/microsoft/containers-toolkit.git
+```
+```PowerShell
+$env:PSModulePath += "$env:PSModulePath;<path-to-module-directory>"
+```
+```PowerShell
+Import-Module -Name ContainerToolsForWindows -Force
+```
 
-**Option 2b:**
+###Get the module details
 
-1. Add the location of the module directory to `$env:PSModulePath`
+```PowerShell
+Get-Help ContainerToolsForWindows
+```
 
-    ```PowerShell
-    $env:PSModulePath += "$env:PSModulePath;<path-to-module-directory>"
-    ```
-
-1. Reload the terminal or open a new terminal
-
----
-
-1. Import the module
-
-    ```PowerShell
-    Import-Module -Name ContainerToolsForWindows -Force
-    ```
-
-1. Get the module details
-
-    ```PowerShell
-    Get-Help ContainerToolsForWindows
-    ```
-
-    ```PowerShell
-    Get-Module -Name ContainerToolsForWindows
-    ```
+```PowerShell
+Get-Module -Name ContainerToolsForWindows
+```
 
 ### Command reference
 
