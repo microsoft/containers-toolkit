@@ -137,7 +137,7 @@ This project builds on work done by others to create a PowerShell module.
 - [containerd-installer](https://github.com/lippertmarkus/containerd-installer)
 - [Install MCR on Windows Servers](https://docs.mirantis.com/mcr/20.10/install/mcr-windows.html)
 - [Stevedore](https://github.com/slonopotamus/stevedore)
-- [setup_buildkitd_on_windows.ps1] <https://gist.github.com/gabriel-samfira/6e56238ad11c24f490ac109bdd378471>
+- [setup_buildkitd_on_windows.ps1](https://gist.github.com/gabriel-samfira/6e56238ad11c24f490ac109bdd378471)
 - [Windows Containers on Windows 10 without Docker (using Containerd)](https://www.jamessturtevant.com/posts/Windows-Containers-on-Windows-10-without-Docker-using-Containerd/)
 
 ## Container tools repositories
