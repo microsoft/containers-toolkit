@@ -25,6 +25,8 @@ Import-Module -Name <absolute-path>\ContainerToolsForWindows.psd1 -Force
 #### Option 2
 Clone containers-toolkit into one of the folder locations in the `$env:PSModulePath` environment variable.
 
+_NB: We are currently working on publishing this module to PS Gallery_
+
 To get a possible module path:
 ```PowerShell
 $env:PSModulePath
@@ -52,7 +54,7 @@ $env:PSModulePath += "$env:PSModulePath;<path-to-module-directory>"
 Import-Module -Name ContainerToolsForWindows -Force
 ```
 
-###Get the module details
+### Get the module details
 
 ```PowerShell
 Get-Help ContainerToolsForWindows
