@@ -1,9 +1,17 @@
+###########################################################################
+#                                                                         #
+#   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+#   This code is licensed under the MIT License (MIT).                    #
+#                                                                         #
+###########################################################################
+
 <#
 .SYNOPSIS
-Runs ContainerToolsForWindows module tests 
+Runs containers-toolkit module tests 
 
 .DESCRIPTION
-Runs ContainerToolsForWindows module tests.
+Runs containers-toolkit module tests.
 https://pester.dev/docs/commands/New-PesterConfiguration
 https://pester.dev/docs/usage/output
 
@@ -77,7 +85,7 @@ Import-Module -Name ThreadJob -Force
 ################### DISCONVER TESTS ###################
 #######################################################
 Write-Host "Discovering tests" -ForegroundColor DarkCyan
-$ModuleParentPath = "$RootDir\ContainerToolsForWindows"
+$ModuleParentPath = "$RootDir\containers-toolkit"
 $unitTests = Get-ChildItem -Path "$RootDir\Tests" -Filter "*.tests.ps1" -Recurse
 $array = @()
 

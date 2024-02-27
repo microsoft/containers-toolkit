@@ -1,4 +1,13 @@
-﻿$ModuleParentPath = Split-Path -Parent $PSScriptRoot
+﻿###########################################################################
+#                                                                         #
+#   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+#   This code is licensed under the MIT License (MIT).                    #
+#                                                                         #
+###########################################################################
+
+
+$ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\UpdateEnvironmentPath.psm1" -Force
 
 class ContainerTool {

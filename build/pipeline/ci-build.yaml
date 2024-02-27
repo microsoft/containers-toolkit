@@ -21,7 +21,7 @@ trigger:
 
 variables:
   - name: ModuleDirectory
-    value: $(Build.SourcesDirectory)\ContainerToolsForWindows
+    value: $(Build.SourcesDirectory)\Containers-Toolkit
   - name: ScriptsDirectory
     value: $(Build.SourcesDirectory)\build\scripts
   - name: TestResultsDirectory

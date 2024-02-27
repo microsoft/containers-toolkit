@@ -1,7 +1,16 @@
+###########################################################################
+#                                                                         #
+#   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+#   This code is licensed under the MIT License (MIT).                    #
+#                                                                         #
+###########################################################################
+
+
 Describe "AllToolsAllToolsUtilities.psm1" {
     BeforeAll {
         $RootPath = Split-Path -Parent $PSScriptRoot
-        $ModuleParentPath = Join-Path -Path $RootPath -ChildPath 'ContainerToolsForWindows'
+        $ModuleParentPath = Join-Path -Path $RootPath -ChildPath 'Containers-Toolkit'
         Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Public\ContainerdTools.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force

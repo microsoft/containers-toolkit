@@ -1,10 +1,10 @@
 ﻿TOPIC
-    ContainerToolsForWindows contains PowerShell functions that allow you to
+    Containers-Toolkit contains PowerShell functions that allow you to
     download, install, and configure Containerd, Buildkit, Nerdctl, and Windows
     CNI for container networks.
 
 SHORT DESCRIPTION
-    ContainerToolsForWindows contains PowerShell functions that allow you to
+    Containers-Toolkit contains PowerShell functions that allow you to
     download, install, and configure Containerd, Buildkit, Nerdctl, and Windows
     CNI for container networks.
 
@@ -17,7 +17,7 @@ LONG DESCRIPTION
     allow you to get started with interacting with the tools. Further
     configurations may be necessary.
     You can find documentation for these functions here:
-        "https://github.com/.../ContainerToolsForWindows/docs/command-reference.md"
+        "https://github.com/microsoft/containers-toolkit/tree/main/docs/command-reference.md"
 
 KEYWORDS
     - Containerd

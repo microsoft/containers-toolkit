@@ -1,10 +1,8 @@
 ﻿###########################################################################
 #                                                                         #
-#   Module Name: containerd.psm1                                          #
-#                                                                         #
-#   Description: Wrappers for containerd setup functions.                 #
-#                                                                         #
 #   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+#   This code is licensed under the MIT License (MIT).                    #
 #                                                                         #
 ###########################################################################
 
@@ -90,7 +88,7 @@ function Install-Containerd {
     }
 
     if ($showCommands) {
-        $commands = (Get-command -Name '*containerd*' | Where-Object { $_.Source -like 'containerToolsForWindows' -and $_.Name -ne 'Install-Containerd' }).Name
+        $commands = (Get-command -Name '*containerd*' | Where-Object { $_.Source -like 'Containers-Toolkit' -and $_.Name -ne 'Install-Containerd' }).Name
         $message = "Other useful Containerd commands: $($commands -join ', ').`nTo learn more about each command, run Get-Help <command-name>, e.g., 'Get-Help Register-ContainerdService'"
         Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
     }
@@ -186,7 +184,7 @@ function Uninstall-Containerd {
             Throw "Could not uninstall $tool. $_"
         }
     }
-    else{
+    else {
         Throw "$tool uninstallation cancelled."
     }
 }

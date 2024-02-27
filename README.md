@@ -10,24 +10,30 @@
 
 ## Introduction
 
-ContainerToolsForWindows is a Windows PowerShell module for downloading, installing, and setting up default configs for Containerd, BuildKit, Windows CNI plugin, and nerdctl.
+Containers-Toolkit is a Windows PowerShell module for downloading, installing, and setting up default configs for Containerd, BuildKit, Windows CNI plugin, and nerdctl.
 
 ## Usage
 
 ### Importing the module
 
+> COMING SOON: We are currently working on publishing this module to PS Gallery to make it easier to import the module
+
 #### Option 1
+
 Manually import this module using:
+
 ```PowerShell
-Import-Module -Name <absolute-path>\ContainerToolsForWindows.psd1 -Force
+Import-Module -Name <absolute-path>\containers-toolkit.psd1 -Force
 ```
 
+Containers-Toolkit
+
 #### Option 2
+
 Clone containers-toolkit into one of the folder locations in the `$env:PSModulePath` environment variable.
 
-_NB: We are currently working on publishing this module to PS Gallery_
-
 To get a possible module path:
+
 ```PowerShell
 $env:PSModulePath
 ```
@@ -36,32 +42,33 @@ $env:PSModulePath
 cd <module path>
 git clone https://github.com/microsoft/containers-toolkit.git
 ```
+
 ```PowerShell
-Import-Module -Name ContainerToolsForWindows -Force
+Import-Module -Name containers-toolkit -Force
 ```
 
 #### Option 3
+
 Clone containers-toolkit to a folder location of choice and add the new module location to the Windows PowerShell module path
 
 ```PowerShell
 cd <module path>
 git clone https://github.com/microsoft/containers-toolkit.git
-```
-```PowerShell
+
+
 $env:PSModulePath += "$env:PSModulePath;<path-to-module-directory>"
-```
-```PowerShell
-Import-Module -Name ContainerToolsForWindows -Force
+
+Import-Module -Name containers-toolkit -Force
 ```
 
 ### Get the module details
 
 ```PowerShell
-Get-Help ContainerToolsForWindows
+Get-Help containers-toolkit
 ```
 
 ```PowerShell
-Get-Module -Name ContainerToolsForWindows
+Get-Module -Name containers-toolkit
 ```
 
 ### Command reference
@@ -72,7 +79,7 @@ Get-Module -Name ContainerToolsForWindows
 #### List of available commands
 
 ```PowerShell
-Get-Command -Module ContainerToolsForWindows
+Get-Command -Module containers-toolkit
 ```
 
 ### Examples
@@ -97,7 +104,7 @@ Get-Command -Module ContainerToolsForWindows
 
 ### Important Notes
 
-To use these tools (Containerd, BuildKit, and nerdCtl), ensure that Containers and HyperV Windows features are enabled.
+To use these tools (Containerd, BuildKit, and nerdctl), ensure that Containers and HyperV Windows features are enabled.
 
 To get the features to enable, use:
 
@@ -115,18 +122,18 @@ Enable-WindowsOptionalFeature -Online -FeatureName '<Feature-Name-Here>' -All -N
 
 ## TODO
 
-- [ ] Rename this module to containerstoolkit: The current name for this module might cause confusion with repository named windows-containers-tools
 - [ ] Pipeline configuration
 - [ ] Publish module to PSGallery
 - [ ] Fix Code analysis warnings
-- [ ] Rootless installation
 - [ ] Dev install: (Hacks) Add functions in Containerd and BuildKit to build from source files. (Is this really necessary? May be an overkill)
+- [x] Rename this module to containerstoolkit: The current name for this module might cause confusion with repository named windows-containers-tools
 - [x] Update README.md (Documentation)
-- [x] Update ContainerToolsForWindows/ContainerToolsForWindows.Format.ps1xml (Documentation)
-- [x] Update ContainerToolsForWindows/en-US/about_ContainerToolsForWindows.help.txt (Documentation)
-- [x] Use latest version in download
+- [x] Update containers-toolkit/containers-toolkit.Format.ps1xml (Documentation)
+- [x] Update Containers-Toolkit/Containers-ToolkitlsForWindows.help.txt (Documentation)
+- [x] Use latContainers-Toolkit
 - [x] Add Pester test
 - [x] Replace GitHub username in URL: <https://github.com/...>
+- [ ] ~~Rootless installation~~: Not needed for Windows
 
 ## Contribution
 

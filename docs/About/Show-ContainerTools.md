@@ -1,6 +1,6 @@
 ---
-external help file: ContainerToolsForWindows-help.xml
-Module Name: ContainerToolsForWindows
+external help file: Containers-Toolkit-help.xml
+Module Name: Containers-Toolkit
 online version:
 schema: 2.0.0
 ---
@@ -77,4 +77,4 @@ Returns an array of [PSCustomObject](https://learn.microsoft.com/en-us/dotnet/ap
 
 ## RELATED LINKS
 
-- [Container Tools For Windows](ContainerToolsForWindows.md)
+- [Container Tools For Windows](Containers-Toolkit.md)

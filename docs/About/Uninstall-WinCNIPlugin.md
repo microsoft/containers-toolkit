@@ -1,6 +1,6 @@
 ---
 external help file: ContainerNetworkTools.psm1-help.xml
-Module Name: ContainerToolsForWindows
+Module Name: Containers-Toolkit
 online version:
 schema: 2.0.0
 ---

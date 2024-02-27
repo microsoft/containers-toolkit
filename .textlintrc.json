@@ -15,7 +15,7 @@
                 "/\\$[\\w]+(:\\w)?/g", // PowerShell variables
                 "/-\\w+\\b/g", // FIXME: PowerShell Cmdlets/function parameter names
                 "/\\b\\w+[./]\\w+\\b/g", // paths // FIXME: Does not work for \ in paths
-                "ContainerToolsForWindows",
+                "containers-toolkit",
                 "PowerShell",
                 "/Cmdlets/i",
                 "Containerd",

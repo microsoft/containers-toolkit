@@ -1,4 +1,12 @@
-﻿function Update-EnvironmentPath {
+﻿###########################################################################
+#                                                                         #
+#   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+#   This code is licensed under the MIT License (MIT).                    #
+#                                                                         #
+###########################################################################
+
+function Update-EnvironmentPath {
     param (
         [parameter(HelpMessage = "Name of the tool add or remove from env path")]
         [string] $Tool,

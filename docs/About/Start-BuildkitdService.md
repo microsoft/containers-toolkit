@@ -1,6 +1,6 @@
 ---
-external help file: ContainerToolsForWindows-help.xml
-Module Name: ContainerToolsForWindows
+external help file: Containers-Toolkit-help.xml
+Module Name: Containers-Toolkit
 online version:
 schema: 2.0.0
 ---
