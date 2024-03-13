@@ -1,9 +1,10 @@
----
-external help file: Containers-Toolkit-help.xml
-Module Name: Containers-Toolkit
+﻿---
+external help file: containers-toolkit-help.xml
+Module Name: containers-toolkit
 online version:
 schema: 2.0.0
 ---
+
 
 # Uninstall-Buildkit
 
@@ -14,7 +15,7 @@ Uninstalls BuildKit.
 ## SYNTAX
 
 ```
-Uninstall-Buildkit [[-Path] <String>] [<CommonParameters>]
+Uninstall-Buildkit [[-Path] <String>] [-Force] [-WhatIf] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -33,6 +34,22 @@ PS C:\> Uninstall-Buildkit
 
 ## PARAMETERS
 
+### -Force
+
+Bypass confirmation to uninstall BuildKit
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -Path
 
 BuildKit path
@@ -45,6 +62,22 @@ Aliases:
 Required: False
 Position: 0
 Default value: The Buildkit path in the environment path variable or `$Env:ProgramFiles\Buildkit`
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+
+Shows what would happen if the cmdlet runs. The cmdlet isn't run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: Setup
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

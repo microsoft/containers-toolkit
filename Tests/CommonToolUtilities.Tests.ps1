@@ -13,7 +13,7 @@ Describe "CommonToolUtilities.psm1" {
         $ModuleParentPath = Join-Path -Path $RootPath -ChildPath 'Containers-Toolkit'
         Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Private\UpdateEnvironmentPath.psm1" -Force
-    
+
         $DownloadPath = "TestDrive:\Download"
         New-Item -Path $DownloadPath -ItemType Directory -Force | Out-Null
 
@@ -64,7 +64,7 @@ Describe "CommonToolUtilities.psm1" {
         AfterEach {
             Get-ChildItem $TestDrive | Remove-Item -Recurse -Force
         }
-            
+
         It "Should return true if directory does not exist" {
             Test-EmptyDirectory -Path $testFolder | Should -Be $true
 
@@ -99,7 +99,7 @@ Describe "CommonToolUtilities.psm1" {
             Mock Invoke-WebRequest { } -ModuleName "CommonToolUtilities"
 
             $sampleJob = New-MockObject -Type 'ThreadJob.ThreadJob' -Properties @{ JobStateInfo = 'Completed' }
-            Mock Start-ThreadJob -ModuleName "CommonToolUtilities" -MockWith { return $sampleJob } 
+            Mock Start-ThreadJob -ModuleName "CommonToolUtilities" -MockWith { return $sampleJob }
             Mock Wait-Job -ModuleName "CommonToolUtilities"
             Mock Receive-Job -ModuleName "CommonToolUtilities"
             Mock Remove-Job -ModuleName "CommonToolUtilities"
@@ -119,7 +119,7 @@ Describe "CommonToolUtilities.psm1" {
             Should -Invoke Invoke-WebRequest -Exactly 1 -Scope It -ModuleName "CommonToolUtilities"
             Should -Invoke Start-ThreadJob  -Exactly 0 -Scope It -ModuleName "CommonToolUtilities"
         }
-        
+
         It "Should successfully download muliple files asynchronously" {
 
             $files = @(
@@ -148,7 +148,7 @@ Describe "CommonToolUtilities.psm1" {
             Should -Invoke Start-ThreadJob -Exactly 2 -Scope It -ModuleName "CommonToolUtilities"
             Should -Invoke Receive-Job -Exactly 2 -Scope It -ModuleName "CommonToolUtilities"
         }
-        
+
         It "Should throw an error if download fails" {
             $params = @{
                 Feature      = "Containerd"
@@ -183,7 +183,7 @@ Describe "CommonToolUtilities.psm1" {
                     }) }
             Get-DefaultInstallPath -Tool buildkit | Should -Be 'C:\ProgramData\Buildkit'
         }
-        
+
         It "Should return the default path for a tool binaries are not in the environment path" {
             Mock Get-Command { } -ModuleName "CommonToolUtilities"
             Get-DefaultInstallPath -Tool containerd | Should -Be "$Env:ProgramFiles\Containerd"
@@ -222,7 +222,7 @@ Describe "CommonToolUtilities.psm1" {
             # Check that clean up is done on completion
             Should -Invoke Remove-Item  -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter { $Path -eq $params.DownloadPath }
         }
-        
+
         It "should not remove items if cleanup is false" {
             $params = @{
                 Feature      = "containerd"
@@ -234,12 +234,12 @@ Describe "CommonToolUtilities.psm1" {
             Install-RequiredFeature @params
             Should -Invoke Remove-Item -ModuleName "CommonToolUtilities" -Times 0 -Scope It
         }
-        
+
         It "should throw an error if tar command fails" {
-            $obj = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ 
+            $obj = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{
                 ExitCode      = 1
-                StandardError = New-MockObject -Type 'System.IO.StreamReader' -Methods @{ 
-                    ReadToEnd = { return "Error message" } 
+                StandardError = New-MockObject -Type 'System.IO.StreamReader' -Methods @{
+                    ReadToEnd = { return "Error message" }
                 }
             }
             Mock Invoke-ExecutableCommand -ModuleName "CommonToolUtilities" -MockWith { return $obj }
@@ -250,7 +250,7 @@ Describe "CommonToolUtilities.psm1" {
                 EnvPath      = "$ProgramFiles\Containerd\bin"
                 cleanup      = $false
             }
-            
+
             { Install-RequiredFeature @params } | Should -Throw "Could not untar file $($params.DownloadPath) at $($params.InstallPath). Error message"
         }
     }
@@ -266,7 +266,7 @@ Describe "CommonToolUtilities.psm1" {
         It "Should return false if user does not consent to uninstall" {
             $noValue = [ActionConsent]::No.value__
             Mock Get-Host -ModuleName "CommonToolUtilities" -MockWith { return [UITest]::new($noValue) }
-            $result = Uninstall-ContainerToolConsent -Tool 'Tool' -Path "TestDrive:\Tool"           
+            $result = Uninstall-ContainerToolConsent -Tool 'Tool' -Path "TestDrive:\Tool"
             $result | Should -BeFalse
         }
     }
@@ -282,7 +282,7 @@ Describe "CommonToolUtilities.psm1" {
             # Assert
             @("User", "System") | ForEach-Object {
                 Should -Invoke Update-EnvironmentPath -ModuleName 'CommonToolUtilities' `
-                    -Times 1 -Exactly -Scope It -ParameterFilter { 
+                    -Times 1 -Exactly -Scope It -ParameterFilter {
                     $Tool -eq "Tool" -and
                     $Path -eq $testPathToAdd -and
                     $Action -eq 'Add' -and
@@ -302,8 +302,8 @@ Describe "CommonToolUtilities.psm1" {
             # Assert
             @("User", "System") | ForEach-Object {
                 Should -Invoke Update-EnvironmentPath -ModuleName 'CommonToolUtilities' `
-                    -Times 1 -Exactly -Scope It -ParameterFilter { 
-                    $Tool -eq "Tool" -and 
+                    -Times 1 -Exactly -Scope It -ParameterFilter {
+                    $Tool -eq "Tool" -and
                     $Path -eq $null -and
                     $Action -eq 'Remove' -and
                     $PathType -eq $_
@@ -328,23 +328,23 @@ Describe "CommonToolUtilities.psm1" {
 
             { Invoke-ServiceAction -Action 'Start' -Service 'MockService' } | Should -Throw "MockService service does not exist as an installed service."
         }
-        
+
         It "Should successfully start service" {
             Mock Start-Service -ModuleName "CommonToolUtilities"
 
             Invoke-ServiceAction -Action 'Start' -Service 'MockService'
-        
+
             Should -Invoke Get-Service -ModuleName "CommonToolUtilities" -ParameterFilter { $Name -like "MockService" }
             Should -Invoke Start-Service -ModuleName "CommonToolUtilities" -ParameterFilter { $Name -like "MockService" }
         }
-        
+
         It "Should successfully stop service" {
             Mock Stop-Service -ModuleName "CommonToolUtilities"
 
             Invoke-ServiceAction -Action 'Stop' -Service 'MockService'
             Should -Invoke Stop-Service -ModuleName "CommonToolUtilities" -ParameterFilter { $Name -like "MockService" }
         }
-        
+
         It "Should throw an error if invoked action fails" {
             Mock Start-Service -ModuleName "CommonToolUtilities" -MockWith { Throw 'Error Message.' }
 

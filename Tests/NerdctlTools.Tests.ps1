@@ -12,7 +12,14 @@ Describe "NerdctlTools.psm1" {
         $RootPath = Split-Path -Parent $PSScriptRoot
         $ModuleParentPath = Join-Path -Path $RootPath -ChildPath 'Containers-Toolkit'
         Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
+        Import-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1"
+        Import-Module -Name "$ModuleParentPath\Public\ContainerdTools.psm1"
+        Import-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1"
         Import-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1" -Force
+    }
+
+    AfterEach {
+        $ENV:PESTER = $false
     }
 
     AfterAll {
@@ -28,107 +35,164 @@ Describe "NerdctlTools.psm1" {
             Mock Install-RequiredFeature -ModuleName 'NerdctlTools'
             Mock Get-Command -ModuleName 'NerdctlTools'
             Mock Get-ChildItem -ModuleName 'NerdctlTools'
+            Mock Test-EmptyDirectory  -ModuleName 'NerdctlTools' -MockWith { return $true }
+            Mock Install-Containerd -ModuleName 'NerdctlTools'
+            Mock Install-Buildkit -ModuleName 'NerdctlTools'
+            Mock Install-WinCNIPlugin -ModuleName 'NerdctlTools'
+            Mock Install-Nerdctl -ModuleName 'NerdctlTools'
 
-            $NerdctlRepo = 'https://github.com/containerd/nerdctl/releases/download'
+            $nerdctlRepo = 'https://github.com/containerd/nerdctl/releases/download'
+        }
+
+        It 'Should not process on implicit request for validation (WhatIfPreference)' {
+            {
+                $WhatIfPreference = $true
+                Install-Nerdctl
+            }
+            Should -Invoke -CommandName Install-Nerdctl -ModuleName 'NerdctlTools' -Exactly -Times 0 -Scope It
+        }
+
+        It 'Should not process on explicit request for validation (-WhatIf)' {
+            { Install-Nerdctl -WhatIf }
+            Should -Invoke -CommandName Install-Nerdctl -ModuleName 'NerdctlTools' -Exactly -Times 0 -Scope It
         }
 
         It "Should use defaults" {
-            Install-Nerdctl
+            Install-Nerdctl -Force -Confirm:$false
 
-            Should -Invoke Uninstall-Nerdctl -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It `
-                -ParameterFilter { $Path -eq "$Env:ProgramFiles\Nerdctl" }
+            Should -Invoke Uninstall-Nerdctl -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFiles -ModuleName 'NerdctlTools' -ParameterFilter {
                 $Files -like @(
                     @{
-                        Feature      = "Nerdctl"
-                        Uri          = "$NerdctlRepo/v7.9.8/nerdctl-7.9.8-windows-amd64.tar.gz"
+                        Feature      = "nerdctl"
+                        Uri          = "$nerdctlRepo/v7.9.8/nerdctl-7.9.8-windows-amd64.tar.gz"
                         Version      = '7.9.8'
                         DownloadPath = "$HOME\Downloads\nerdctl-7.9.8-windows-amd64.tar.gz"
                     }
                 )
             }
             Should -Invoke Install-RequiredFeature -ModuleName 'NerdctlTools' -ParameterFilter {
-                $Feature -eq "Nerdctl"
-                $InstallPath -eq "$Env:ProgramFiles\Nerdctl"
+                $Feature -eq "nerdctl"
+                $InstallPath -eq "$Env:ProgramFiles\nerdctl"
                 $DownloadPath -eq "$HOME\Downloads\nerdctl-7.9.8-windows-amd64.tar.gz"
-                $EnvPath -eq "$Env:ProgramFiles\Nerdctl\bin" 
+                $EnvPath -eq "$Env:ProgramFiles\nerdctl\bin"
                 $cleanup -eq $true
             }
-        }
-        
-        It "Should call function with user-specified values" {
-            Install-Nerdctl -Version '1.2.3' -InstallPath 'TestDrive:\Nerdctl' -DownloadPath 'TestDrive:\Downloads'
 
-            Should -Invoke Uninstall-Nerdctl -ModuleName 'NerdctlTools' `
-                -ParameterFilter { $Path -eq 'TestDrive:\Nerdctl' }
+            Should -Invoke Install-Containerd -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
+            Should -Invoke Install-Buildkit -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
+            Should -Invoke Install-WinCNIPlugin -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
+        }
+
+        It "Should call function with user-specified values" {
+            Install-Nerdctl -Version '1.2.3' -InstallPath 'TestDrive:\nerdctl' -DownloadPath 'TestDrive:\Downloads' -Dependencies 'containerd' -Force -Confirm:$false
+
+            Should -Invoke Uninstall-Nerdctl -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFiles -ModuleName 'NerdctlTools' -ParameterFilter {
                 $Files -like @(
                     @{
-                        Feature      = "Nerdctl"
-                        Uri          = "$NerdctlRepo/v1.2.3/nerdctl-1.2.3-windows-amd64.tar.gz"
+                        Feature      = "nerdctl"
+                        Uri          = "$nerdctlRepo/v1.2.3/nerdctl-1.2.3-windows-amd64.tar.gz"
                         Version      = '1.2.3'
                         DownloadPath = "$HOME\Downloads"
                     }
                 )
             }
             Should -Invoke Install-RequiredFeature -ModuleName 'NerdctlTools' -ParameterFilter {
-                $Feature -eq "Nerdctl"
-                $InstallPath -eq 'TestDrive:\Nerdctl'
+                $Feature -eq "nerdctl"
+                $InstallPath -eq 'TestDrive:\nerdctl'
                 $DownloadPath -eq 'TestDrive:\Downloads\nerdctl-1.2.3-windows-amd64.tar.gz'
-                $EnvPath -eq 'TestDrive:\Nerdctl\bin'
+                $EnvPath -eq 'TestDrive:\nerdctl\bin'
                 $cleanup -eq $true
             }
+
+            Should -Invoke Install-Containerd -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It
+            Should -Invoke Install-Buildkit -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
+            Should -Invoke Install-WinCNIPlugin -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
+        }
+
+        It "Should uninstall tool if it is already installed" {
+            Mock Test-EmptyDirectory -ModuleName 'NerdctlTools' -MockWith { return $false }
+
+            Install-Nerdctl -Force -Confirm:$false
+
+            Should -Invoke Uninstall-Nerdctl -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It `
+                -ParameterFilter { $Path -eq "$Env:ProgramFiles\nerdctl" }
+        }
+
+        It "Should throw an error if uninstallation fails" {
+            Mock Test-EmptyDirectory -ModuleName 'NerdctlTools' -MockWith { return $false }
+            Mock Uninstall-Nerdctl -ModuleName 'NerdctlTools' -MockWith { throw 'Error' }
+
+            { Install-Nerdctl -Confirm:$false } | Should -Throw "nerdctl installation failed. Error"
+        }
+
+        It "Should install all dependencies if 'All' is specified" {
+            Install-Nerdctl -Dependencies 'All' -Confirm:$false
+
+            Should -Invoke Install-Containerd -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It
+            Should -Invoke Install-Buildkit -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It
+            Should -Invoke Install-WinCNIPlugin -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It
+        }
+
+        It "Should install specified dependencies" {
+            Install-Nerdctl -Dependencies 'containerd' -Confirm:$false
+
+            Should -Invoke Install-Containerd -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It
+            Should -Invoke Install-Buildkit -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
+            Should -Invoke Install-WinCNIPlugin -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
         }
     }
 
     Context "Uninstall-Nerdctl" -Tag "Uninstall-Nerdctl" {
         BeforeAll {
-            Mock Get-DefaultInstallPath -ModuleName 'NerdctlTools' -MockWith { return 'TestDrive:\Program Files\Nerdctl' }
+            Mock Get-DefaultInstallPath -ModuleName 'NerdctlTools' -MockWith { return 'TestDrive:\Program Files\nerdctl' }
             Mock Test-EmptyDirectory -ModuleName 'NerdctlTools' -MockWith { return  $false }
             Mock Uninstall-ContainerToolConsent -ModuleName 'NerdctlTools' -MockWith { return $true }
             Mock Remove-Item -ModuleName 'NerdctlTools'
             Mock Remove-FeatureFromPath -ModuleName 'NerdctlTools'
         }
 
-        It "Should successfully uninstall Nerdctl" {
+        It "Should successfully uninstall nerdctl" {
             Mock Uninstall-NerdctlHelper -ModuleName 'NerdctlTools'
 
-            Uninstall-Nerdctl -Path 'TestDrive:\Program Files\Nerdctl'
+            Uninstall-Nerdctl -Path 'TestDrive:\Program Files\nerdctl' -Force
 
             Should -Invoke Uninstall-NerdctlHelper -Times 1 -Scope It -ModuleName "NerdctlTools" `
-                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Nerdctl' }
+                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\nerdctl' }
         }
 
-        It "Should successfully uninstall Nerdctl from default path" {
+        It "Should successfully uninstall nerdctl from default path" {
             Mock Uninstall-NerdctlHelper -ModuleName 'NerdctlTools'
-            
-            Uninstall-Nerdctl
+
+            Uninstall-Nerdctl -Force
 
             Should -Invoke Uninstall-NerdctlHelper -Times 1 -Scope It -ModuleName "NerdctlTools" `
-                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Nerdctl' }
+                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\nerdctl' }
         }
 
-        It "Should throw an error if user does not consent to uninstalling Nerdctl" {
+        It "Should throw an error if user does not consent to uninstalling nerdctl" {
             Mock Uninstall-ContainerToolConsent -ModuleName 'NerdctlTools' -MockWith { return $false }
 
-            { Uninstall-Nerdctl -Path 'TestDrive:\Program Files\Nerdctl' } | Should -Throw 'Nerdctl uninstallation cancelled.'
+            $ENV:PESTER = $true
+            { Uninstall-Nerdctl -Path 'TestDrive:\Program Files\nerdctl'-Force:$false } | Should -Throw 'nerdctl uninstallation cancelled.'
         }
-        
+
         It "Should do nothing if nerdctl is not installed at specified path" {
             Mock Test-EmptyDirectory -ModuleName 'NerdctlTools' -MockWith { return $true }
 
-            Uninstall-Nerdctl
+            Uninstall-Nerdctl -Force
             Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "NerdctlTools"
-            Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "NerdctlTools" 
+            Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "NerdctlTools"
         }
 
-        It "Should successfully call uninstall Nerdctl helper function" {
-            Uninstall-NerdctlHelper -Path 'TestDrive:\Program Files\Nerdctl'
+        It "Should successfully call uninstall nerdctl helper function" {
+            Uninstall-NerdctlHelper -Path 'TestDrive:\Program Files\nerdctl'
 
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "NerdctlTools" `
-                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Nerdctl' }
+                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\nerdctl' }
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "NerdctlTools" `
-                -ParameterFilter { $Path -eq "$ENV:ProgramData\Nerdctl" }
+                -ParameterFilter { $Path -eq "$ENV:ProgramData\nerdctl" }
             Should -Invoke Remove-FeatureFromPath -Times 1 -Scope It -ModuleName "NerdctlTools" `
                 -ParameterFilter { $Feature -eq "nerdctl" }
         }
@@ -136,9 +200,9 @@ Describe "NerdctlTools.psm1" {
         It "Should write an error if nerdctl is not installed at specified path" {
             Mock Test-EmptyDirectory -ModuleName 'NerdctlTools' -MockWith { return $true }
 
-            Uninstall-NerdctlHelper -Path 'TestDrive:\Program Files\Nerdctl'
+            Uninstall-NerdctlHelper -Path 'TestDrive:\Program Files\nerdctl'
 
-            $Error[0].Exception.Message | Should -BeExactly 'Nerdctl does not exist at TestDrive:\Program Files\Nerdctl or the directory is empty.'
+            $Error[0].Exception.Message | Should -BeExactly 'nerdctl does not exist at TestDrive:\Program Files\nerdctl or the directory is empty.'
         }
     }
 }

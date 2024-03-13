@@ -14,7 +14,8 @@ Downloads and installs Containerd.
 ## SYNTAX
 
 ```
-Install-Containerd [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-Setup] [<CommonParameters>]
+Install-Containerd [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-Setup] [-Force]
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -49,6 +50,25 @@ PS C:\> Install-Containerd -Version "1.7.7" -InstallPath 'C:\Test\Path\Container
 
 ## PARAMETERS
 
+### -Confirm
+
+Prompts for confirmation before running the cmdlet. For more information, see the following articles:
+
+- [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference)
+- [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact)
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -DownloadPath
 
 Path to download files. Defaults to user's Downloads folder
@@ -65,9 +85,25 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Force
+
+Installs Containerd even if the tool already exists at the specified path.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -InstallPath
 
-Path to install Containerd. Defaults to `$ENV:ProramFiles\containerd`
+Path to install Containerd. Defaults to Defaults to `$ENV:ProramFiles\containerd`
 
 ```yaml
 Type: String
@@ -76,7 +112,23 @@ Aliases:
 
 Required: False
 Position: 1
-Default value: $ENV:ProramFiles\containerd
+Default value:  $ENV:ProramFiles\containerd
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Setup
+
+Register and start Containerd Service once Containerd installation is done
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -97,18 +149,18 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Setup
+### -WhatIf
 
-Register and start Containerd Service once Containerd installation is done
+Shows what would happen if the cmdlet runs. The cmdlet isn't run.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: (All)
+Parameter Sets: Setup
 Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

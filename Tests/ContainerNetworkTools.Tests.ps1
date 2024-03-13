@@ -15,6 +15,10 @@ Describe "ContainerNetworkTools.psm1" {
         Import-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1" -Force
     }
 
+    AfterEach {
+        $ENV:PESTER = $false
+    }
+
     AfterAll {
         Get-ChildItem -Path 'TestDrive:\' | Remove-Item -Recurse -Force
 
@@ -30,15 +34,30 @@ Describe "ContainerNetworkTools.psm1" {
             Mock Get-InstallationFiles -ModuleName 'ContainerNetworkTools'
             Mock Expand-Archive -ModuleName 'ContainerNetworkTools'
             Mock Remove-Item -ModuleName 'ContainerNetworkTools'
+            Mock Test-EmptyDirectory  -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
+            Mock Install-ContainerToolConsent -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
+            Mock Install-WinCNIPlugin -ModuleName 'ContainerNetworkTools'
 
             $WinCNIRepo = 'https://github.com/microsoft/windows-container-networking/releases/download'
         }
-        
+
+        It 'Should not process on implicit request for validation (WhatIfPreference)' {
+            {
+                $WhatIfPreference = $true
+                Install-WinCNIPlugin
+            }
+            Should -Invoke -CommandName Install-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -Exactly -Times 0 -Scope It
+        }
+
+        It 'Should not process on explicit request for validation (-WhatIf)' {
+            { Install-WinCNIPlugin -WhatIf }
+            Should -Invoke -CommandName Install-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -Exactly -Times 0 -Scope It
+        }
+
         It "Should use defaults" {
-            Install-WinCNIPlugin
-            
-            Should -Invoke Uninstall-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -Times 1 -Exactly -Scope It `
-                -ParameterFilter { $Path -eq "$Env:ProgramFiles\Containerd\cni" }
+            Install-WinCNIPlugin -Force -Confirm:$false
+
+            Should -Invoke Uninstall-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -Times 0 -Exactly -Scope It
 
             $MockZipFileName = 'windows-container-networking-cni-amd64-v1.0.0.zip'
             Should -Invoke Get-InstallationFiles -ModuleName 'ContainerNetworkTools' -ParameterFilter {
@@ -59,12 +78,11 @@ Describe "ContainerNetworkTools.psm1" {
                 $Path -eq "$HOME\Downloads\$MockZipFileName"
             }
         }
-        
-        It "Should call function with user-specified values" {
-            Install-WinCNIPlugin -WinCNIVersion '1.2.3' -WinCNIPath 'TestDrive:\WinCNI\bin'
 
-            Should -Invoke Uninstall-WinCNIPlugin -ModuleName 'ContainerNetworkTools' `
-                -ParameterFilter { $Path -eq 'TestDrive:\WinCNI' }
+        It "Should call function with user-specified values" {
+            Install-WinCNIPlugin -WinCNIVersion '1.2.3' -WinCNIPath 'TestDrive:\WinCNI\bin' -Force -Confirm:$false
+
+            Should -Invoke Uninstall-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -Times 0 -Exactly -Scope It
 
             $MockZipFileName = 'windows-container-networking-cni-amd64-v1.2.3.zip'
             Should -Invoke Get-InstallationFiles -ModuleName 'ContainerNetworkTools' -ParameterFilter {
@@ -85,54 +103,71 @@ Describe "ContainerNetworkTools.psm1" {
                 $Path -eq "$HOME\Downloads\$MockZipFileName"
             }
         }
+
+        It "Should uninstall tool if it is already installed" {
+            Mock Test-EmptyDirectory -ModuleName 'ContainerNetworkTools' -MockWith { return $false }
+
+            Install-WinCNIPlugin -Force -Confirm:$false
+
+            Should -Invoke Uninstall-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -Times 1 -Exactly -Scope It `
+                -ParameterFilter { $Path -eq "$Env:ProgramFiles\Containerd\cni" }
+        }
+
+        It "Should throw an error if uninstallation fails" {
+            Mock Test-EmptyDirectory -ModuleName 'ContainerNetworkTools' -MockWith { return $false }
+            Mock Uninstall-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -MockWith { throw 'Error' }
+
+            { Install-WinCNIPlugin -Confirm:$false } | Should -Throw "Windows CNI plugin installation failed. Error"
+        }
     }
-    
+
     Context "Initialize-NatNetwork" -Tag "Initialize-NatNetwork" {
         BeforeAll {
             Mock Get-DefaultInstallPath -ModuleName 'ContainerNetworkTools' -MockWith { return 'TestDrive:\Program Files\Containerd' }
+            Mock Get-NetRoute -ModuleName 'ContainerNetworkTools' -MockWith { @{NextHop = "99.2.0.8" } }
             Mock Test-EmptyDirectory -ModuleName 'ContainerNetworkTools' -MockWith { return $false }
             Mock Get-WinCNILatestVersion { return '1.0.0' } -ModuleName 'ContainerNetworkTools'
             Mock Get-Module -ModuleName 'ContainerNetworkTools' -MockWith { return @{} }
             Mock Import-Module -ModuleName 'ContainerNetworkTools'
             Mock Get-HnsNetwork -ModuleName 'ContainerNetworkTools'
             Mock New-HNSNetwork -ModuleName 'ContainerNetworkTools'
-            Mock Get-NetRoute -ModuleName 'ContainerNetworkTools' -MockWith { @{NextHop = "99.2.0.8" } }
+            Mock Restart-Service -ModuleName 'ContainerNetworkTools'
         }
 
         It "Should use defaults" {
-            Initialize-NatNetwork
+            Initialize-NatNetwork -Force
 
-            Should -Invoke Import-Module -ModuleName 'ContainerNetworkTools' 
-            Should -Invoke Get-NetRoute -ModuleName 'ContainerNetworkTools' 
-            Should -Invoke New-HNSNetwork -ModuleName 'ContainerNetworkTools' -ParameterFilter { 
-                $Name -eq 'NAT' 
+            Should -Invoke Import-Module -ModuleName 'ContainerNetworkTools'
+            Should -Invoke Get-NetRoute -ModuleName 'ContainerNetworkTools'
+            Should -Invoke New-HNSNetwork -ModuleName 'ContainerNetworkTools' -ParameterFilter {
+                $Name -eq 'NAT'
                 $Type -eq 'NAT'
                 $Gateway -eq '99.2.0.8'
                 $AddressPrefix -eq '99.2.0.0/16'
             }
             $MockConfFilePath = "TestDrive:\Program Files\Containerd\cni\conf\0-containerd-nat.conf"
-            $MockConfFilePath | Should -Exist 
+            $MockConfFilePath | Should -Exist
             $MockConfFilePath | Should -FileContentMatch "`"cniVersion`": `"1.0.0`""
         }
 
         It "Should use user-specified values" {
-            Initialize-NatNetwork -NetworkName 'TestN/W' -Gateway '80.7.9.5' -CIDR 32 -WinCNIVersion '2.5.7' -WinCNIPath 'TestDrive:\Test Dir\cni'
+            Initialize-NatNetwork -NetworkName 'TestN/W' -Gateway '80.7.9.5' -CIDR 32 -WinCNIVersion '2.5.7' -WinCNIPath 'TestDrive:\Test Dir\cni' -Force
 
-            Should -Invoke Get-DefaultInstallPath -ModuleName 'ContainerNetworkTools' -Times 0 -Scope It 
-            Should -Invoke Get-NetRoute -ModuleName 'ContainerNetworkTools' -Times 0 -Scope It 
-            Should -Invoke Get-WinCNILatestVersion -ModuleName 'ContainerNetworkTools' -Times 0 -Scope It 
-            Should -Invoke New-HNSNetwork -ModuleName 'ContainerNetworkTools' -ParameterFilter { 
-                $Name -eq 'TestN/W' 
+            Should -Invoke Get-DefaultInstallPath -ModuleName 'ContainerNetworkTools' -Times 0 -Scope It
+            Should -Invoke Get-NetRoute -ModuleName 'ContainerNetworkTools' -Times 0 -Scope It
+            Should -Invoke Get-WinCNILatestVersion -ModuleName 'ContainerNetworkTools' -Times 0 -Scope It
+            Should -Invoke New-HNSNetwork -ModuleName 'ContainerNetworkTools' -ParameterFilter {
+                $Name -eq 'TestN/W'
                 $Type -eq 'NAT'
                 $Gateway -eq '80.7.9.5'
                 $AddressPrefix -eq '80.7.9.5/32'
             }
 
             $MockConfFilePath = "TestDrive:\Test Dir\cni\conf\0-containerd-nat.conf"
-            $MockConfFilePath | Should -Exist 
+            $MockConfFilePath | Should -Exist
             $MockConfFilePath | Should -FileContentMatch "`"cniVersion`": `"2.5.7`""
         }
-        
+
         It "Should install missing WinCNI plugins if user consents" {
             Mock Test-EmptyDirectory -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
             Mock New-Item -ModuleName 'ContainerNetworkTools'
@@ -141,16 +176,17 @@ Describe "ContainerNetworkTools.psm1" {
             $mockedConsent = [ActionConsent]::Yes.value__
             Mock Get-Host -ModuleName "ContainerNetworkTools" -MockWith { return [UITest]::new($mockedConsent) }
 
-            Initialize-NatNetwork 
+            Initialize-NatNetwork
             Should -Invoke Install-WinCNIPlugin -ModuleName 'ContainerNetworkTools'
         }
-        
+
         It "Should throw an error if WinCNI plugins do not exist and user does not consent to install them" {
             Mock Test-EmptyDirectory -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
 
             $mockedConsent = [ActionConsent]::No.value__
             Mock Get-Host -ModuleName "ContainerNetworkTools" -MockWith { return [UITest]::new($mockedConsent) }
 
+            $ENV:PESTER = $true
             { Initialize-NatNetwork } | Should -Throw "Windows CNI plugins have not been installed*"
         }
 
@@ -158,7 +194,7 @@ Describe "ContainerNetworkTools.psm1" {
             Mock Get-Module -ModuleName 'ContainerNetworkTools'
             Mock Install-Module -ModuleName 'ContainerNetworkTools'
 
-            Initialize-NatNetwork
+            Initialize-NatNetwork -Force
             Should -Invoke Install-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
             Should -Invoke Import-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
         }
@@ -167,10 +203,10 @@ Describe "ContainerNetworkTools.psm1" {
             Mock Get-Module -ModuleName 'ContainerNetworkTools'
             Mock Install-Module -ModuleName 'ContainerNetworkTools' -MockWith { Throw 'Could not download HNS module' }
             Mock Test-Path -ModuleName 'ContainerNetworkTools' -MockWith { $false } `
-                -ParameterFilter { $path -eq "$Env:ProgramFiles\containerd\cni\hns.psm1" } 
+                -ParameterFilter { $path -eq "$Env:ProgramFiles\containerd\cni\hns.psm1" }
             Mock Get-InstallationFiles -ModuleName 'ContainerNetworkTools'
 
-            Initialize-NatNetwork
+            Initialize-NatNetwork -Force
             Should -Invoke Install-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
             Should -Invoke Get-InstallationFiles -ModuleName 'ContainerNetworkTools' -ParameterFilter {
                 $Files -like @(
@@ -186,20 +222,20 @@ Describe "ContainerNetworkTools.psm1" {
 
         It "Should throw an error when importing HNS module fails" {
             Mock Test-Path -ModuleName 'ContainerNetworkTools' -MockWith { $true } `
-                -ParameterFilter { $path -eq "$Env:ProgramFiles\containerd\cni\hns.psm1" } 
+                -ParameterFilter { $path -eq "$Env:ProgramFiles\containerd\cni\hns.psm1" }
             Mock Import-Module -ModuleName 'ContainerNetworkTools' -MockWith { Throw 'Error message.' }
 
-            { Initialize-NatNetwork } | Should -Throw "Could not import HNS module. Error message."
+            { Initialize-NatNetwork -Force } | Should -Throw "Could not import HNS module. Error message."
         }
-        
+
         It "Should throw an error if network exists" {
             Mock Get-HnsNetwork -ModuleName 'ContainerNetworkTools' -MockWith { return @{Name = 'TestN/W' } }
-            { Initialize-NatNetwork -NetworkName 'TestN/W' } | Should -Throw "TestN/W already exists.*"
+            { Initialize-NatNetwork -NetworkName 'TestN/W' -Force } | Should -Throw "TestN/W already exists.*"
         }
-        
+
         It "Should throw an error if creating a new network fails" {
             Mock New-HNSNetwork -ModuleName 'ContainerNetworkTools' -MockWith { Throw 'Error message' }
-            { Initialize-NatNetwork -NetworkName 'TestN/W' } | Should -Throw "Could not create a new NAT network TestN/W with Gateway 99.2.0.8 and Subnet mask 99.2.0.0/16.*"
+            { Initialize-NatNetwork -NetworkName 'TestN/W' -Force } | Should -Throw "Could not create a new NAT network TestN/W with Gateway 99.2.0.8 and Subnet mask 99.2.0.0/16.*"
         }
     }
 
@@ -214,7 +250,7 @@ Describe "ContainerNetworkTools.psm1" {
         It "Should successfully uninstall WinCNI plugins" {
             Mock Uninstall-WinCNIPluginHelper -ModuleName 'ContainerNetworkTools'
 
-            Uninstall-WinCNIPlugin -Path 'TestDrive:\Program Files\cni'
+            Uninstall-WinCNIPlugin -Path 'TestDrive:\Program Files\cni' -Force
 
             Should -Invoke Uninstall-WinCNIPluginHelper -Times 1 -Scope It -ModuleName "ContainerNetworkTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\cni' }
@@ -223,7 +259,7 @@ Describe "ContainerNetworkTools.psm1" {
         It "Should successfully uninstall WinCNI plugins from default path" {
             Mock Uninstall-WinCNIPluginHelper -ModuleName 'ContainerNetworkTools'
 
-            Uninstall-WinCNIPlugin
+            Uninstall-WinCNIPlugin -Force
 
             Should -Invoke Uninstall-WinCNIPluginHelper -Times 1 -Scope It -ModuleName "ContainerNetworkTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Containerd\cni' }
@@ -232,7 +268,8 @@ Describe "ContainerNetworkTools.psm1" {
         It "Should throw an error if user does not consent to uninstalling WinCNIPlugin" {
             Mock Uninstall-ContainerToolConsent -ModuleName 'ContainerNetworkTools' -MockWith { return $false }
 
-            { Uninstall-WinCNIPlugin -Path 'TestDrive:\Program Files\cni' } | Should -Throw "Windows CNI plugin uninstallation cancelled."
+            $ENV:PESTER = $true
+            { Uninstall-WinCNIPlugin -Path 'TestDrive:\Program Files\cni' -Force:$false } | Should -Throw "Windows CNI plugins uninstallation cancelled."
         }
 
         It "Should successfully call uninstall WinCNIPlugin helper function" {
