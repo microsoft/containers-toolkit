@@ -61,7 +61,7 @@ function Install-Buildkit {
 
     # Download file from repo
     $buildkitTarFile = "buildkit-v${Version}.windows-amd64.tar.gz"
-    $DownloadPath = "$DownloadPath\$buildkitTarFile"
+    $DownloadPath = "$DownloadPath\$($buildkitTarFile)"
 
     # Download files
     $DownloadParams = @(
@@ -78,7 +78,7 @@ function Install-Buildkit {
     $params = @{
         Feature      = "Buildkit"
         InstallPath  = $InstallPath
-        DownloadPath = "$DownloadPath\$buildkitTarFile"
+        DownloadPath = "$DownloadPath"
         EnvPath      = "$InstallPath\bin"
         cleanup      = $true
     }
@@ -234,7 +234,7 @@ function Uninstall-Buildkit {
             Throw "Could not uninstall $tool. $_"
         }
     }
-    else{
+    else {
         Throw "$tool uninstallation cancelled."
     }
 }
