@@ -1,4 +1,12 @@
-﻿$ModuleParentPath = Split-Path -Parent $PSScriptRoot
+﻿###########################################################################
+#                                                                         #
+#   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+#   This code is licensed under the MIT License (MIT).                    #
+#                                                                         #
+###########################################################################
+
+$ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 
@@ -19,7 +27,7 @@ function Show-ContainerTools {
         $installedTools += Invoke-Expression -Command $command
     }
 
-    $registerCommands = (Get-Command -Name "*-*Service" | Where-Object { $_.Source -eq 'ContainerToolsForWindows' }).Name -join ', '
+    $registerCommands = (Get-Command -Name "*-*Service" | Where-Object { $_.Source -eq 'Containers-Toolkit' }).Name -join ', '
     $message = "For unregistered services/daemons, check the tool's help or register the service using `n`t$registerCommands"
     Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
     return $installedTools

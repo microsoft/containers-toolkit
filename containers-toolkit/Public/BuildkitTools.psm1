@@ -1,12 +1,11 @@
 ﻿###########################################################################
 #                                                                         #
-#   Module Name: BuildkitTools.psm1                                       #
-#                                                                         #
-#   Description: Wrappers for BuildKit setup functions.                   #
-#                                                                         #
 #   Copyright (c) Microsoft Corporation. All rights reserved.             #
 #                                                                         #
+#   This code is licensed under the MIT License (MIT).                    #
+#                                                                         #
 ###########################################################################
+
 
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
@@ -101,7 +100,7 @@ function Install-Buildkit {
     }
 
     if ($showCommands) {
-        $commands = (Get-command -Name '*buildkit*' | Where-Object { $_.Source -like 'containerToolsForWindows' -and $_.Name -ne 'Install-Buildkit' }).Name
+        $commands = (Get-command -Name '*buildkit*' | Where-Object { $_.Source -like 'Containers-Toolkit' -and $_.Name -ne 'Install-Buildkit' }).Name
         $message = "Other useful Buildkit commands: $($commands -join ', ').`nTo learn more about each command, run Get-Help <command-name>, e.g., 'Get-Help Register-BuildkitdService'`n"
         Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
     }

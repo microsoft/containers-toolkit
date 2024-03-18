@@ -1,10 +1,8 @@
 ﻿###########################################################################
 #                                                                         #
-#   Module Name: NerdctlTools.psm1                                        #
-#                                                                         #
-#   Description: Wrappers for NerdctlTools setup functions.               #
-#                                                                         #
 #   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+#   This code is licensed under the MIT License (MIT).                    #
 #                                                                         #
 ###########################################################################
 

@@ -1,7 +1,16 @@
+###########################################################################
+#                                                                         #
+#   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+#   This code is licensed under the MIT License (MIT).                    #
+#                                                                         #
+###########################################################################
+
+
 Describe "UpdateEnvironmentPath.psm1" { 
     BeforeAll {
         $RootPath = Split-Path -Parent $PSScriptRoot
-        $ModuleParentPath = Join-Path -Path $RootPath -ChildPath 'ContainerToolsForWindows'
+        $ModuleParentPath = Join-Path -Path $RootPath -ChildPath 'Containers-Toolkit'
         Import-Module -Name "$ModuleParentPath\Private\UpdateEnvironmentPath.psm1" -Force
 
         # Original enviromnent values

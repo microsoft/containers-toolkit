@@ -1,3 +1,11 @@
+###########################################################################
+#                                                                         #
+#   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+#   This code is licensed under the MIT License (MIT).                    #
+#                                                                         #
+###########################################################################
+
 $ErrorActionPreference = 'Stop'
 
 if (!(Get-Module -Name PSScriptAnalyzer -ListAvailable)) {
@@ -5,7 +13,7 @@ if (!(Get-Module -Name PSScriptAnalyzer -ListAvailable)) {
 }
 Import-Module -Name PSScriptAnalyzer -Force
 
-$codeAnalysis = Invoke-ScriptAnalyzer -Path .\ContainerToolsForWindows\ -Recurse -ExcludeRule PSProvideCommentHelp
+$codeAnalysis = Invoke-ScriptAnalyzer -Path .\Containers-Toolkit\ -Recurse -ExcludeRule PSProvideCommentHelp
 
 $lintIssues = $codeAnalysis | Where-Object { $_.Severity -notlike 'Error' }
 if ($lintIssues) {

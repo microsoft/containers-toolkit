@@ -1,18 +1,18 @@
 ---
-Module Name: ContainerToolsForWindows
+Module Name: Containers-Toolkit
 Module Guid: 8a534dc0-6e6f-431b-9de8-29d4659af987
 Download Help Link: {{ Update Download Link }}
 Help Version: 1.0.0
 Locale: en-US
 ---
 
-# ContainerToolsForWindows Module
+# Containers-Toolkit Module
 
 ## Description
 
 {{ Fill in the Description }}
 
-## ContainerToolsForWindows Cmdlets
+## Containers-Toolkit Cmdlets
 
 ### [Get-BuildkitLatestVersion](Get-BuildkitLatestVersion.md)
 

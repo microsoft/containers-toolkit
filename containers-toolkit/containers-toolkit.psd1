@@ -72,10 +72,10 @@
             Tags                       = @('Containerd', 'Buildkit', 'Nerdctl', 'Windows Containers', 'Container Tools')
 
             # A URL to the license for this module.
-            LicenseUri                 = "https://cdn.githubraw.com/.../ContainerToolsForWindows/main/LICENSE"
+            LicenseUri                 = "https://raw.githubusercontent.com/microsoft/containers-toolkit/main/LICENSE"
 
             # A URL to the main website for this project.
-            ProjectUri                 = 'https://github.com/.../ContainerToolsForWindows'
+            ProjectUri                 = 'https://github.com/microsoft/containers-toolkit'
 
             # Flag to indicate whether the module requires explicit user acceptance for install/update/save
             RequireLicenseAcceptance   = $true
