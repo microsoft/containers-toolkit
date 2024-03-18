@@ -126,7 +126,7 @@ function Install-ContainerTools {
 }
 
 function Uninstall-ContainerTool($Tool, $Path) {
-    command = "Uninstall-$($Tool) -Path $Path"
+    $command = "Uninstall-$($Tool) -Path '$Path'"
     Invoke-Expression -Command $command
 }
 
