@@ -108,7 +108,7 @@ function Install-ContainerTools {
     foreach ($params in $files) {
         try {
             # Uninstall if tool exists at specified location. Requires user consent
-            Uninstall-ContainerTool -Tool $params.Feature -Path $params.InstallPath | Out-Null
+            Uninstall-ContainerTool -Tool $params.Feature -Path $params.InstallPath
 
             # Untar downloaded files to the specified installation path
             $InstallParams = @{
