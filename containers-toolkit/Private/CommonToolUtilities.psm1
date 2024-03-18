@@ -80,7 +80,7 @@ function Get-InstallationFiles {
     process {
         # Download file from repo
         if ($Files.Length -eq 1) {
-            Receive-File($Files[0])
+            Receive-File -feature $Files[0]
         }
         else {
             # Download files asynchronously
