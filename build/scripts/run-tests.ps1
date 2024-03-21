@@ -53,15 +53,15 @@ param (
     [Parameter(HelpMessage = "Run tests for specific commands/functions")]
     [string] $Tag,
 
-    [Parameter(HelpMessage = "Run tests for a specific module file")]
-    [string] $FileName
+    [Parameter(HelpMessage = "Run tests for a specific module file, eg: ContainerdTools.psm1")]
+    [string] $ModuleName
 )
 Write-Host "ErrorActionPreference: $ErrorActionPreference" -ForegroundColor DarkCyan
 
 $RootDir = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 Write-Host "Root directory: $RootDir" -ForegroundColor DarkCyan
 
-New-Item -Path Env:\Pester -Value $true | Out-Null
+New-Item -Path Env:\Pester -Value $true -Force | Out-Null
 
 ########################################################
 #################### IMPORT MODULES ####################
@@ -97,12 +97,37 @@ foreach ($unitTest in $unitTests) {
 
 
 #######################################################
+###################### FUNCTIONS ######################
+#######################################################
+
+function ParseModuleNames {
+    param (
+        [string] $ModuleName
+    )
+
+    if (-not $ModuleName) {
+        return
+    }
+
+    $moduleNames = $ModuleName -split ',' | ForEach-Object { 
+        $name = $_.Trim()
+        if ($name -like '*.psm1') {
+            return $name
+        }
+        else {
+            return  $name += '.psm1'
+        }
+    }
+    return $moduleNames
+}
+
+#######################################################
 ################ PESTER CONFIGURATION #################
 #######################################################
 $config = [PesterConfiguration]::Default
 $config.Output.Verbosity = $Verbosity
 $config.Filter.Tag = ($tag -split ',')
-$config.Filter.FullName = ($FileName -split ',')
+$config.Filter.FullName = (ParseModuleNames -ModuleName $ModuleName)
 $config.TestResult.Enabled = $true
 $config.TestResult.OutputFormat = "NUnitXML"
 $config.TestResult.OutputPath = "$RootDir\TestResults\Test-Results.xml"

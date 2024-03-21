@@ -1,6 +1,6 @@
----
-external help file: Containers-Toolkit-help.xml
-Module Name: Containers-Toolkit
+﻿---
+external help file: containers-toolkit-help.xml
+Module Name: containers-toolkit
 online version:
 schema: 2.0.0
 ---
@@ -14,7 +14,8 @@ Downloads and installs nerdctl.
 ## SYNTAX
 
 ```
-Install-Nerdctl [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [<CommonParameters>]
+Install-Nerdctl [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>]
+ [[-Dependencies] <String[]>] [-Force] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -41,6 +42,41 @@ PS C:\> Install-Nerdctl -Version "1.6.1" -InstallPath 'C:\Test\Path\nerdctl'
 
 ## PARAMETERS
 
+### -Confirm
+
+Prompts for confirmation before running the cmdlet. For more information, see the following articles:
+
+- [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference)
+- [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact)
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Dependencies
+
+Specify the nerdctl dependencies (All, Containerd, Buildkit, WinCNIPlugin) to install. Input type: array
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: 3
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -DownloadPath
 
 Path to download files. Defaults to user's Downloads folder
@@ -57,9 +93,25 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Force
+
+Installs nerdctl (and its dependecies if specified) even if the tool already exists at the specified path.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -InstallPath
 
-Path to install nerdctl. Defaults to `$ENV:ProramFiles\Nerdctl`
+Path to install nerdctl. Defaults to `$ENV:ProramFiles\nerdctl`
 
 ```yaml
 Type: String
@@ -68,7 +120,7 @@ Aliases:
 
 Required: False
 Position: 1
-Default value: $ENV:ProramFiles\Nerdctl`
+Default value: $ENV:ProramFiles\nerdctl`
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -85,6 +137,22 @@ Aliases:
 Required: False
 Position: 0
 Default value: Latest version
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+
+Shows what would happen if the cmdlet runs. The cmdlet isn't run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: Setup
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

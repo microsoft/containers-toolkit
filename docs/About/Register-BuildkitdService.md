@@ -1,6 +1,6 @@
----
-external help file: Containers-Toolkit-help.xml
-Module Name: Containers-Toolkit
+﻿---
+external help file: containers-toolkit-help.xml
+Module Name: containers-toolkit
 online version:
 schema: 2.0.0
 ---
@@ -14,7 +14,8 @@ Registers the buildkitd service with a prompt to either register with the Contai
 ## SYNTAX
 
 ```
-Register-BuildkitdService [[-BuildKitPath] <String>] [[-WinCNIPath] <String>] [-Start] [<CommonParameters>]
+Register-BuildkitdService [[-WinCNIPath] <String>] [[-BuildKitPath] <String>] [-Start] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -57,9 +58,26 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Start
+
+Specify to start Buildkitd service after registration is complete
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -WinCNIPath
 
-Path where Windows CNI plugin is installed. If not provided, it defaults to Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd`
+Path where Windows CNI plugin is installed.
+If not provided, it defaults to Containerd path in the environment path variable or \`$Env:ProgramFiles\Containerd\`
 
 ```yaml
 Type: String
@@ -73,18 +91,18 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Start
+### -WhatIf
 
-Specify to start buildkitd service after registration is complete
+Shows what would happen if the cmdlet runs. The cmdlet isn't run.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: (All)
+Parameter Sets: Setup
 Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

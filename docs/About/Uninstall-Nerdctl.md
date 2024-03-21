@@ -1,6 +1,6 @@
----
-external help file: Containers-Toolkit-help.xml
-Module Name: Containers-Toolkit
+﻿---
+external help file: containers-toolkit-help.xml
+Module Name: containers-toolkit
 online version:
 schema: 2.0.0
 ---
@@ -14,7 +14,7 @@ Uninstalls nerdctl.
 ## SYNTAX
 
 ```
-Uninstall-Nerdctl [[-Path] <String>] [<CommonParameters>]
+Uninstall-Nerdctl [[-Path] <String>] [-Force] [-WhatIf] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -33,6 +33,22 @@ PS C:\> Uninstall-Nerdctl
 
 ## PARAMETERS
 
+### -Force
+
+Bypass confirmation to uninstall nerdctl
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -Path
 
 nerdctl path
@@ -44,7 +60,23 @@ Aliases:
 
 Required: False
 Position: 0
-Default value: The nerdctl path in the environment path variable or $Env:ProgramFiles\Nerdctl
+Default value: The nerdctl path in the environment path variable or $Env:ProgramFiles\nerdctl
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+
+Shows what would happen if the cmdlet runs. The cmdlet isn't run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: Setup
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

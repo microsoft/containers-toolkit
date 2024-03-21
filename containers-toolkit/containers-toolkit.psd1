@@ -18,10 +18,12 @@
     Copyright         = '(c) Microsoft Corporation. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'PowerShell functions that allow you to download, install, and configure Containerd, Buildkit, Nerdctl, and Windows CNI plugins'
+    Description       = 'PowerShell functions that allow you to download, install, and configure Containerd, Buildkit, nerdctl, and Windows CNI plugins'
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion = '5.0'
+
+    RequiredModules   = @('HNS', 'ThreadJob')
 
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
     NestedModules     = @(
@@ -69,7 +71,7 @@
     PrivateData       = @{
         PSData = @{
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags                       = @('Containerd', 'Buildkit', 'Nerdctl', 'Windows Containers', 'Container Tools')
+            Tags                       = @('Containerd', 'Buildkit', 'nerdctl', 'Windows Containers', 'Container Tools')
 
             # A URL to the license for this module.
             LicenseUri                 = "https://raw.githubusercontent.com/microsoft/containers-toolkit/main/LICENSE"

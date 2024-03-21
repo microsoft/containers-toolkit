@@ -1,6 +1,6 @@
----
-external help file: Containers-Toolkit-help.xml
-Module Name: Containers-Toolkit
+﻿---
+external help file: containers-toolkit-help.xml
+Module Name: containers-toolkit
 online version:
 schema: 2.0.0
 ---
@@ -14,7 +14,8 @@ Downloads and installs Windows CNI plugin.
 ## SYNTAX
 
 ```
-Install-WinCNIPlugin [[-WinCNIVersion] <String>] [[-WinCNIPath] <String>] [<CommonParameters>]
+Install-WinCNIPlugin [[-WinCNIVersion] <String>] [[-WinCNIPath] <String>] [-Force] [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -40,6 +41,41 @@ PS C:\> Install-WinCNIPlugin -WinCNIVersion "0.2.0"
 ```
 
 ## PARAMETERS
+
+### -Confirm
+
+Prompts for confirmation before running the cmdlet. For more information, see the following articles:
+
+- [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference)
+- [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact)
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Force
+
+Installs Windows CNI plugins even if the tool already exists at the specified path.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
 
 ### -WinCNIPath
 
@@ -69,6 +105,22 @@ Aliases:
 Required: False
 Position: 0
 Default value: Latest version
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+
+Shows what would happen if the cmdlet runs. The cmdlet isn't run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: Setup
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
