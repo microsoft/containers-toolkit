@@ -62,23 +62,25 @@ function Get-InstallationFiles {
     )
 
     begin {
-        function downloadfile ($feature) {
-            Write-Information -InformationAction Continue -MessageData "Downloading $($feature.Feature) version $($feature.Version)"
-            try {
-                Invoke-WebRequest -Uri $feature.Uri -OutFile $feature.DownloadPath -UseBasicParsing
-            }
-            catch {
-                Throw "$($feature.feature) downlooad failed: $($feature.uri).`n$($_.Exception.Message)"
+        $functions = {
+            function Receive-File ($feature) {
+                Write-Information -InformationAction Continue -MessageData "Downloading $($feature.Feature) version $($feature.Version)"
+                try {
+                    Invoke-WebRequest -Uri $feature.Uri -OutFile $feature.DownloadPath -UseBasicParsing
+                }
+                catch {
+                    Throw "$($feature.feature) downlooad failed: $($feature.uri).`n$($_.Exception.Message)"
+                }
             }
         }
-
+        . $functions
         $jobs = @()
     }
 
     process {
         # Download file from repo
         if ($Files.Length -eq 1) {
-            downloadfile -feature $Files[0]
+            Receive-File -feature $Files[0]
         }
         else {
             # Download files asynchronously
@@ -93,7 +95,7 @@ function Get-InstallationFiles {
 
             foreach ($file in $files) {
                 # TODO: Test what happens if one call fails
-                $jobs += Start-ThreadJob -Name $file.DownloadPath -ScriptBlock { downloadfile -Feature $using:file }
+                $jobs += Start-ThreadJob -Name $file.DownloadPath -InitializationScript $functions -ScriptBlock { Receive-File -Feature $using:file }
             }
 
             Wait-Job -Job $jobs | Out-Null
