@@ -27,6 +27,7 @@
   - [Get-WinCNILatestVersion](#get-wincnilatestversion)
   - [Install-WinCNIPlugin](#install-wincniplugin)
   - [Initialize-NatNetwork](#initialize-natnetwork)
+  - [Uninstall-WinCNIPlugin](#uninstall-wincniplugin)
 
 ### General
 
@@ -59,7 +60,10 @@ Downloads container tool (Containerd, BuildKit, nerdctl) asynchronously and inst
 | nerdctlVersion | String | nerdctl version to install | Latest version |
 | InstallPath | String | Path to install container tools | `$Env:ProgramFiles` |
 | DownloadPath | String | Path to download container tools  | `$HOME\Downloads` |
-| Cleanup | Switch | Specifies whether to cleanup after installation is done  | `False` |
+| Cleanup | Switch | Specifies whether to cleanup after installation is done  |  |
+| Force | Switch | Force install the tools even if they already exists at the specified path |  |
+| Confirm | Switch | Prompts for confirmation before running the cmdlet. For more information, see the following articles: [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference) and [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact) |  |
+| WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
 **Output**
 
@@ -99,6 +103,9 @@ Once Containerd is installed and added to the environment path, we can get the p
 | InstallPath | String | Path to install Containerd | `$Env:ProgramFiles\containerd` |
 | DownloadPath | String | Path to download Containerd  | `$HOME\Downloads` |
 | Setup | Switch | Register and start Containerd Service once Containerd installation is done  |  |
+| Force | Switch | Installs Containerd even if the tool already exists at the specified path |  |
+| Confirm | Switch | Prompts for confirmation before running the cmdlet. For more information, see the following articles: [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference) and [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact) |  |
+| WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
 **Output**
 
@@ -114,6 +121,8 @@ Create a default Containerd configuration file called `config.toml` at the Conta
 | -------- | ------- | ------- | ------- |
 | ContainerdPath | String | Path where Containerd is installed | The Containerd path in the environment path variable or `$Env:ProgramFiles\containerd` |
 | Start | Switch | Start Containerd service after registration is complete | |
+| WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
+
 
 **Output**
 
@@ -157,6 +166,8 @@ Does the following:
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
 | Path | String | Path where Containerd is installed | The Containerd path in the environment path variable or `$Env:ProgramFiles\containerd` |
+| Force | Switch | Bypass confirmation to uninstall Containerd |  |
+| WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
 **Output**
 
@@ -196,6 +207,9 @@ Once BuildKit is installed and added to the environment path, we can get the pat
 |InstallPath | String | Path to install BuildKit | `$Env:ProgramFiles\BuildKit` |
 |DownloadPath | String | Path to download BuildKit | $HOME\Downloads |
 | Setup | Switch | Register and start buildkitd Service once Containerd installation is done  |  |
+| Force | Switch | Installs Buildkit even if the tool already exists at the specified path |  |
+| Confirm | Switch | Prompts for confirmation before running the cmdlet. For more information, see the following articles: [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference) and [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact) |  |
+| WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
 **Output**
 
@@ -212,6 +226,7 @@ Registers the buildkitd service with a prompt to either register with the Contai
 | BuildkitPath | String | Path where BuildKit is installed | The BuildKit path in the environment path variable or `$Env:ProgramFiles\BuildKit` |
 | WinCNIPath | String | Path to Windows CNI plugin | The Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd` |
 | Start | Switch | Start buildkitd service after registration is complete | |
+| WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
 **Output**
 
@@ -254,6 +269,8 @@ Does the following:
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
 | Path | String | Path where BuildKit is installed | The BuildKit path in the environment path variable or `$Env:ProgramFiles\BuildKit` |
+| Force | Switch | Bypass confirmation to uninstall BuildKit |  |
+| WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
 **Output**
 
@@ -284,6 +301,10 @@ Downloads Containerd files from [nerdctl releases](https://github.com/containerd
 | Version | String | nerdctl version to install | Latest version |
 | InstallPath | String | Path to install nerdctl | $Env:ProgramFiles\nerdctl |
 | DownloadPath | String | Path to download nerdctl  | $HOME\Downloads |
+| Dependencies | String[] | Specify the nerdctl dependencies (All, Containerd, Buildkit, WinCNIPlugin) to install. |  |
+| Force | Switch | Installs nerdctl even if the tool already exists at the specified path |  |
+| Confirm | Switch | Prompts for confirmation before running the cmdlet. For more information, see the following articles: [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference) and [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact) |  |
+| WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
 **Output**
 
@@ -298,6 +319,8 @@ Deletes the nerdctl directory and removes it from the environment variables.
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
 | Path | String | Path where nerdctl is installed | The nerdctl path in the environment path variable or `$Env:ProgramFiles\BuildKit` |
+| Force | Switch | Bypass confirmation to uninstall nerdctl |  |
+| WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
 **Output**
 
@@ -327,6 +350,9 @@ Downloads Windows CNI plugin from [windows-container-networking](https://github.
 | -------- | ------- | ------- | ------- |
 | WinCNIVersion | String | Windows CNI version to install | Latest version |
 | WinCNIPath | String | Location to install Windows CNI | Path where Containerd is installed or `$Env:ProgramFiles\Containerd`|
+| Force | Switch | Installs Windows CNI plugins even if the tool already exists at the specified path |  |
+| Confirm | Switch | Prompts for confirmation before running the cmdlet. For more information, see the following articles: [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference) and [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact) |  |
+| WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
 **Output**
 
@@ -336,7 +362,7 @@ None
 
 Initializes a NAT network.
 
-**NOTE**: This function installs the [HNS module](https://www.powershellgallery.com/packages/HNS/0.2.4) to be installed.
+**NOTE**: This function installs the [HNS module](https://www.powershellgallery.com/packages/HNS/0.2.4).
 
 **Parameters**
 
@@ -347,6 +373,23 @@ Initializes a NAT network.
 | CIDR | Int | Size of the subnet mask | 16 |
 | WinCNIVersion | String | Windows CNI version to use | Latest version |
 | WinCNIPath | String | Absolute path to cni directory ~\cni. Not ~\cni\bin | Path where Containerd is installed or `$Env:ProgramFiles\Containerd\cni` |
+| WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
+
+**Output**
+
+None
+
+#### Uninstall-WinCNIPlugin
+
+Uninstalls Windows CNI plugins.
+
+**Parameters**
+
+| Name | Type | Description | Default |
+| -------- | ------- | ------- | ------- |
+| Path | String | Path where Windows CNI plugins is installed | `$Env:ProgramFiles\containerd\cni` |
+| Force | Switch | Bypass confirmation to uninstall Windows CNI plugins |  |
+| WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
 **Output**
 

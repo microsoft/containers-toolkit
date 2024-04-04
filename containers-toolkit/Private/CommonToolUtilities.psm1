@@ -83,18 +83,18 @@ function Get-InstallationFiles {
             Receive-File -feature $Files[0]
         }
         else {
-            # Download files asynchronously
-            Write-Information -InformationAction Continue -MessageData "Downloading container tools files"
-
+            # Import ThreadJob module if not available
             if (!(Get-Module -ListAvailable -Name ThreadJob)) {
+                Write-Information -InformationAction Continue -MessageData "Installing module ThreadJob from PowerShell Gallery."
                 Install-Module -Name ThreadJob -Scope CurrentUser -Force
             }
             Import-Module -Name ThreadJob -Force
 
-            # Create multiple thread jobs to download multiple files at the same time.
+            # Download files asynchronously
+            Write-Information -InformationAction Continue -MessageData "Downloading $($Files.Length) container tools executables. This may take a few minutes."
 
+            # Create multiple thread jobs to download multiple files at the same time.
             foreach ($file in $files) {
-                # TODO: Test what happens if one call fails
                 $jobs += Start-ThreadJob -Name $file.DownloadPath -InitializationScript $functions -ScriptBlock { Receive-File -Feature $using:file }
             }
 
@@ -160,6 +160,18 @@ function Install-RequiredFeature {
     }
 }
 
+function Install-ContainerToolConsent ($tool) {
+    $caption = ""
+    $question = "The following tools will be installed: `n`t`t$tool `nDo you wish to proceed?"
+    $choices = '&Yes', '&No'
+
+    $defaultChoice = [ActionConsent]::No.value__
+    $consent = (Get-Host).UI.PromptForChoice($caption, $question, $choices, $defaultChoice)
+
+    return [ActionConsent]$consent -eq [ActionConsent]::Yes
+}
+
+
 function Uninstall-ContainerToolConsent ($tool, $path) {
     $question = "Do you want to uninstall $tool from $($path)?"
     $choices = '&Yes', '&No'
@@ -213,7 +225,7 @@ function Invoke-ServiceAction ($Action, $service) {
         # Waiting for buildkit to come to steady state
         (Get-Service -Name $service -ErrorAction Ignore).WaitForStatus($status, '00:00:30')
 
-        Write-Output "Success: { Service: $service, Action: $Action }"
+        Write-Debug "Success: { Service: $service, Action: $Action }"
     }
     catch {
         Throw "Couldn't $action $service service. $_"
@@ -248,6 +260,7 @@ Export-ModuleMember -Function Get-DefaultInstallPath
 Export-ModuleMember -Function Test-EmptyDirectory
 Export-ModuleMember -Function Get-InstallationFiles
 Export-ModuleMember -Function Install-RequiredFeature
+Export-ModuleMember -Function Install-ContainerToolConsent
 Export-ModuleMember -Function Uninstall-ContainerToolConsent
 Export-ModuleMember -Function Invoke-ExecutableCommand
 Export-ModuleMember -Function Test-ServiceRegistered

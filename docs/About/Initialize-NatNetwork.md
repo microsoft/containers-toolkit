@@ -1,6 +1,6 @@
----
-external help file: Containers-Toolkit-help.xml
-Module Name: Containers-Toolkit
+﻿---
+external help file: containers-toolkit-help.xml
+Module Name: containers-toolkit
 online version:
 schema: 2.0.0
 ---
@@ -14,7 +14,7 @@ Initializes a NAT network.
 ## SYNTAX
 
 ```
-Initialize-NatNetwork [[-NetworkName] <String>] [[-Gateway] <String>] [[-CIDR] <Int32>]
+Initialize-NatNetwork [[-NetworkName] <String>] [[-Gateway] <String>] [[-CIDR] <Int32>] [-WhatIf]
  [[-WinCNIVersion] <String>] [[-WinCNIPath] <String>] [<CommonParameters>]
 ```
 
@@ -119,6 +119,22 @@ Aliases:
 Required: False
 Position: 3
 Default value: Latest version
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+
+Shows what would happen if the cmdlet runs. The cmdlet isn't run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: Setup
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
