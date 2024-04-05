@@ -62,7 +62,9 @@ Describe "AllToolsUtilities.psm1" {
             Mock Install-RequiredFeature -ModuleName 'AllToolsUtilities'
             Mock Install-ContainerToolConsent -ModuleName 'AllToolsUtilities' -MockWith { return $true }
             Mock Install-ContainerTools -ModuleName 'AllToolsUtilities'
-            Mock Test-EmptyDirectory  -ModuleName 'BuildkitTools' -MockWith { return $true }
+            Mock Register-ContainerdService -ModuleName 'AllToolsUtilities'
+            Mock Register-BuildkitdService -ModuleName 'AllToolsUtilities'
+            Mock Initialize-NatNetwork -ModuleName 'AllToolsUtilities'
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -79,8 +81,6 @@ Describe "AllToolsUtilities.psm1" {
         }
 
         It "Should use defaults" {
-            Mock Test-EmptyDirectory -ModuleName 'AllToolsUtilities' -MockWith { return $false }
-
             Install-ContainerTools -Confirm:$false
 
             $containerdTarFile = "containerd-4.9.0-windows-amd64.tar.gz"
@@ -132,6 +132,10 @@ Describe "AllToolsUtilities.psm1" {
 
                 Should -Invoke Install-RequiredFeature -ModuleName 'AllToolsUtilities' -ParameterFilter { $MockInstallParams -and $cleanup -eq $false }
             }
+
+            Should -Invoke Register-ContainerdService -ModuleName 'AllToolsUtilities' -Times 0
+            Should -Invoke Register-BuildkitdService -ModuleName 'AllToolsUtilities' -Times 0
+            Should -Invoke Initialize-NatNetwork -ModuleName 'AllToolsUtilities' -Times 0
         }
 
         It "Should use user-specified values" {
@@ -191,7 +195,6 @@ Describe "AllToolsUtilities.psm1" {
         }
 
         It "Should continue installation of other tools on failure" {
-            Mock Test-EmptyDirectory -ModuleName 'AllToolsUtilities' -MockWith { return $false }
             Mock Uninstall-ContainerTool -ModuleName 'AllToolsUtilities' -ParameterFilter { $Tool -eq 'Containerd' } -MockWith { Throw 'Error message' }
 
             Install-ContainerTools -Force -Confirm:$false
@@ -201,6 +204,26 @@ Describe "AllToolsUtilities.psm1" {
             foreach ($tool in @('buildkit', 'nerdctl')) {
                 Should -Invoke Install-RequiredFeature -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It -ParameterFilter { $Feature -eq $tool }
             }
+        }
+
+        It "Should register services and initialize NAT network" {
+            Install-ContainerTools `
+            -InstallPath 'TestDrive:\Install Directory' `
+            -Force -Confirm:$false `
+            -RegisterServices
+
+            $RegisterContainerdParams = @{
+                ContainerdPath =  "$InstallPath\Containerd"
+            }
+            $RegisterBuildKitdParams = @{
+                BuildKitPath = "$InstallPath\Buildkit"
+            }
+
+            Should -Invoke Register-ContainerdService -ModuleName 'AllToolsUtilities' -Times 1 `
+                -ParameterFilter { $RegisterContainerdParams -and $Start -eq $true -and $Force -eq $true }
+            Should -Invoke Register-BuildkitdService -ModuleName 'AllToolsUtilities' -Times 1 `
+                -ParameterFilter { $RegisterBuildKitdParams -and $Start -eq $true -and $Force -eq $true }
+            Should -Invoke Initialize-NatNetwork -ModuleName 'AllToolsUtilities' -Times 1
         }
     }
 }
