@@ -15,19 +15,23 @@ Describe "ContainerdTools.psm1" {
         Import-Module -Name "$ModuleParentPath\Public\ContainerdTools.psm1" -Force
 
         # Mock objects
-        $commandError = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ 
+        $commandError = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{
             ExitCode       = 1
-            StandardError  = New-MockObject -Type 'System.IO.StreamReader' -Methods @{ 
-                ReadToEnd = { return "Error message" } 
+            StandardError  = New-MockObject -Type 'System.IO.StreamReader' -Methods @{
+                ReadToEnd = { return "Error message" }
             }
-            StandardOutput = New-MockObject -Type 'System.IO.StreamReader' -Methods @{ 
-                ReadToEnd = { return "Sample command output" } 
+            StandardOutput = New-MockObject -Type 'System.IO.StreamReader' -Methods @{
+                ReadToEnd = { return "Sample command output" }
             }
         }
 
         # Mock functions
         function Test-ServiceRegistered { }
         Mock Test-ServiceRegistered -ModuleName 'ContainerdTools' -MockWith { return $true }
+    }
+
+    AfterEach {
+        $ENV:PESTER = $false
     }
 
     AfterAll {
@@ -45,15 +49,30 @@ Describe "ContainerdTools.psm1" {
             Mock Start-ContainerdService -ModuleName 'ContainerdTools'
             Mock Get-Command -ModuleName 'ContainerdTools'
             Mock Get-ChildItem -ModuleName 'ContainerdTools'
+            Mock Test-EmptyDirectory  -ModuleName 'ContainerdTools' -MockWith { return $true }
+            Mock Install-ContainerToolConsent -ModuleName 'ContainerdTools' -MockWith { return $true }
+            Mock Install-Containerd -ModuleName 'ContainerdTools'
 
             $ContainerdRepo = 'https://github.com/containerd/containerd/releases/download'
         }
 
-        It "Should use defaults" {
-            Install-Containerd
+        It 'Should not process on implicit request for validation (WhatIfPreference)' {
+            {
+                $WhatIfPreference = $true
+                Install-Containerd
+            }
+            Should -Invoke -CommandName Install-Containerd -ModuleName 'ContainerdTools' -Exactly -Times 0 -Scope It
+        }
 
-            Should -Invoke Uninstall-Containerd -ModuleName 'ContainerdTools' -Times 1 -Exactly -Scope It `
-                -ParameterFilter { $Path -eq "$Env:ProgramFiles\Containerd" }
+        It 'Should not process on explicit request for validation (-WhatIf)' {
+            { Install-Containerd -WhatIf }
+            Should -Invoke -CommandName Install-Containerd -ModuleName 'ContainerdTools' -Exactly -Times 0 -Scope It
+        }
+
+        It "Should use defaults" {
+            Install-Containerd -Force -Confirm:$false
+
+            Should -Invoke Uninstall-Containerd -ModuleName 'ContainerdTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFiles -ModuleName 'ContainerdTools' -ParameterFilter {
                 $Files -like @(
                     @{
@@ -75,12 +94,11 @@ Describe "ContainerdTools.psm1" {
             Should -Invoke Register-ContainerdService -ModuleName 'ContainerdTools' -Times 0 -Exactly -Scope It
             Should -Invoke Start-ContainerdService -ModuleName 'ContainerdTools' -Times 0 -Exactly -Scope It
         }
-        
-        It "Should call function with user-specified values" {
-            Install-Containerd -Version '1.2.3' -InstallPath 'TestDrive:\Containerd' -DownloadPath 'TestDrive:\Downloads'
 
-            Should -Invoke Uninstall-Containerd -ModuleName 'ContainerdTools' `
-                -ParameterFilter { $Path -eq 'TestDrive:\Containerd' }
+        It "Should call function with user-specified values" {
+            Install-Containerd -Version '1.2.3' -InstallPath 'TestDrive:\Containerd' -DownloadPath 'TestDrive:\Downloads' -Force -Confirm:$false
+
+            Should -Invoke Uninstall-Containerd -ModuleName 'ContainerdTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFiles -ModuleName 'ContainerdTools' -ParameterFilter {
                 $Files -like @(
                     @{
@@ -101,15 +119,29 @@ Describe "ContainerdTools.psm1" {
         }
 
         It "Should setup Containerd service" {
-            Install-Containerd -Setup
+            Install-Containerd -Setup -Force -Confirm:$false
 
             Should -Invoke Register-ContainerdService -Times 1 -Exactly -Scope It -ModuleName 'ContainerdTools' `
                 -ParameterFilter { $ContainerdPath -eq "$Env:ProgramFiles\Containerd" }
+        }
 
-            Should -Invoke Start-ContainerdService -Times 1 -Exactly -Scope It -ModuleName 'ContainerdTools'
+        It "Should uninstall tool if it is already installed" {
+            Mock Test-EmptyDirectory -ModuleName 'ContainerdTools' -MockWith { return $false }
+
+            Install-Containerd -Force -Confirm:$false
+
+            Should -Invoke Uninstall-Containerd -ModuleName 'ContainerdTools' -Times 1 -Exactly -Scope It `
+                -ParameterFilter { $Path -eq "$Env:ProgramFiles\Containerd" -and $force -eq $true }
+        }
+
+        It "Should throw an error if uninstallation fails" {
+            Mock Test-EmptyDirectory -ModuleName 'ContainerdTools' -MockWith { return $false }
+            Mock Uninstall-Containerd -ModuleName 'ContainerdTools' -MockWith { throw 'Error' }
+
+            { Install-Containerd -Confirm:$false } | Should -Throw "Containerd installation failed. Error"
         }
     }
-    
+
     Context "Service action" -Tag "Service action" {
         BeforeAll {
             Mock Invoke-ServiceAction -ModuleName 'ContainerdTools' -MockWith { }
@@ -127,7 +159,7 @@ Describe "ContainerdTools.psm1" {
             Should -Invoke Invoke-ServiceAction -ModuleName 'ContainerdTools' -ParameterFilter { $Service -eq "Containerd" -and $Action -eq 'Stop' }
         }
     }
-    
+
     Context "Register-ContainerdService" -Tag "Register-ContainerdService" {
         BeforeAll {
             $MockContainerdPath = 'TestDrive:\Program Files\Containerd'
@@ -142,7 +174,7 @@ Describe "ContainerdTools.psm1" {
                 -ParameterFilter { $Tool -eq "Containerd" }
             Mock Invoke-Expression -ModuleName "ContainerdTools"`
                 -MockWith { return 'Sample containerd default config data' }
-                
+
             $obj = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ ExitCode = 0 }
             Mock Invoke-ExecutableCommand -ModuleName "ContainerdTools" -MockWith { return $obj }
 
@@ -151,15 +183,16 @@ Describe "ContainerdTools.psm1" {
             Mock Get-Service -ModuleName "ContainerdTools" -MockWith { return [MockService]::new('Containerd') }
             Mock Set-Service -ModuleName "ContainerdTools"
             Mock Start-ContainerdService -ModuleName "ContainerdTools"
+            Mock Test-ServiceRegistered -ModuleName 'ContainerdTools' -MockWith { return $false }
         }
 
         AfterAll {
             Get-ChildItem -Path 'TestDrive:\' | Remove-Item -Recurse -Force
         }
-        
+
         It "Should successfully register containerd service using default values" {
-            Register-ContainerdService
-            
+            Register-ContainerdService -Force
+
             $expectedExecutablePath = "$MockContainerdPath\bin\containerd.exe"
 
             Should -Invoke Invoke-Expression -ModuleName "ContainerdTools" `
@@ -176,10 +209,10 @@ Describe "ContainerdTools.psm1" {
                 -ParameterFilter { $name -eq "containerd" -and $StartupType -eq "Automatic" }
             Should -Invoke Start-ContainerdService -Times 0 -Scope It -ModuleName "ContainerdTools"
         }
-        
+
         It "Should successfully register containerd service using custom values" {
-            Register-ContainerdService -ContainerdPath $MockContainerdPath -Start
-            
+            Register-ContainerdService -ContainerdPath $MockContainerdPath -Start -Force
+
             $expectedExecutablePath = "$MockContainerdPath\bin\containerd.exe"
 
             Should -Invoke Invoke-Expression -ModuleName "ContainerdTools" `
@@ -197,25 +230,31 @@ Describe "ContainerdTools.psm1" {
             Should -Invoke Start-ContainerdService -Times 1 -Scope It -ModuleName "ContainerdTools"
         }
 
+        It "Should log an error and stop execution if user does not consent" {
+            $ENV:PESTER = $true
+            Register-ContainerdService
+            $Error[0].Exception.Message | Should -BeExactly  "containerd service registration cancelled."
+        }
+
         It "Should throw an error if Containerd is not installed at the specified path" {
             Mock Test-EmptyDirectory -ModuleName "ContainerdTools" { return $true }
-            
+
             { Register-ContainerdService } | Should -Throw "Containerd does not exist at $MockContainerdPath or the directory is empty"
         }
-                
+
         It "Should throw an error if service registration fails" {
             Mock Invoke-ExecutableCommand -ModuleName "ContainerdTools" -MockWith { return $commandError }
 
-            { Register-ContainerdService } | Should -Throw "Failed to register containerd service.*"
+            { Register-ContainerdService -Force } | Should -Throw "Failed to register containerd service.*"
         }
-        
+
         It "Should throw an error if service is not found after registration is complete" {
             Mock Get-Service -ModuleName "ContainerdTools"
 
-            { Register-ContainerdService } | Should -Throw "Failed to register containerd service.*"
+            { Register-ContainerdService -Force } | Should -Throw "Failed to register containerd service.*"
         }
     }
-    
+
     Context "Uninstall-Containerd" -Tag "Uninstall-Containerd" {
         BeforeAll {
             Mock Get-DefaultInstallPath -ModuleName 'ContainerdTools' -MockWith { return 'TestDrive:\Program Files\Containerd' }
@@ -230,7 +269,7 @@ Describe "ContainerdTools.psm1" {
         It "Should successfully uninstall Containerd" {
             Mock Uninstall-ContainerdHelper -ModuleName 'ContainerdTools'
 
-            Uninstall-Containerd -Path 'TestDrive:\Program Files\Containerd'
+            Uninstall-Containerd -Path 'TestDrive:\Program Files\Containerd' -Force
 
             Should -Invoke Uninstall-ContainerdHelper -Times 1 -Scope It -ModuleName "ContainerdTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Containerd' }
@@ -239,7 +278,7 @@ Describe "ContainerdTools.psm1" {
         It "Should successfully uninstall Containerd from default path" {
             Mock Uninstall-ContainerdHelper -ModuleName 'ContainerdTools'
 
-            Uninstall-Containerd
+            Uninstall-Containerd -Force
 
             Should -Invoke Uninstall-ContainerdHelper -Times 1 -Scope It -ModuleName "ContainerdTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Containerd' }
@@ -248,7 +287,8 @@ Describe "ContainerdTools.psm1" {
         It "Should throw an error if user does not consent to uninstalling Containerd" {
             Mock Uninstall-ContainerToolConsent -ModuleName 'ContainerdTools' -MockWith { return $false }
 
-            { Uninstall-Containerd -Path 'TestDrive:\Program Files\Containerd' } | Should -Throw "Containerd uninstallation cancelled."
+            $ENV:PESTER = $true
+            { Uninstall-Containerd -Path 'TestDrive:\Program Files\Containerd' -Force:$false } | Should -Throw "Containerd uninstallation cancelled."
         }
 
         It "Should successfully call uninstall Containerd helper function" {
@@ -265,7 +305,7 @@ Describe "ContainerdTools.psm1" {
             Should -Invoke Remove-FeatureFromPath -Times 1 -Scope It -ModuleName "ContainerdTools" `
                 -ParameterFilter { $Feature -eq "containerd" }
         }
-        
+
         It "Should do nothing if containerd is not installed at specified path" {
             Mock Test-EmptyDirectory -ModuleName 'ContainerdTools' -MockWith { return $true }
 
@@ -274,18 +314,18 @@ Describe "ContainerdTools.psm1" {
             Should -Invoke Stop-ContainerdService -Times 0 -Scope It -ModuleName "ContainerdTools"
             Should -Invoke Unregister-Containerd -Times 0 -Scope It -ModuleName "ContainerdTools"
             Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "ContainerdTools"
-            Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "ContainerdTools" 
+            Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "ContainerdTools"
 
             $Error[0].Exception.Message | Should -BeExactly 'Containerd does not exist at TestDrive:\Program Files\Containerd or the directory is empty.'
         }
-        
+
         It "Should throw an error if containerd service stop or unregister was unsuccessful" {
             Mock Stop-ContainerdService -ModuleName 'ContainerdTools' -MockWith { Throw 'Error' }
 
             { Uninstall-ContainerdHelper -Path 'TestDrive:\Program Files\Containerd' } | Should -Throw "Could not stop or unregister containerd service.*"
             Should -Invoke Unregister-Containerd -Times 0 -Scope It -ModuleName "ContainerdTools"
             Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "ContainerdTools"
-            Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "ContainerdTools" 
+            Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "ContainerdTools"
         }
     }
 }

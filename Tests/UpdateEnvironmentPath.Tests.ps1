@@ -7,7 +7,7 @@
 ###########################################################################
 
 
-Describe "UpdateEnvironmentPath.psm1" { 
+Describe "UpdateEnvironmentPath.psm1" {
     BeforeAll {
         $RootPath = Split-Path -Parent $PSScriptRoot
         $ModuleParentPath = Join-Path -Path $RootPath -ChildPath 'Containers-Toolkit'
@@ -105,14 +105,14 @@ Describe "UpdateEnvironmentPath.psm1" {
             # Act & Assert
             { Update-EnvironmentPath -Tool $tool -Path $path -PathType $pathType -Action $action } | Should -Throw
         }
-    
+
         It "Should throw an error for an invalid PathType" {
             # Arrange
             $tool = "MyTool"
             $path = "TestDrive:\TestTool"
             $pathType = "Invalid"
             $action = "Add"
-    
+
             # Act & Assert
             { Update-EnvironmentPath -Tool $tool -Path $path -PathType $pathType -Action $action } | Should -Throw
         }
