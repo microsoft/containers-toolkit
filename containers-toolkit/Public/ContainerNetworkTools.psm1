@@ -136,6 +136,12 @@ function Initialize-NatNetwork {
     )
 
     begin {
+        # Check of NAT exists
+        $natInfo = Get-HnsNetwork -ErrorAction Ignore | Where-Object { $_.Name -eq $networkName }
+        if ($null -ne $natInfo) {
+            Throw "$networkName already exists. To view existing networks, use `Get-HnsNetwork`. To remove the existing network use the `Remove-HNSNetwork` command."
+        }
+        
         if (!$WinCNIPath) {
             $ContainerdPath = Get-DefaultInstallPath -Tool "containerd"
             $WinCNIPath = "$ContainerdPath\cni"
@@ -178,12 +184,6 @@ function Initialize-NatNetwork {
             }
             catch {
                 Throw "Could not import HNS module. $_"
-            }
-
-            # Check of NAT exists
-            $natInfo = Get-HnsNetwork -ErrorAction Ignore | Where-Object { $_.Name -eq $networkName }
-            if ($null -ne $natInfo) {
-                Throw "$networkName already exists. To view existing networks, use `Get-HnsNetwork`. To remove the existing network use the `Remove-HNSNetwork` command."
             }
 
             # Set default gateway if gateway us null and generate subnet mash=k from Gateway

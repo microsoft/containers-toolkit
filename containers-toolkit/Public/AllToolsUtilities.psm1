@@ -68,7 +68,11 @@ function Install-ContainerTools {
 
         [Switch]
         [parameter(HelpMessage = "Force install the tools even if they already exists at the specified path")]
-        $Force
+        $Force,
+
+        [switch]
+        [parameter(HelpMessage = "Register and Start Conatinerd and Buildkitd services and set up NAT network")]
+        $RegisterServices
     )
 
     begin {
@@ -153,10 +157,29 @@ function Install-ContainerTools {
                     Install-RequiredFeature @InstallParams -Cleanup $CleanUp
 
                     $completedInstalls += $params.Feature
+
+                    if ($RegisterServices) {
+                        $RegisterParams = @{
+                            force = $force
+                            feature = $params.Feature
+                            installPath = $params.InstallPath
+                        }
+                        Register-Service @RegisterParams
+                    }
                 }
                 catch {
                     Write-Error "Installation failed for $($params.feature). $_"
                 }
+            }
+
+            if ($RegisterServices) {
+                Initialize-NatNetwork
+            }
+            else {
+                Write-Information -Tags "Instructions" -MessageData (
+                    "To start containderd service, run 'Start-Service containerd' or 'Start-ContainerdService',",
+                    "To start buildkitd service, run 'Start-Service buildkitd' or 'Start-BuildkitdService'"
+                )
             }
 
             Write-Information -MessageData "$($completedInstalls -join ', ') installed successfully." -Tags "Installation" -InformationAction Continue
@@ -264,6 +287,29 @@ function getDaemonStatus($daemon) {
     }
 
     return $daemonStatus.Status
+}
+
+function Register-Service {
+    param (
+        [bool]$force,
+        [string]$feature,
+        [string]$installPath
+    )
+
+    switch ($feature) {
+        "Containerd" {
+            $RegisterParams = @{
+                ContainerdPath = $installPath
+            }
+            Register-ContainerdService @RegisterParams -Start -Force:$force
+        }
+        "BuildKit" {
+            $RegisterParams = @{
+                BuildKitPath = $installPath
+            }
+            Register-BuildkitdService @RegisterParams -Start -Force:$force
+        }
+    }
 }
 
 Export-ModuleMember -Function Show-ContainerTools

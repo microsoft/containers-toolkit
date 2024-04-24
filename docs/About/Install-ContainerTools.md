@@ -15,7 +15,7 @@ Downloads and installs container tool (Containerd, BuildKit, and nerdctl).
 
 ```
 Install-ContainerTools [[-ContainerDVersion] <String>] [[-BuildKitVersion] <String>]
- [[-NerdCTLVersion] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-CleanUp] [-Force]
+ [[-NerdCTLVersion] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-CleanUp] [-Force] [-RegisterServices]
  [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
@@ -47,6 +47,14 @@ Deletes downloaded files after installation is complete to save on disk space.
 
 ```powershell
 PS C:\> Install-ContainerTools -Cleanup
+```
+
+### Example 4: Register and Start Conatinerd and Buildkitd services and set up NAT network
+
+Register and Start Conatinerd and Buildkitd services and set up NAT network
+
+```powershell
+PS C:\> Install-ContainerTools -RegisterServices
 ```
 
 ## PARAMETERS
@@ -137,6 +145,22 @@ Accept wildcard characters: False
 ### -Force
 
 Force install the tools even if they already exists at the specified path.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -RegisterServices
+
+Register and Start Conatinerd and Buildkitd services and set up NAT network.
 
 ```yaml
 Type: SwitchParameter
