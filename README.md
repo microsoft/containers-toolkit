@@ -56,7 +56,7 @@ cd <module path>
 git clone https://github.com/microsoft/containers-toolkit.git
 
 
-$env:PSModulePath += "$env:PSModulePath;<path-to-module-directory>"
+$env:PSModulePath = "$env:PSModulePath;<path-to-module-directory>"
 
 Import-Module -Name containers-toolkit -Force
 ```
