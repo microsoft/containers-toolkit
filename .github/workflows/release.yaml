@@ -1,0 +1,113 @@
+###########################################################################
+#                                                                         #
+#   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+#   This code is licensed under the MIT License (MIT).                    #
+#                                                                         #
+###########################################################################
+
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release-type:
+        description: "Release type"
+        required: false
+        default: patch
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+env:
+  MODULE_DIR: .\containers-toolkit
+  ROOT_DIR: .\
+
+jobs:
+  release:
+    runs-on: windows-latest
+    if: startsWith(github.ref, 'refs/heads/releases/')
+    timeout-minutes: 60
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # FIXME: Fix cache not working
+      - name: Setup PowerShell module cache
+        id: cacher
+        uses: actions/cache@v3
+        with:
+          path: "C:\\program files\\powershell\\7\\Modules"
+          key: ${{ runner.os }}-CTK
+
+      - name: Install required PowerShell modules
+        if: steps.cacher.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          Set-PSRepository PSGallery -InstallationPolicy Trusted
+          $requiredModules = @('ThreadJob', 'HNS')
+          $missingModules = $requiredModules | Where-Object { -not (Get-Module -ListAvailable -Name $_) }
+
+          if ($missingModules) {
+            Write-Output "Modules to install: $($missingModules -join ', ')"
+            Install-Module $missingModules -ErrorAction Stop -AllowClobber -SkipPublisherCheck -Force
+          }
+
+      - name: Update module version
+        id: update-version
+        shell: pwsh
+        run: |
+          $NewSemVer = .\build\scripts\update-ctkmanifest.ps1 -ReleaseType ${{ inputs.release-type }}
+          echo "NEW_VERSION=$NewSemVer" >> $env:GITHUB_OUTPUT
+
+      - name: Sign and archive signed module scripts
+        uses: ./.github/actions/sign-scripts
+        with:
+          AzureKeyVaultUrl: $env:AKVUrl
+          AzureKeyVaultClientId: $env:AKVClientId
+          AzureKeyVaultClientSecret: $env:AKVClientSecret
+          AzureKeyVaultTenantId: $env:AKVTenantId
+          AzureKeyVaultCertificate: $env:AKVCertificate
+        env:
+          AKVUrl: ${{ secrets.AzureKeyVaultUrl }}
+          AKVClientId: ${{ secrets.AzureKeyVaultClientId }}
+          AKVClientSecret: ${{ secrets.AzureKeyVaultClientSecret }}
+          AKVTenantId: ${{ secrets.AzureKeyVaultTenantId }}
+          AKVCertificate: ${{ secrets.AzureKeyVaultCertificate }}
+
+      - name: Generate release note from template
+        shell: pwsh
+        run: |
+          $NewSemVer="${{ steps.update-version.outputs.NEW_VERSION }}"
+          $releaseNotes = [IO.File]::ReadAllText(".\build\hacks\release-notes-template.md")
+          $releaseNotes = $releaseNotes -replace "__NEW_VERSTION__", $NewSemVer
+          $releaseNotes | Out-File -FilePath ./release-note.txt -Encoding utf8 -Force
+
+      - name: Create release
+        shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Compress ./container-toolkit module directory
+          $outputDir = ".\Source code.zip"
+          Compress-Archive -Path @(".\containers-toolkit\","LICENSE") -DestinationPath "$outputDir" -Update
+
+          # Get new version tag
+          $tag="${{ steps.update-version.outputs.NEW_VERSION }}"
+          $vtag = "v${tag}"
+
+          # Create release
+          gh release create -F ./release-note.txt --draft --title "${vtag}" "${vtag}" "$outputDir"
+
+      - name: Publish containers-toolkit to PS Gallery
+        shell: pwsh
+        run: |
+          Publish-Module -Path ${{ env.MODULE_DIR }} -NuGetApiKey {{ secrets.NUGET_APIKEY }}
+
+      - name: Post results
+        shell: pwsh
+        run: |
+          $tag="${{ steps.update-version.outputs.NEW_VERSION }}"
+          echo ":rocket: Succefully released Containers.Toolkit v$tag" >> $GITHUB_STEP_SUMMARY

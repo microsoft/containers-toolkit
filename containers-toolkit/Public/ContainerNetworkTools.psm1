@@ -59,8 +59,7 @@ function Install-WinCNIPlugin {
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
-                    $command = "Uninstall-WinCNIPlugin -Path '$WinCNIPath' -Force:`$$Force | Out-Null"
-                    Invoke-Expression -Command $command
+                    Uninstall-WinCNIPlugin -Path "$WinCNIPath" -Confirm:$false -Force:$Force | Out-Null
                 }
                 catch {
                     Throw "Windows CNI plugin installation failed. $_"
@@ -77,7 +76,7 @@ function Install-WinCNIPlugin {
 
             New-Item -Path $WinCNIPath -ItemType Directory -Force -ErrorAction Ignore | Out-Null
 
-            # NOTE: We download plugins from https://github.com/microsoft/windows-container-networking 
+            # NOTE: We download plugins from https://github.com/microsoft/windows-container-networking
             # instead of  https://github.com/containernetworking/plugins/releases.
             # The latter causes an error in nerdctl: "networking setup error has occurred. incompatible CNI versions"
 
@@ -92,7 +91,7 @@ function Install-WinCNIPlugin {
                     DownloadPath = $DownloadPath
                 }
             )
-            Get-InstallationFiles -Files $DownloadParams
+            Get-InstallationFile -Files $DownloadParams
 
             # Expand zip file and install Win CNI plugin
             $WinCNIBin = "$WinCNIPath\bin"
@@ -111,8 +110,7 @@ function Install-WinCNIPlugin {
 
 function Initialize-NatNetwork {
     [CmdletBinding(
-        SupportsShouldProcess = $true,
-        ConfirmImpact = 'Medium'
+        SupportsShouldProcess = $true
     )]
     param(
         [parameter(HelpMessage = "Name of the new network. Defaults to 'nat''")]
@@ -141,7 +139,7 @@ function Initialize-NatNetwork {
         if ($null -ne $natInfo) {
             Throw "$networkName already exists. To view existing networks, use `Get-HnsNetwork`. To remove the existing network use the `Remove-HNSNetwork` command."
         }
-        
+
         if (!$WinCNIPath) {
             $ContainerdPath = Get-DefaultInstallPath -Tool "containerd"
             $WinCNIPath = "$ContainerdPath\cni"
@@ -234,7 +232,7 @@ function Initialize-NatNetwork {
 function Uninstall-WinCNIPlugin {
     [CmdletBinding(
         SupportsShouldProcess = $true,
-        ConfirmImpact = 'Medium'
+        ConfirmImpact = 'High'
     )]
     param(
         [parameter(HelpMessage = "Windows CNI plugin path")]
@@ -314,13 +312,20 @@ function Import-HNSModule {
         [Switch] $Force
     )
 
+    $ModuleName = 'HostNetworkingService'
+    if ((Get-Module -ListAvailable -Name $ModuleName)) {
+        Import-Module -Name $ModuleName -DisableNameChecking -Force
+        return
+    }
+
+    $ModuleName = 'HNS'
     try {
         # https://www.powershellgallery.com/packages/HNS/0.2.4
-        if ($null -eq ( Get-Module -ListAvailable -Name 'HNS')) {
-            Install-Module -Name HNS -Scope CurrentUser -AllowClobber -Force:$Force
+        if ($null -eq ( Get-Module -ListAvailable -Name $ModuleName)) {
+            Install-Module -Name $ModuleName -Scope CurrentUser -AllowClobber -Force:$Force
         }
 
-        Import-Module -Name HNS -DisableNameChecking -Force
+        Import-Module -Name $ModuleName -DisableNameChecking -Force
     }
     catch {
         $WinCNIPath = "$Env:ProgramFiles\containerd\cni"
@@ -333,7 +338,7 @@ function Import-HNSModule {
                     DownloadPath = $WinCNIPath
                 }
             )
-            Get-InstallationFiles -Files $DownloadParams
+            Get-InstallationFile -Files $DownloadParams
         }
 
         Import-Module $path -DisableNameChecking -Force
@@ -366,11 +371,25 @@ function Install-MissingPlugin {
 
 
 # FIXME: nerdctl- Warning when user tries to run container with this network config
-function Set-DefaultCNICInfig ($WinCNIVersion, $networkName, $gateway, $subnet, $cniConfDir) {
-    # CurrentEndpointCount   : 1
-    # MaxConcurrentEndpoints : 1
-    # TotalEndpoints
-    $CNIConfig = @"
+function Set-DefaultCNICInfig {
+    [CmdletBinding(
+        SupportsShouldProcess = $true,
+        ConfirmImpact = 'Low'
+    )]
+    param(
+        [String]$WinCNIVersion,
+        [String]$networkName,
+        [String]$gateway,
+        [String]$subnet,
+        [String]$cniConfDir
+    )
+
+    process {
+        if ($PSCmdlet.ShouldProcess('', "Sets Default CNI config")) {
+            # CurrentEndpointCount   : 1
+            # MaxConcurrentEndpoints : 1
+            # TotalEndpoints
+            $CNIConfig = @"
 {
 "cniVersion": "$WinCNIVersion",
 "name": "$networkName",
@@ -390,9 +409,15 @@ function Set-DefaultCNICInfig ($WinCNIVersion, $networkName, $gateway, $subnet, 
     }
 }
 "@
-    $CNIConfig | Set-Content "$cniConfDir\0-containerd-nat.conf" -Force
+            $CNIConfig | Set-Content "$cniConfDir\0-containerd-nat.conf" -Force
+        }
+        else {
+            # Code that should be processed if doing a WhatIf operation
+            # Must NOT change anything outside of the function / script
+            return
+        }
+    }
 }
-
 
 Export-ModuleMember -Function Get-WinCNILatestVersion
 Export-ModuleMember -Function Install-WinCNIPlugin

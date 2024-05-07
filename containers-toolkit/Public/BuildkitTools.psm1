@@ -72,8 +72,7 @@ function Install-Buildkit {
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
-                    $command = "Uninstall-Buildkit -Path '$InstallPath' -Force:`$$Force | Out-Null"
-                    Invoke-Expression -Command $command
+                    Uninstall-Buildkit -Path "$InstallPath" -Force:$Force -Confirm:$false | Out-Null
                 }
                 catch {
                     Throw "Buildkit installation failed. $_"
@@ -101,7 +100,7 @@ function Install-Buildkit {
                     DownloadPath = $DownloadPath
                 }
             )
-            Get-InstallationFiles -Files $DownloadParams
+            Get-InstallationFile -Files $DownloadParams
 
             # Untar downloaded file at install path
             $params = @{
@@ -153,11 +152,39 @@ function Build-BuildkitFromSource {
 }
 
 function Start-BuildkitdService {
-    Invoke-ServiceAction -Service 'Buildkitd' -Action 'Start'
+    [CmdletBinding(
+        SupportsShouldProcess = $true
+    )]
+    param()
+
+    process {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, "Buildkitd service will be started")) {
+            Invoke-ServiceAction -Service 'Buildkitd' -Action 'Start'
+        }
+        else {
+            # Code that should be processed if doing a WhatIf operation
+            # Must NOT change anything outside of the function / script
+            return
+        }
+    }
 }
 
 function Stop-BuildkitdService {
-    Invoke-ServiceAction -Service 'Buildkitd' -Action 'Stop'
+    [CmdletBinding(
+        SupportsShouldProcess = $true
+    )]
+    param()
+
+    process {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, "Buildkitd service will be stopped")) {
+            Invoke-ServiceAction -Service 'Buildkitd' -Action 'Stop'
+        }
+        else {
+            # Code that should be processed if doing a WhatIf operation
+            # Must NOT change anything outside of the function / script
+            return
+        }
+    }
 }
 
 function Register-BuildkitdService {
@@ -290,7 +317,7 @@ function Register-BuildkitdService {
 function Uninstall-Buildkit {
     [CmdletBinding(
         SupportsShouldProcess = $true,
-        ConfirmImpact = 'Medium'
+        ConfirmImpact = 'High'
     )]
     param(
         [parameter(HelpMessage = "BuildKit path")]
@@ -306,11 +333,11 @@ function Uninstall-Buildkit {
             $Path = Get-DefaultInstallPath -Tool $tool
         }
 
-        $WhatIfMessage = "Buildkit will be uninstalled and buildkitd service will be stopped and unregistered"
+        $WhatIfMessage = "Buildkit will be uninstalled from $path and buildkitd service will be stopped and unregistered"
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess($Path, $WhatIfMessage)) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             if (Test-EmptyDirectory -Path $path) {
                 Write-Output "$tool does not exist at $Path or the directory is empty"
                 return
@@ -318,7 +345,7 @@ function Uninstall-Buildkit {
 
             $consent = $force
             if (!$ENV:PESTER) {
-                $consent = $force -or $PSCmdlet.ShouldContinue($Path, 'Are you sure you want to uninstall Buildkit?')
+                $consent = $force -or $PSCmdlet.ShouldContinue($env:COMPUTERNAME, "Are you sure you want to uninstall Buildkit from $path?")
             }
 
             if (!$consent) {

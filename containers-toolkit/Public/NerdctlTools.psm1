@@ -41,9 +41,9 @@ function Install-NerdctlDependencies {
     )
 
     foreach ($dependency in $Dependencies) {
-        $command = "Install-$dependency -Force:`$$Force -Confirm:`$$false"
+        $InstallCommand = "Install-$dependency"
         try {
-            Invoke-Expression -Command $command
+            & $InstallCommand -Force:$Force -Confirm:$false
         }
         catch {
             Write-Error "Installation failed for $dependency. $_"
@@ -108,8 +108,7 @@ function Install-Nerdctl {
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
-                    $command = "Uninstall-Nerdctl -Path '$InstallPath' -Force:`$$Force | Out-Null"
-                    Invoke-Expression -Command $command
+                    Uninstall-Nerdctl -Path "$InstallPath" -Confirm:$false -Force:$Force | Out-Null
                 }
                 catch {
                     Throw "nerdctl installation failed. $_"
@@ -134,7 +133,7 @@ function Install-Nerdctl {
                     DownloadPath = $DownloadPath
                 }
             )
-            Get-InstallationFiles -Files $DownloadParams
+            Get-InstallationFile -Files $DownloadParams
 
             # Untar and install tool
             $params = @{
@@ -179,7 +178,7 @@ function Initialize-NerdctlToml {
 function Uninstall-Nerdctl {
     [CmdletBinding(
         SupportsShouldProcess = $true,
-        ConfirmImpact = 'Medium'
+        ConfirmImpact = 'High'
     )]
     param(
         [parameter(HelpMessage = "nerdctl path")]

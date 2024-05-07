@@ -20,11 +20,7 @@ function Show-ContainerTools {
 
     $installedTools = @()
     foreach ($tool in $tools) {
-        $command = "Get-InstalledVersion -Feature $tool"
-        if ($Latest) {
-            $command += " -Latest $true"
-        }
-        $installedTools += Invoke-Expression -Command $command
+        $installedTools += (Get-InstalledVersion -Feature $tool -Latest:$Latest)
     }
 
     $registerCommands = (Get-Command -Name "*-*Service" | Where-Object { $_.Source -eq 'Containers-Toolkit' }).Name -join ', '
@@ -132,7 +128,7 @@ function Install-ContainerTools {
             )
 
             # Download files
-            Get-InstallationFiles -Files $files
+            Get-InstallationFile -Files $files
 
             $completedInstalls = @()
 
@@ -197,8 +193,8 @@ function Install-ContainerTools {
 }
 
 function Uninstall-ContainerTool($Tool, $Path, $force) {
-    $command = "Uninstall-$($Tool) -Path '$Path' -Force:`$$Force"
-    Invoke-Expression -Command $command
+    $uninstallCommand = "Uninstall-$($Tool)"
+    & $uninstallCommand -Path "$Path" -Force:$Force
 }
 
 function Get-InstalledVersion($feature, $Latest) {
@@ -242,7 +238,7 @@ function Get-InstalledVersion($feature, $Latest) {
     $latestVersion = "-"
     if ($Latest) {
         $latestVersionCommand = "Get-$($feature)LatestVersion"
-        $latestVersion = Invoke-Expression -Command $latestVersionCommand
+        $latestVersion = & $latestVersionCommand
         Add-Member -InputObject $result -Name 'LatestVersion' -Value "v$latestVersion" -MemberType 'NoteProperty'
     }
 
@@ -252,7 +248,7 @@ function Get-InstalledVersion($feature, $Latest) {
 function getToolVersion($executable) {
     $installedVersion = $null
     try {
-        $version = Invoke-Expression -Command "$executable -v"
+        $version = & $executable -v
 
         $pattern = "(\d+\.)(\d+\.)(\*|\d+)"
         $installedVersion = ($version | Select-String -Pattern $pattern).Matches.Value

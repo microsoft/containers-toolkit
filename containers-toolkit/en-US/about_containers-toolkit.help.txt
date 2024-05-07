@@ -1,4 +1,4 @@
-TOPIC
+﻿TOPIC
     about_containerstoolkit
 
     Containers-Toolkit contains PowerShell functions that allow you to download,
@@ -18,7 +18,7 @@ LONG DESCRIPTION
     Configurations done with these functions are the default configurations that
     allow you to get started with interacting with the tools. Further
     configurations may be necessary.
-    You can find documentation for these functions here:    
+    You can find documentation for these functions here:
         https://github.com/microsoft/containers-toolkit/tree/main/docs/command-reference.md
 
 KEYWORDS

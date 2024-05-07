@@ -55,7 +55,7 @@ function Test-EmptyDirectory($path) {
     return ($itemCount.Count -eq 0)
 }
 
-function Get-InstallationFiles {
+function Get-InstallationFile {
     param(
         [parameter(Mandatory, HelpMessage = "Files to download")]
         [PSCustomObject[]] $Files
@@ -186,8 +186,24 @@ function Add-FeatureToPath ($Path, $Feature) {
     @("User", "System") | ForEach-Object { Update-EnvironmentPath -Tool $Feature -Path $Path -Action 'Add' -PathType $_ }
 }
 
-function Remove-FeatureFromPath ($Feature) {
-    @("User", "System") | ForEach-Object { Update-EnvironmentPath -Tool $Feature -Action 'Remove' -PathType $_ }
+function Remove-FeatureFromPath {
+    [CmdletBinding(
+        SupportsShouldProcess = $true
+    )]
+    param(
+        [string]$Feature
+    )
+
+    process {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, "$feature will be removed from Environment paths")) {
+            @("User", "System") | ForEach-Object { Update-EnvironmentPath -Tool $Feature -Action 'Remove' -PathType $_ }
+        }
+        else {
+            # Code that should be processed if doing a WhatIf operation
+            # Must NOT change anything outside of the function / script
+            return
+        }
+    }
 }
 
 function Test-ServiceRegistered ($service) {
@@ -200,35 +216,53 @@ function Invoke-ServiceAction ($Action, $service) {
         throw "$service service does not exist as an installed service."
     }
 
-    switch ($Action) {
-        'Start' {
-            $status = 'Running'
-            $command = 'Start-Service'
-        }
-        'Stop' {
-            $status = 'Stopped'
-            $command = 'Stop-Service -NoWait -Force'
-        }
-        Default {
-            Throw 'Not implemented'
-        }
-    }
-
     $serviceInfo = Get-Service $service -ErrorAction Ignore
     if (!$serviceInfo) {
         Throw "$service service does not exist as an installed service."
     }
 
-    try {
-        Invoke-Expression "$command -Name $service"
-
-        # Waiting for buildkit to come to steady state
-        (Get-Service -Name $service -ErrorAction Ignore).WaitForStatus($status, '00:00:30')
-
-        Write-Debug "Success: { Service: $service, Action: $Action }"
+    switch ($Action) {
+        'Start' {
+            Invoke-StartService -Service $service
+        }
+        'Stop' {
+            Invoke-StopService -Service $service
+        }
+        Default {
+            Throw 'Not implemented'
+        }
     }
-    catch {
-        Throw "Couldn't $action $service service. $_"
+}
+
+function Invoke-StartService($service) {
+    process {
+        try {
+            Start-Service -Name $service
+
+            # Waiting for the service to come to a steady state
+            (Get-Service -Name $service -ErrorAction Ignore).WaitForStatus('Running', '00:00:30')
+
+            Write-Debug "Success: { Service: $service, Action: 'Start' }"
+        }
+        catch {
+            Throw "Couldn't start $service service. $_"
+        }
+    }
+}
+
+function Invoke-StopService($service) {
+    process {
+        try {
+            Stop-Service -Name $service -NoWait -Force
+
+            # Waiting for the service to come to a steady state
+            (Get-Service -Name $service -ErrorAction Ignore).WaitForStatus('Stopped', '00:00:30')
+
+            Write-Debug "Success: { Service: $service, Action: 'Stop' }"
+        }
+        catch {
+            Throw "Couldn't stop $service service. $_"
+        }
     }
 }
 
@@ -258,7 +292,7 @@ function Invoke-ExecutableCommand {
 Export-ModuleMember -Function Get-LatestToolVersion
 Export-ModuleMember -Function Get-DefaultInstallPath
 Export-ModuleMember -Function Test-EmptyDirectory
-Export-ModuleMember -Function Get-InstallationFiles
+Export-ModuleMember -Function Get-InstallationFile
 Export-ModuleMember -Function Install-RequiredFeature
 Export-ModuleMember -Function Install-ContainerToolConsent
 Export-ModuleMember -Function Uninstall-ContainerToolConsent

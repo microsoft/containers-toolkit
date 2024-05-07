@@ -124,7 +124,6 @@ Create a default Containerd configuration file called `config.toml` at the Conta
 | Start | Switch | Start Containerd service after registration is complete | |
 | WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
-
 **Output**
 
 None

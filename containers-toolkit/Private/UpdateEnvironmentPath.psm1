@@ -7,6 +7,9 @@
 ###########################################################################
 
 function Update-EnvironmentPath {
+    [CmdletBinding(
+        SupportsShouldProcess = $true
+    )]
     param (
         [parameter(HelpMessage = "Name of the tool add or remove from env path")]
         [string] $Tool,
@@ -23,60 +26,69 @@ function Update-EnvironmentPath {
         [string] $Action
     )
 
-    # Get current environment path
-    $parsedPathString = switch ($PathType) {
-        "System" {
-            $pathVariable = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
-            ParsePathString -PathString $pathVariable
-        }
-        "User" {
-            ParsePathString -PathString $env:Path
-        }
-        Default { throw "Invalid PathType: $PathType" }
-    }
-
-    # Check if the path needs to be changed
-    switch ($Action) {
-        "Add" {
-            $pathChanged = $parsedPathString -notlike "*$Tool*"
-            $toAction = $Path
-            $ActionVerb = "Adding"
-        }
-        "Remove" {
-            $pathChanged = $parsedPathString -like "*$Tool*"
-            $toAction = $Tool
-            $ActionVerb = "Removing"
-        }
-        Default { throw "Invalid PathType: $PathType" }
-    }
-
-    if ($pathChanged) {
-        Write-Information -InformationAction Continue -MessageData "$ActionVerb $toAction in $PathType Environment Path"
-
-        # Get the updated path
-        $updatedPath = switch ($Action) {
-            "Add" { AddFeatureToPath -PathString $parsedPathString -ToolPath $Path }
-            "Remove" { RemoveFeatureFromPath -PathString $parsedPathString -Tool $Tool }
-            Default { throw "Invalid Action: $Action" }
-        }
-
-        # For tests, we do not want to update the environment path
-        if ($env:pester) {
-            Write-Debug "Skipping environment path update for tests"
-            return $updatedPath
-        }
-
-        # Update the environment path
-        switch ($PathType) {
-            "System" {
-                [System.Environment]::SetEnvironmentVariable("Path", "$updatedPath", [System.EnvironmentVariableTarget]::Machine)
+    process {
+        if ($PSCmdlet.ShouldProcess($InstallPath, "$path will be added to environment path")) {
+            # Get current environment path
+            $parsedPathString = switch ($PathType) {
+                "System" {
+                    $pathVariable = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+                    ParsePathString -PathString $pathVariable
+                }
+                "User" {
+                    ParsePathString -PathString $env:Path
+                }
+                Default { throw "Invalid PathType: $PathType" }
             }
-            "User" {
-                $env:Path = $updatedPath
+
+            # Check if the path needs to be changed
+            switch ($Action) {
+                "Add" {
+                    $pathChanged = $parsedPathString -notlike "*$Tool*"
+                    $toAction = $Path
+                    $ActionVerb = "Adding"
+                }
+                "Remove" {
+                    $pathChanged = $parsedPathString -like "*$Tool*"
+                    $toAction = $Tool
+                    $ActionVerb = "Removing"
+                }
+                Default { throw "Invalid PathType: $PathType" }
             }
-            Default {
-                throw"Invalid PathType: $PathType"
+
+            if ($pathChanged) {
+                Write-Information -InformationAction Continue -MessageData "$ActionVerb $toAction in $PathType Environment Path"
+
+                # Get the updated path
+                $updatedPath = switch ($Action) {
+                    "Add" { AddFeatureToPath -PathString $parsedPathString -ToolPath $Path }
+                    "Remove" { RemoveFeatureFromPath -PathString $parsedPathString -Tool $Tool }
+                    Default { throw "Invalid Action: $Action" }
+                }
+
+                # For tests, we do not want to update the environment path
+                if ($env:pester) {
+                    Write-Debug "Skipping environment path update for tests"
+                    return $updatedPath
+                }
+
+                # Update the environment path
+                switch ($PathType) {
+                    "System" {
+                        [System.Environment]::SetEnvironmentVariable("Path", "$updatedPath", [System.EnvironmentVariableTarget]::Machine)
+                    }
+                    "User" {
+                        $env:Path = $updatedPath
+                    }
+                    Default {
+                        throw"Invalid PathType: $PathType"
+                    }
+                }
             }
+        }
+        else {
+            # Code that should be processed if doing a WhatIf operation
+            # Must NOT change anything outside of the function / script
+            return
         }
     }
 }
