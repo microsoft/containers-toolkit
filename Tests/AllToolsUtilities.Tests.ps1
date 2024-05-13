@@ -16,6 +16,7 @@ Describe "AllToolsUtilities.psm1" {
         Import-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Public\AllToolsUtilities.psm1" -Force
+        Import-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1" -Force
     }
 
     AfterAll {
@@ -24,6 +25,7 @@ Describe "AllToolsUtilities.psm1" {
         Remove-Module -Name "$ModuleParentPath\Public\ContainerdTools.psm1" -Force -ErrorAction Ignore
         Remove-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force -ErrorAction Ignore
         Remove-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1" -Force -ErrorAction Ignore
     }
 
     Context "Show-ContainerTools" -Tag "Show-ContainerTools" {
