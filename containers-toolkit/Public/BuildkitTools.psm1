@@ -230,7 +230,10 @@ function Register-BuildkitdService {
 
             # Check buildkitd service is already registered
             if (Test-ServiceRegistered -Service 'Buildkitd') {
-                Write-Warning "Buildkitd service already registered."
+                Write-Warning (-join @("buildkitd service already registered. To re-register the service, "
+                "stop the service by running 'Stop-Service buildkitd' or 'Stop-BuildkitdService', then "
+                "run 'buildkitd --unregister-service'. Wait for buildkitd service to be deregistered, "
+                "then re-reun this command."))
                 return
             }
 
@@ -404,14 +407,6 @@ function Uninstall-BuildkitHelper {
     Write-Output "Successfully uninstalled buildkit."
 }
 
-function Test-ConfFileEmpty($Path) {
-    if (!(Test-Path -LiteralPath $Path)) {
-        return $true
-    }
-
-    $isFileNotEmpty = (([System.IO.File]::ReadAllText($Path)) -match '\S')
-    return (-not $isFileNotEmpty )
-}
 
 function Get-ConsentToRegisterBuildkit ($path) {
     $retry = 2

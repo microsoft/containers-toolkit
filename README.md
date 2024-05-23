@@ -8,8 +8,8 @@
 [ci-build-site]: https://github.com/microsoft/containers-toolkit/actions/workflows/ci-build.yaml
 [devskim-image]: https://github.com/microsoft/containers-toolkit/actions/workflows/sdl-compliance.yaml/badge.svg
 [devskim-site]: https://github.com/microsoft/containers-toolkit/actions/workflows/sdl-compliance.yaml
-[cf-image]: https://www.codefactor.io/repository/github/powershell/powershell/badge
-[cf-site]: https://www.codefactor.io/repository/github/powershell/powershell
+[cf-image]: https://www.codefactor.io/repository/github/microsoft/containers-toolkit/badge/main
+[cf-site]: https://www.codefactor.io/repository/github/microsoft/containers-toolkit/overview/main
 
 ## Table of contents
 

@@ -162,7 +162,7 @@ Describe "ContainerdTools.psm1" {
 
     Context "Register-ContainerdService" -Tag "Register-ContainerdService" {
         BeforeAll {
-            $MockContainerdPath = 'TestDrive:\Program Files\Containerd'
+            $MockContainerdPath = "$TestDrive\Program Files\Containerd"
             # New-Item -Path $MockContainerdPath -ItemType 'Directory' -Force | Out-Null
             New-Item -Path "$MockContainerdPath\bin\containerd.exe" -ItemType 'File' -Force | Out-Null
 
@@ -172,15 +172,19 @@ Describe "ContainerdTools.psm1" {
             Mock Get-DefaultInstallPath -ModuleName "ContainerdTools" `
                 -MockWith { return $MockContainerdPath } `
                 -ParameterFilter { $Tool -eq "Containerd" }
+
+            $mockProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ ExitCode = 0 }
+            Mock Invoke-ExecutableCommand -ModuleName "ContainerdTools" -MockWith { return $mockProcess }
+
+            # Mock for default config
+            $mockConfigStdOut = New-MockObject -Type 'System.IO.StreamReader' -Methods @{ ReadToEnd = { return "Sample containerd default config data" } }
+            $mockConfigProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ 
+                StandardOutput = $mockConfigStdOut 
+            }
             Mock Invoke-ExecutableCommand -ModuleName "ContainerdTools" `
                 -ParameterFilter { $Arguments -eq "config default" } `
-                -MockWith { return 'Sample containerd default config data' }
-
-            $obj = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ ExitCode = 0 }
-            Mock Invoke-ExecutableCommand -ModuleName "ContainerdTools" -MockWith { return $obj }
-
-            # $MockService = New-MockObject -Type System.ServiceProcess.ServiceController -Methods @{ WaitForStatus = { } }
-            # Mock Get-Service -ModuleName "ContainerdTools" -MockWith { return $MockService }
+                -MockWith { return $mockConfigProcess }
+           
             Mock Get-Service -ModuleName "ContainerdTools" -MockWith { return [MockService]::new('Containerd') }
             Mock Set-Service -ModuleName "ContainerdTools"
             Mock Start-ContainerdService -ModuleName "ContainerdTools"
@@ -253,6 +257,19 @@ Describe "ContainerdTools.psm1" {
             Mock Get-Service -ModuleName "ContainerdTools"
 
             { Register-ContainerdService -Force } | Should -Throw "Failed to register containerd service.*"
+        }
+
+        It "Should throw an error if config file is empty" {
+            # Mock for default config
+            $mockConfigStdOut = New-MockObject -Type 'System.IO.StreamReader' -Methods @{ ReadToEnd = { return } }
+            $mockConfigProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ 
+                StandardOutput = $mockConfigStdOut 
+            }
+            Mock Invoke-ExecutableCommand -ModuleName "ContainerdTools" `
+                -ParameterFilter { $Arguments -eq "config default" } `
+                -MockWith { return $mockConfigProcess }
+
+            { Register-ContainerdService -Force } | Should -Throw "Config file is empty. '$MockContainerdPath\config.toml'"
         }
     }
 
