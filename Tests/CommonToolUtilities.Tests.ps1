@@ -58,7 +58,7 @@ Describe "CommonToolUtilities.psm1" {
 
     Context "Test-EmptyDirectory" -Tag "Test-EmptyDirectory" {
         BeforeAll {
-            $testFolder = Join-Path $TestDrive 'TestFolder'
+            $Script:testFolder = Join-Path $TestDrive 'TestFolder'
         }
 
         AfterEach {
@@ -66,34 +66,28 @@ Describe "CommonToolUtilities.psm1" {
         }
 
         It "Should return true if directory does not exist" {
-            Test-EmptyDirectory -Path $testFolder | Should -Be $true
+            Test-EmptyDirectory -Path $Script:testFolder | Should -Be $true
 
         }
 
         It "Should return true if directory is empty" {
-            New-Item -Path $testFolder -ItemType Directory -Force | Out-Null
-            New-Item -Path "$testFolder\bin" -ItemType Directory -Force | Out-Null
+            New-Item -Path $Script:testFolder -ItemType Directory -Force | Out-Null
+            New-Item -Path "$Script:testFolder\bin" -ItemType Directory -Force | Out-Null
 
-            Test-EmptyDirectory "$testFolder\bin" | Should -Be $true
+            Test-EmptyDirectory "$Script:testFolder\bin" | Should -Be $true
         }
 
         It "Should return false if directory is not empty" {
-            New-Item -Path $testFolder -ItemType Directory | Out-Null
-            New-Item -Path "$testFolder\bin" -ItemType Directory | Out-Null
-            New-Item -Path "$testFolder\testfile.txt" -ItemType "File" -Force | Out-Null
+            New-Item -Path $Script:testFolder -ItemType Directory | Out-Null
+            New-Item -Path "$Script:testFolder\bin" -ItemType Directory | Out-Null
+            New-Item -Path "$Script:testFolder\testfile.txt" -ItemType "File" -Force | Out-Null
 
-            Test-EmptyDirectory $testFolder | Should -Be $false
+            Test-EmptyDirectory $Script:testFolder | Should -Be $false
         }
     }
 
-    Context "Get-InstallationFiles" -Tag "Get-InstallationFiles" {
+    Context "Get-InstallationFile" -Tag "Get-InstallationFile" {
         BeforeAll {
-            # Functions in the ThreadJob module
-            function Start-ThreadJob { }
-            function Wait-Job { return @( $sampleJob  ) }
-            function Receive-Job { }
-            function Remove-Job { }
-
             Mock Get-Module -ParameterFilter { $Name -eq 'ThreadJob' } { }
             Mock Import-Module -ParameterFilter { $Name -eq 'ThreadJob' } { }
             Mock Invoke-WebRequest { } -ModuleName "CommonToolUtilities"
@@ -113,7 +107,7 @@ Describe "CommonToolUtilities.psm1" {
                 DownloadPath = "$DownloadPath\downloadedfile.tar.gz"
             }
             $files = @($params)
-            Get-InstallationFiles -Files $files
+            Get-InstallationFile -Files $files
 
             Should -Invoke Invoke-WebRequest -Exactly 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter { $Uri -eq $params.Uri -and $Outfile -eq $params.DownloadPath }
             Should -Invoke Invoke-WebRequest -Exactly 1 -Scope It -ModuleName "CommonToolUtilities"
@@ -138,7 +132,7 @@ Describe "CommonToolUtilities.psm1" {
             )
             # $containerdParams = $files[0]
             # $buildkitParams = $files[1]
-            Get-InstallationFiles -Files $files
+            Get-InstallationFile -Files $files
 
             # Should -Invoke Invoke-WebRequest -Exactly 1 -Scope It -ModuleName "CommonToolUtilities" `
             #     -ParameterFilter { $Uri -eq $containerdParams.Uri -and $Outfile -eq $containerdParams.DownloadPath }
@@ -160,7 +154,7 @@ Describe "CommonToolUtilities.psm1" {
 
             $errorMessage = "Response status code does not indicate success: 404 (Not Found)."
             Mock Invoke-WebRequest { Throw $errorMessage } -ModuleName "CommonToolUtilities"
-            { Get-InstallationFiles -Files $files } | Should -Throw "Containerd downlooad failed: https://github.com/v1.0.0/downloadedfile.tar.gz.`n$errorMessage"
+            { Get-InstallationFile -Files $files } | Should -Throw "Containerd downlooad failed: https://github.com/v1.0.0/downloadedfile.tar.gz.`n$errorMessage"
         }
     }
 

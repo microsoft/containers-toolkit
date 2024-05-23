@@ -61,8 +61,7 @@ function Install-Containerd {
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
-                    $command = "Uninstall-Containerd -Path '$InstallPath' -Force:`$$Force | Out-Null"
-                    Invoke-Expression -Command $command
+                    Uninstall-Containerd -Path "$InstallPath" -Confirm:$false -Force:$Force | Out-Null
                 }
                 catch {
                     Throw "Containerd installation failed. $_"
@@ -89,7 +88,7 @@ function Install-Containerd {
                     DownloadPath = $DownloadPath
                 }
             )
-            Get-InstallationFiles -Files $DownloadParams
+            Get-InstallationFile -Files $DownloadParams
 
             # Untar and install tool
             $params = @{
@@ -120,7 +119,7 @@ function Install-Containerd {
                 Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
             }
 
-            Write-Host "For containerd usage: run 'containerd -h'" -ForegroundColor DarkGreen
+            Write-Output "For containerd usage: run 'containerd -h'"
         }
         else {
             # Code that should be processed if doing a WhatIf operation
@@ -136,11 +135,39 @@ function Build-ContainerdFromSource {
 }
 
 function Start-ContainerdService {
-    Invoke-ServiceAction -Service 'Containerd' -Action 'Start'
+    [CmdletBinding(
+        SupportsShouldProcess = $true
+    )]
+    param()
+
+    process {
+        if ($PSCmdlet.ShouldProcess($InstallPath, "")) {
+            Invoke-ServiceAction -Service 'Containerd' -Action 'Start'
+        }
+        else {
+            # Code that should be processed if doing a WhatIf operation
+            # Must NOT change anything outside of the function / script
+            return
+        }
+    }
 }
 
 function Stop-ContainerdService {
-    Invoke-ServiceAction -Service 'Containerd' -Action 'Stop'
+    [CmdletBinding(
+        SupportsShouldProcess = $true
+    )]
+    param()
+
+    process {
+        if ($PSCmdlet.ShouldProcess($InstallPath, "")) {
+            Invoke-ServiceAction -Service 'Containerd' -Action 'Stop'
+        }
+        else {
+            # Code that should be processed if doing a WhatIf operation
+            # Must NOT change anything outside of the function / script
+            return
+        }
+    }
 }
 
 function Register-ContainerdService {
@@ -199,7 +226,8 @@ function Register-ContainerdService {
 
             #Configure containerd service
             $containerdConfigFile = "$ContainerdPath\config.toml"
-            Invoke-Expression -Command "& '$containerdExecutable' config default" | Out-File $containerdConfigFile -Encoding ascii
+            Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "config default" | `
+                Out-File $containerdConfigFile -Encoding ascii
             Write-Information -InformationAction Continue -MessageData "Review containerd configutations at $containerdConfigFile"
 
             # Register containerd service
@@ -237,7 +265,7 @@ function Register-ContainerdService {
 function Uninstall-Containerd {
     [CmdletBinding(
         SupportsShouldProcess = $true,
-        ConfirmImpact = 'Medium'
+        ConfirmImpact = 'High'
     )]
     param(
         [parameter(HelpMessage = "Containerd path")]

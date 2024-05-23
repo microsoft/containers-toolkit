@@ -14,8 +14,8 @@ Describe "UpdateEnvironmentPath.psm1" {
         Import-Module -Name "$ModuleParentPath\Private\UpdateEnvironmentPath.psm1" -Force
 
         # Original enviromnent values
-        $originalUserPathString = $ENV:Path
-        $originalSysPathString = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+        $Script:originalUserPathString = $ENV:Path
+        $Script:originalSysPathString = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
     }
 
     Context "Add feature from env path" -Tag "Update-EnvironmentPath" {
@@ -33,8 +33,8 @@ Describe "UpdateEnvironmentPath.psm1" {
             $result | Should -BeLike "*$path*"
 
             # should not update actual values during testing
-            [System.Environment]::GetEnvironmentVariable("Path", "Machine") | Should -Be $originalSysPathString
-            $env:Path | Should -Be $originalUserPathString
+            [System.Environment]::GetEnvironmentVariable("Path", "Machine") | Should -Be $Script:originalSysPathString
+            $env:Path | Should -Be $Script:originalUserPathString
         }
 
         It "Should successfully add the tool to the User environment path" {
@@ -51,8 +51,8 @@ Describe "UpdateEnvironmentPath.psm1" {
             $result | Should -BeLike "*$path*"
 
             # should not update actual values during testing
-            [System.Environment]::GetEnvironmentVariable("Path", "Machine") | Should -Be $originalSysPathString
-            $env:Path | Should -Be $originalUserPathString
+            [System.Environment]::GetEnvironmentVariable("Path", "Machine") | Should -Be $Script:originalSysPathString
+            $env:Path | Should -Be $Script:originalUserPathString
         }
     }
 
@@ -71,8 +71,8 @@ Describe "UpdateEnvironmentPath.psm1" {
             $result | Should -Not -BeLike "*$path*"
 
             # should not update actual values during testing
-            [System.Environment]::GetEnvironmentVariable("Path", "Machine") | Should -Be $originalSysPathString
-            $env:Path | Should -Be $originalUserPathString
+            [System.Environment]::GetEnvironmentVariable("Path", "Machine") | Should -Be $Script:originalSysPathString
+            $env:Path | Should -Be $Script:originalUserPathString
         }
 
         It "Should remove the tool from the User environment path" {
@@ -89,8 +89,8 @@ Describe "UpdateEnvironmentPath.psm1" {
             $result | Should -Not -BeLike "*$path*"
 
             # should not update actual values during testing
-            [System.Environment]::GetEnvironmentVariable("Path", "Machine") | Should -Be $originalSysPathString
-            $env:Path | Should -Be $originalUserPathString
+            [System.Environment]::GetEnvironmentVariable("Path", "Machine") | Should -Be $Script:originalSysPathString
+            $env:Path | Should -Be $Script:originalUserPathString
         }
     }
 

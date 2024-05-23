@@ -15,6 +15,7 @@ Describe "AllToolsUtilities.psm1" {
         Import-Module -Name "$ModuleParentPath\Public\ContainerdTools.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1" -Force
+        Import-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Public\AllToolsUtilities.psm1" -Force
     }
 
@@ -24,6 +25,7 @@ Describe "AllToolsUtilities.psm1" {
         Remove-Module -Name "$ModuleParentPath\Public\ContainerdTools.psm1" -Force -ErrorAction Ignore
         Remove-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force -ErrorAction Ignore
         Remove-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1" -Force -ErrorAction Ignore
     }
 
     Context "Show-ContainerTools" -Tag "Show-ContainerTools" {
@@ -57,7 +59,7 @@ Describe "AllToolsUtilities.psm1" {
             Mock Get-ContainerdLatestVersion -ModuleName 'AllToolsUtilities' -MockWith { return '4.9.0' }
             Mock Get-BuildkitLatestVersion -ModuleName 'AllToolsUtilities' -MockWith { return '8.9.7' }
             Mock Get-NerdctlLatestVersion -ModuleName 'AllToolsUtilities' -MockWith { return '1.5.3' }
-            Mock Get-InstallationFiles -ModuleName 'AllToolsUtilities'
+            Mock Get-InstallationFile -ModuleName 'AllToolsUtilities'
             Mock Uninstall-ContainerTool -ModuleName 'AllToolsUtilities'
             Mock Install-RequiredFeature -ModuleName 'AllToolsUtilities'
             Mock Install-ContainerToolConsent -ModuleName 'AllToolsUtilities' -MockWith { return $true }
@@ -65,6 +67,7 @@ Describe "AllToolsUtilities.psm1" {
             Mock Register-ContainerdService -ModuleName 'AllToolsUtilities'
             Mock Register-BuildkitdService -ModuleName 'AllToolsUtilities'
             Mock Initialize-NatNetwork -ModuleName 'AllToolsUtilities'
+            Mock Test-EmptyDirectory -ModuleName 'AllToolsUtilities' -MockWith { return $false }
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -113,7 +116,7 @@ Describe "AllToolsUtilities.psm1" {
                 }
             )
 
-            Should -Invoke Get-InstallationFiles -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It `
+            Should -Invoke Get-InstallationFile -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It `
                 -ParameterFilter { @{$Files = $MockToolParams } }
 
             foreach ($mockParam in $MockToolParams) {
@@ -139,6 +142,8 @@ Describe "AllToolsUtilities.psm1" {
         }
 
         It "Should use user-specified values" {
+            Mock Test-EmptyDirectory -ModuleName 'AllToolsUtilities' -MockWith { return $true }
+
             Install-ContainerTools `
                 -ContainerDVersion '7.8.9' `
                 -BuildKitVersion '4.5.6' `
@@ -177,7 +182,7 @@ Describe "AllToolsUtilities.psm1" {
                 }
             )
 
-            Should -Invoke Get-InstallationFiles -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It `
+            Should -Invoke Get-InstallationFile -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It `
                 -ParameterFilter { @{$Files = $MockToolParams } }
 
             foreach ($mockParam in $MockToolParams) {

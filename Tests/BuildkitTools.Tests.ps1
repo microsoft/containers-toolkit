@@ -14,7 +14,7 @@ Describe "BuildkitTools.psm1" {
         Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force
 
-        $commandError = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{
+        $Script:commandError = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{
             ExitCode       = 1
             StandardError  = New-MockObject -Type 'System.IO.StreamReader' -Methods @{
                 ReadToEnd = { return "Error message" }
@@ -41,7 +41,7 @@ Describe "BuildkitTools.psm1" {
     Context "Install-Buildkit" -Tag "Install-Buildkit" {
         BeforeAll {
             Mock Get-BuildkitLatestVersion { return '1.0.0' } -ModuleName 'BuildkitTools'
-            Mock Get-InstallationFiles -ModuleName 'BuildkitTools'
+            Mock Get-InstallationFile -ModuleName 'BuildkitTools'
             Mock Install-RequiredFeature -ModuleName 'BuildkitTools'
             Mock Register-BuildkitdService -ModuleName 'BuildkitTools'
             Mock Start-BuildkitdService -ModuleName 'BuildkitTools'
@@ -52,7 +52,7 @@ Describe "BuildkitTools.psm1" {
             Mock Install-ContainerToolConsent -ModuleName 'BuildkitTools' -MockWith { return $true }
             Mock Install-Buildkit -ModuleName 'BuildkitTools'
 
-            $BuildkitRepo = 'https://github.com/moby/buildkit/releases/download'
+            $Script:BuildkitRepo = 'https://github.com/moby/buildkit/releases/download'
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -72,11 +72,11 @@ Describe "BuildkitTools.psm1" {
             Install-Buildkit -Force -Confirm:$false
 
             Should -Invoke Uninstall-Buildkit -ModuleName 'BuildkitTools' -Times 0 -Exactly -Scope It
-            Should -Invoke Get-InstallationFiles -ModuleName 'BuildkitTools' -ParameterFilter {
+            Should -Invoke Get-InstallationFile -ModuleName 'BuildkitTools' -ParameterFilter {
                 $Files -like @(
                     @{
                         Feature      = "Buildkit"
-                        Uri          = "$BuildkitRepo/v1.0.0/buildkit-v1.0.0.windows-amd64.tar.gz"
+                        Uri          = "$Script:BuildkitRepo/v1.0.0/buildkit-v1.0.0.windows-amd64.tar.gz"
                         Version      = '1.0.0'
                         DownloadPath = "$HOME\Downloads\buildkit-v1.0.0.windows-amd64.tar.gz"
                     }
@@ -97,11 +97,11 @@ Describe "BuildkitTools.psm1" {
             Install-Buildkit -Version '0.2.3' -InstallPath 'TestDrive:\BuildKit' -DownloadPath 'TestDrive:\Downloads' -Force -Confirm:$false
 
             Should -Invoke Uninstall-Buildkit -ModuleName 'BuildkitTools' -Times 0 -Exactly -Scope It
-            Should -Invoke Get-InstallationFiles -ModuleName 'BuildkitTools' -ParameterFilter {
+            Should -Invoke Get-InstallationFile -ModuleName 'BuildkitTools' -ParameterFilter {
                 $Files -like @(
                     @{
                         Feature      = "Buildkit"
-                        Uri          = "$BuildkitRepo/v0.2.3/buildkit-v0.2.3.windows-amd64.tar.gz"
+                        Uri          = "$Script:BuildkitRepo/v0.2.3/buildkit-v0.2.3.windows-amd64.tar.gz"
                         Version      = '0.2.3'
                         DownloadPath = "$HOME\Downloads"
                     }
@@ -270,7 +270,7 @@ Describe "BuildkitTools.psm1" {
         }
 
         It "Should throw an error if service registration fails" {
-            Mock Invoke-ExecutableCommand -ModuleName "BuildkitTools" -MockWith { return $commandError }
+            Mock Invoke-ExecutableCommand -ModuleName "BuildkitTools" -MockWith { return $Script:commandError }
 
             { Register-BuildkitdService -Force } | Should -Throw "Failed to register buildkitd service.*"
         }
@@ -282,7 +282,7 @@ Describe "BuildkitTools.psm1" {
         }
 
         It "Should throw an error if could not set containerd dependency" {
-            Mock Invoke-ExecutableCommand -ModuleName "BuildkitTools" -MockWith { return $commandError } -ParameterFilter { $Executable -eq 'sc.exe' }
+            Mock Invoke-ExecutableCommand -ModuleName "BuildkitTools" -MockWith { return $Script:commandError } -ParameterFilter { $Executable -eq 'sc.exe' }
 
             Register-BuildkitdService -Force
 
@@ -304,7 +304,7 @@ Describe "BuildkitTools.psm1" {
         It "Should successfully uninstall Buildkit" {
             Mock Uninstall-BuildkitHelper -ModuleName 'BuildkitTools'
 
-            Uninstall-Buildkit -Path 'TestDrive:\Program Files\Buildkit' -Force
+            Uninstall-Buildkit -Path 'TestDrive:\Program Files\Buildkit' -Confirm:$false -Force
 
             Should -Invoke Uninstall-BuildkitHelper -Times 1 -Scope It -ModuleName "BuildkitTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Buildkit' }
@@ -313,7 +313,7 @@ Describe "BuildkitTools.psm1" {
         It "Should successfully uninstall Buildkit from default path" {
             Mock Uninstall-BuildkitHelper -ModuleName 'BuildkitTools'
 
-            Uninstall-Buildkit -Force
+            Uninstall-Buildkit -Confirm:$false -Force
 
             Should -Invoke Uninstall-BuildkitHelper -Times 1 -Scope It -ModuleName "BuildkitTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Buildkit' }
@@ -323,7 +323,7 @@ Describe "BuildkitTools.psm1" {
             Mock Uninstall-ContainerToolConsent -ModuleName 'BuildkitTools' -MockWith { return $false }
 
             $ENV:PESTER = $true
-            { Uninstall-Buildkit -Path 'TestDrive:\Program Files\Buildkit'  -Force:$false } | Should -Throw "Buildkit uninstallation cancelled."
+            { Uninstall-Buildkit -Path 'TestDrive:\Program Files\Buildkit' -Confirm:$false -Force:$false } | Should -Throw "Buildkit uninstallation cancelled."
         }
 
         It "Should successfully call uninstall Buildkit helper function" {

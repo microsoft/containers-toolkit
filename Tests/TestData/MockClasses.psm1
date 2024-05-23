@@ -1,4 +1,4 @@
-class ChoiceClass {     
+﻿class ChoiceClass {
     [Int]$MockedChoice
 
     ChoiceClass(
@@ -9,7 +9,7 @@ class ChoiceClass {
 
     [Int]PromptForChoice ($caption, $message, $choices, $defaultChoice) {
         return $this.MockedChoice
-    }  
+    }
 }
 
 class UITest {
@@ -34,5 +34,5 @@ class MockService {
         $this.Name = $ServiceName
     }
 
-    [void]WaitForStatus ($status, $duration) { }  
+    [void]WaitForStatus ($status, $duration) { }
 }

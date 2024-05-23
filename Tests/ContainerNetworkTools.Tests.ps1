@@ -31,14 +31,14 @@ Describe "ContainerNetworkTools.psm1" {
             Mock Get-WinCNILatestVersion { return '1.0.0' } -ModuleName 'ContainerNetworkTools'
             Mock Uninstall-WinCNIPlugin -ModuleName "ContainerNetworkTools"
             Mock New-Item -ModuleName 'ContainerNetworkTools'
-            Mock Get-InstallationFiles -ModuleName 'ContainerNetworkTools'
+            Mock Get-InstallationFile -ModuleName 'ContainerNetworkTools'
             Mock Expand-Archive -ModuleName 'ContainerNetworkTools'
             Mock Remove-Item -ModuleName 'ContainerNetworkTools'
             Mock Test-EmptyDirectory  -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
             Mock Install-ContainerToolConsent -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
             Mock Install-WinCNIPlugin -ModuleName 'ContainerNetworkTools'
 
-            $WinCNIRepo = 'https://github.com/microsoft/windows-container-networking/releases/download'
+            $Script:WinCNIRepo = 'https://github.com/microsoft/windows-container-networking/releases/download'
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -60,11 +60,11 @@ Describe "ContainerNetworkTools.psm1" {
             Should -Invoke Uninstall-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -Times 0 -Exactly -Scope It
 
             $MockZipFileName = 'windows-container-networking-cni-amd64-v1.0.0.zip'
-            Should -Invoke Get-InstallationFiles -ModuleName 'ContainerNetworkTools' -ParameterFilter {
+            Should -Invoke Get-InstallationFile -ModuleName 'ContainerNetworkTools' -ParameterFilter {
                 $Files -like @(
                     @{
                         Feature      = "WinCNIPlugin"
-                        Uri          = "$WinCNIRepo/v1.0.0/$MockZipFileName"
+                        Uri          = "$Script:WinCNIRepo/v1.0.0/$MockZipFileName"
                         Version      = '1.0.0'
                         DownloadPath = "$HOME\Downloads"
                     }
@@ -85,11 +85,11 @@ Describe "ContainerNetworkTools.psm1" {
             Should -Invoke Uninstall-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -Times 0 -Exactly -Scope It
 
             $MockZipFileName = 'windows-container-networking-cni-amd64-v1.2.3.zip'
-            Should -Invoke Get-InstallationFiles -ModuleName 'ContainerNetworkTools' -ParameterFilter {
+            Should -Invoke Get-InstallationFile -ModuleName 'ContainerNetworkTools' -ParameterFilter {
                 $Files -like @(
                     @{
                         Feature      = "WinCNIPlugin"
-                        Uri          = "$WinCNIRepo/v1.2.3/$MockZipFileName"
+                        Uri          = "$Script:WinCNIRepo/v1.2.3/$MockZipFileName"
                         Version      = '1.2.3'
                         DownloadPath = "$HOME\Downloads"
                     }
@@ -204,11 +204,11 @@ Describe "ContainerNetworkTools.psm1" {
             Mock Install-Module -ModuleName 'ContainerNetworkTools' -MockWith { Throw 'Could not download HNS module' }
             Mock Test-Path -ModuleName 'ContainerNetworkTools' -MockWith { $false } `
                 -ParameterFilter { $path -eq "$Env:ProgramFiles\containerd\cni\hns.psm1" }
-            Mock Get-InstallationFiles -ModuleName 'ContainerNetworkTools'
+            Mock Get-InstallationFile -ModuleName 'ContainerNetworkTools'
 
             Initialize-NatNetwork -Force
             Should -Invoke Install-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
-            Should -Invoke Get-InstallationFiles -ModuleName 'ContainerNetworkTools' -ParameterFilter {
+            Should -Invoke Get-InstallationFile -ModuleName 'ContainerNetworkTools' -ParameterFilter {
                 $Files -like @(
                     @{
                         Feature      = "HNS.psm1"
@@ -250,7 +250,7 @@ Describe "ContainerNetworkTools.psm1" {
         It "Should successfully uninstall WinCNI plugins" {
             Mock Uninstall-WinCNIPluginHelper -ModuleName 'ContainerNetworkTools'
 
-            Uninstall-WinCNIPlugin -Path 'TestDrive:\Program Files\cni' -Force
+            Uninstall-WinCNIPlugin -Confirm:$false -Path 'TestDrive:\Program Files\cni' -Force
 
             Should -Invoke Uninstall-WinCNIPluginHelper -Times 1 -Scope It -ModuleName "ContainerNetworkTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\cni' }
@@ -259,7 +259,7 @@ Describe "ContainerNetworkTools.psm1" {
         It "Should successfully uninstall WinCNI plugins from default path" {
             Mock Uninstall-WinCNIPluginHelper -ModuleName 'ContainerNetworkTools'
 
-            Uninstall-WinCNIPlugin -Force
+            Uninstall-WinCNIPlugin -Confirm:$false -Force
 
             Should -Invoke Uninstall-WinCNIPluginHelper -Times 1 -Scope It -ModuleName "ContainerNetworkTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Containerd\cni' }
@@ -269,7 +269,7 @@ Describe "ContainerNetworkTools.psm1" {
             Mock Uninstall-ContainerToolConsent -ModuleName 'ContainerNetworkTools' -MockWith { return $false }
 
             $ENV:PESTER = $true
-            { Uninstall-WinCNIPlugin -Path 'TestDrive:\Program Files\cni' -Force:$false } | Should -Throw "Windows CNI plugins uninstallation cancelled."
+            { Uninstall-WinCNIPlugin -Confirm:$false -Path 'TestDrive:\Program Files\cni' -Force:$false } | Should -Throw "Windows CNI plugins uninstallation cancelled."
         }
 
         It "Should successfully call uninstall WinCNIPlugin helper function" {
