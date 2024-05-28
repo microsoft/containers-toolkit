@@ -206,7 +206,10 @@ function Register-ContainerdService {
 
             # Check containerd service is already registered
             if (Test-ServiceRegistered -Service 'containerd') {
-                Write-Warning "Containerd service already registered."
+                Write-Warning (-join @("Containerd service already registered. To re-register the service, "
+                "stop the service by running 'Stop-Service containerd' or 'Stop-ContainerdService', then "
+                "run 'containerd --unregister-service'. Wait for containerd service to be deregistered, "
+                "then re-reun this command."))
                 return
             }
 
@@ -224,11 +227,20 @@ function Register-ContainerdService {
 
             Add-MpPreference -ExclusionProcess $containerdExecutable
 
-            #Configure containerd service
+            # Get default containerd config and write to file
             $containerdConfigFile = "$ContainerdPath\config.toml"
-            Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "config default" | `
-                Out-File $containerdConfigFile -Encoding ascii
-            Write-Information -InformationAction Continue -MessageData "Review containerd configutations at $containerdConfigFile"
+            Write-Debug "Containerd config file: $containerdConfigFile"
+
+            $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "config default"
+            $output.StandardOutput.ReadToEnd() | Out-File -FilePath $containerdConfigFile  -Encoding ascii -Force
+            
+            # Check config file is not empty
+            $isEmptyConfig = Test-ConfFileEmpty -Path  "$containerdConfigFile"
+            if ($isEmptyConfig) {
+                Throw "Config file is empty. '$containerdConfigFile'"
+            }
+            
+            Write-Output "Review containerd configutations at $containerdConfigFile"
 
             # Register containerd service
             $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "--register-service --log-level debug --service-name containerd --log-file `"$env:TEMP\containerd.log`""
@@ -366,6 +378,8 @@ function Unregister-Containerd ($containerdPath) {
         Throw "Could not unregister containerd service. $($output.StandardError.ReadToEnd())"
     }
     else {
+        # Wait for service to be unregistered
+        # Failure to wait causes "The specified service has been marked for deletion." error
         Start-Sleep -Seconds 15
     }
 }
