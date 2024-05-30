@@ -72,7 +72,12 @@ function Install-ContainerTools {
     )
 
     begin {
-        $toInstall = @("containerd", "buildkit", "nerdctl")
+        # Strip leading "v" from version
+        $containerdVersion = $containerdVersion.TrimStart("v")
+        $buildKitVersion = $buildKitVersion.TrimStart("v")
+        $nerdctlVersion = $nerdctlVersion.TrimStart("v")
+
+        $toInstall = @("containerd v($containerdVersion)", "buildkit v($buildKitVersion)", "nerdctl v($nerdctlVersion)")
         $toInstallString = $($toInstall -join ', ')
 
         $WhatIfMessage = "$toInstallString will be installed"
@@ -88,18 +93,18 @@ function Install-ContainerTools {
 
     process {
         if ($PSCmdlet.ShouldProcess($InstallPath, $WhatIfMessage)) {
-            Write-Debug "Tools to install: $toInstallString"
+            Write-Output "Tools to install: $toInstallString"
 
             # Global Variables needed for the script
             $containerdTarFile = "containerd-${containerdVersion}-windows-amd64.tar.gz"
-            $BuildKitTarFile = "buildkit-v${BuildKitVersion}.windows-amd64.tar.gz"
+            $buildKitTarFile = "buildkit-v${buildKitVersion}.windows-amd64.tar.gz"
             $nerdctlTarFile = "nerdctl-${nerdctlVersion}-windows-amd64.tar.gz"
 
             # Installation paths
             $ContainerdPath = "$InstallPath\Containerd"
             $BuildkitPath = "$InstallPath\Buildkit"
             $NerdCTLPath = "$InstallPath\nerdctl"
-
+            
             $files = @(
                 [PSCustomObject]@{
                     Feature      = "Containerd"
@@ -140,7 +145,7 @@ function Install-ContainerTools {
                     # Uninstall if tool exists at specified location. Requires user consent
                     if (-not (Test-EmptyDirectory -Path $params.InstallPath) ) {
                         Write-Warning "Uninstalling $($params.Feature) from $($params.InstallPath)"
-                        Uninstall-ContainerTool -Tool $params.Feature -Path $params.InstallPath -Force $force
+                        Uninstall-ContainerTool -Tool $params.Feature -Path $params.InstallPath -Force:$force
                     }
 
                     # Untar downloaded files to the specified installation path
@@ -156,8 +161,8 @@ function Install-ContainerTools {
 
                     if ($RegisterServices) {
                         $RegisterParams = @{
-                            force = $force
-                            feature = $params.Feature
+                            force       = $force
+                            feature     = $params.Feature
                             installPath = $params.InstallPath
                         }
                         Register-Service @RegisterParams
@@ -168,21 +173,25 @@ function Install-ContainerTools {
                 }
             }
 
+            $isError = $false
             if ($RegisterServices) {
-                Initialize-NatNetwork
+                try { 
+                    Initialize-NatNetwork -Force:$force -Confirm:$false
+                }
+                catch {
+                    $isError = $true
+                    Write-Error "Failed to initialize NAT network. $_"
+                }
             }
             else {
-                Write-Information -Tags "Instructions" -MessageData (
-                    "To start containderd service, run 'Start-Service containerd' or 'Start-ContainerdService',",
-                    "To start buildkitd service, run 'Start-Service buildkitd' or 'Start-BuildkitdService'"
-                )
+                $message = "To register containerd and buildkitd services, run the following commands:`n`tRegister-ContainerdService -ContainerdPath '$ContainerdPath' -Start`n`tRegister-BuildkitdService -BuildkitPath '$BuildkitPath' -Start"
+                $message += "`nThen, to create a NAT network for nerdctl, run the following command:`n`tInitialize-NatNetwork"
+                Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
             }
 
-            Write-Information -MessageData "$($completedInstalls -join ', ') installed successfully." -Tags "Installation" -InformationAction Continue
-
-            $message = "To register containerd and buildkitd services, run the following commands:`n`tRegister-ContainerdService -ContainerdPath '$ContainerdPath' -Start`n`tRegister-BuildkitdService -BuildkitPath '$BuildkitPath' -Start"
-            $message += "`nThen, to create a NAT network for nerdctl, run the following command:`n`tInitialize-NatNetwork"
-            Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
+            if (!$isError) {
+                Write-Output "$($completedInstalls -join ', ') installed successfully."
+            }
         }
         else {
             # Code that should be processed if doing a WhatIf operation
@@ -194,7 +203,7 @@ function Install-ContainerTools {
 
 function Uninstall-ContainerTool($Tool, $Path, $force) {
     $uninstallCommand = "Uninstall-$($Tool)"
-    & $uninstallCommand -Path "$Path" -Force:$Force
+    & $uninstallCommand -Path "$Path" -Force:$Force -Confirm:$false
 }
 
 function Get-InstalledVersion($feature, $Latest) {

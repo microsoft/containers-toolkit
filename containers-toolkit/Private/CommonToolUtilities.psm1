@@ -64,7 +64,7 @@ function Get-InstallationFile {
     begin {
         $functions = {
             function Receive-File ($feature) {
-                Write-Information -InformationAction Continue -MessageData "Downloading $($feature.Feature) version $($feature.Version)"
+                Write-Information -InformationAction Continue -MessageData "Downloading $($feature.Feature) version v$($feature.Version)"
                 try {
                     Invoke-WebRequest -Uri $feature.Uri -OutFile $feature.DownloadPath -UseBasicParsing
                 }
@@ -107,7 +107,7 @@ function Get-InstallationFile {
     }
 
     end {
-        $jobs | Remove-Job -Force
+        $jobs | Remove-Job -Force -ErrorAction SilentlyContinue
     }
 }
 

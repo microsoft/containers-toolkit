@@ -213,12 +213,12 @@ Describe "AllToolsUtilities.psm1" {
 
         It "Should register services and initialize NAT network" {
             Install-ContainerTools `
-            -InstallPath 'TestDrive:\Install Directory' `
-            -Force -Confirm:$false `
-            -RegisterServices
+                -InstallPath 'TestDrive:\Install Directory' `
+                -Force -Confirm:$false `
+                -RegisterServices
 
             $RegisterContainerdParams = @{
-                ContainerdPath =  "$InstallPath\Containerd"
+                ContainerdPath = "$InstallPath\Containerd"
             }
             $RegisterBuildKitdParams = @{
                 BuildKitPath = "$InstallPath\Buildkit"
@@ -229,6 +229,13 @@ Describe "AllToolsUtilities.psm1" {
             Should -Invoke Register-BuildkitdService -ModuleName 'AllToolsUtilities' -Times 1 `
                 -ParameterFilter { $RegisterBuildKitdParams -and $Start -eq $true -and $Force -eq $true }
             Should -Invoke Initialize-NatNetwork -ModuleName 'AllToolsUtilities' -Times 1
+        }
+
+        It "Should not throw an error if initializing NAT network fails" {
+            Mock Initialize-NatNetwork -ModuleName 'AllToolsUtilities' -MockWith { throw 'Error message' }
+
+            { Install-ContainerTools -InstallPath 'TestDrive:\Install Directory' -Force -Confirm:$false -RegisterServices } | Should -Not -Throw
+            $Error[0].Exception.Message | Should -Be 'Failed to initialize NAT network. Error message'
         }
     }
 }
