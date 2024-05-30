@@ -274,6 +274,21 @@ function Test-ConfFileEmpty($Path) {
     return (-not $isFileNotEmpty )
 }
 
+function Uninstall-ProgramFiles($path) {
+    try {
+        Remove-Item -Path "$path" -Recurse -Force
+    }
+    catch {
+        $errMsg = $_
+        if ($errMsg -match "denied") {
+            Write-Error "Failed to delete directory: '$path'. Access to path denied. To resolve this issue, see https://github.com/microsoft/containers-toolkit/blob/main/docs/docs/FAQs.md#resolving-uninstallation-error-access-to-path-denied"
+        }
+        else {
+            Write-Error "Failed to delete directory: '$path'. $_"
+        }
+    }
+}
+
 function Invoke-ExecutableCommand {
     param (
         [parameter(Mandatory)]
@@ -322,3 +337,4 @@ Export-ModuleMember -Function Add-FeatureToPath
 Export-ModuleMember -Function Remove-FeatureFromPath
 Export-ModuleMember -Function Invoke-ServiceAction
 Export-ModuleMember -Function Test-ConfFileEmpty
+Export-ModuleMember -Function Uninstall-ProgramFiles

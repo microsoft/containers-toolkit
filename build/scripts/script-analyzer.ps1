@@ -52,7 +52,7 @@ function ConvertTo-MarkDown {
     ) -join ' '
 }
 
-function main {
+function Invoke-CTKScriptAnalyzer {
     $codeAnalysis = Invoke-ScriptAnalyzer -Path . -Recurse -ExcludeRule PSProvideCommentHelp, PSUseSingularNouns
 
     $lintIssues = $codeAnalysis | Where-Object { $_.Severity -notlike 'Error' }
@@ -82,4 +82,4 @@ if (!(Get-Module -Name PSScriptAnalyzer -ListAvailable)) {
 }
 Import-Module -Name PSScriptAnalyzer -Force
 
-main
+Invoke-CTKScriptAnalyzer

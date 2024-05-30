@@ -243,7 +243,9 @@ function Uninstall-NerdctlHelper {
 
     # Remove the folder where nerdctl is installed and related folders
     Remove-Item -Path $Path -Recurse -Force
-    Remove-Item -Path "$ENV:ProgramData\nerdctl" -Recurse -Force -ErrorAction Ignore
+
+    # Remove ProgramData files
+    Uninstall-ProgramFiles "$ENV:ProgramData\nerdctl"
 
     # Remove from env path
     Remove-FeatureFromPath -Feature "nerdctl"

@@ -349,4 +349,27 @@ Describe "CommonToolUtilities.psm1" {
             { Invoke-ServiceAction -Action 'Random action' -Service 'MockService' } | Should -Throw "Not implemented"
         }
     }
+
+    Context "Uninstall-ProgramFiles" -Tag "Uninstall-ProgramFiles" {
+        it "Should successfully remove dir" {
+            Mock Remove-Item -ModuleName 'CommonToolUtilities'
+
+            { Uninstall-ProgramFiles -Path "$ENV:ProgramData\Buildkit" } | Should -Not -Throw
+        }
+
+        it "Should not throw an error if removing programdata fails with access denied" {
+            $accessDeniedErr = "Remove-Item: Access to the path 'C:\ProgramData\Buildkit\dummy\testfile.txt' is denied."
+            Mock Remove-Item -ModuleName 'CommonToolUtilities' -MockWith { Throw $accessDeniedErr }
+
+            { Uninstall-ProgramFiles -Path "$ENV:ProgramData\Buildkit" } | Should -Not -Throw
+            $Error[0].Exception.Message | Should -BeLike "Failed to delete directory: '$ENV:ProgramData\Buildkit'. Access to path denied. *"
+        }
+
+        it "Should not throw an error if removing programdata fails" {
+            Mock Remove-Item -ModuleName 'CommonToolUtilities' -MockWith { Throw "Error" }
+
+            { Uninstall-ProgramFiles -Path "$ENV:ProgramData\Buildkit" } | Should -Not -Throw
+            $Error[0].Exception.Message | Should -BeExactly "Failed to delete directory: '$ENV:ProgramData\Buildkit'. Error"
+        }
+    }
 }

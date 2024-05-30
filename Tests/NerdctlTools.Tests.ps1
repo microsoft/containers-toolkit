@@ -151,6 +151,7 @@ Describe "NerdctlTools.psm1" {
             Mock Uninstall-ContainerToolConsent -ModuleName 'NerdctlTools' -MockWith { return $true }
             Mock Remove-Item -ModuleName 'NerdctlTools'
             Mock Remove-FeatureFromPath -ModuleName 'NerdctlTools'
+            Mock Uninstall-ProgramFiles -ModuleName 'NerdctlTools'
         }
 
         It "Should successfully uninstall nerdctl" {
@@ -191,7 +192,7 @@ Describe "NerdctlTools.psm1" {
 
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "NerdctlTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\nerdctl' }
-            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "NerdctlTools" `
+            Should -Invoke Uninstall-ProgramFiles -Times 1 -Scope It -ModuleName "NerdctlTools" `
                 -ParameterFilter { $Path -eq "$ENV:ProgramData\nerdctl" }
             Should -Invoke Remove-FeatureFromPath -Times 1 -Scope It -ModuleName "NerdctlTools" `
                 -ParameterFilter { $Feature -eq "nerdctl" }

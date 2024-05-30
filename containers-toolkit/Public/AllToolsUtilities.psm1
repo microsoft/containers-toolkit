@@ -104,7 +104,7 @@ function Install-ContainerTools {
             $ContainerdPath = "$InstallPath\Containerd"
             $BuildkitPath = "$InstallPath\Buildkit"
             $NerdCTLPath = "$InstallPath\nerdctl"
-            
+
             $files = @(
                 [PSCustomObject]@{
                     Feature      = "Containerd"
@@ -175,7 +175,7 @@ function Install-ContainerTools {
 
             $isError = $false
             if ($RegisterServices) {
-                try { 
+                try {
                     Initialize-NatNetwork -Force:$force -Confirm:$false
                 }
                 catch {
@@ -212,7 +212,9 @@ function Get-InstalledVersion($feature, $Latest) {
     switch ($feature) {
         "buildkit" {
             $bktdExecutable = (Get-Command "build*.exe" | Where-Object { $_.Source -like "*buildkit*" }) | Select-Object Name
-            $executable = ($bktdExecutable[0]).Name
+            if ($bktdExecutable) {
+                $executable = ($bktdExecutable[0]).Name
+            }
 
             if ($null -ne ($bktdExecutable | Where-Object { $_.Name -contains "buildkitd.exe" })) {
                 $daemon = 'buildkitd'
