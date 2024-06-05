@@ -69,13 +69,20 @@ Containers-Toolkit is a Windows PowerShell module for downloading, installing, a
     git clone https://github.com/microsoft/containers-toolkit.git
     ```
 
-2. Add the directory to @indows PowerShell module path
+1. Add the directory to Windows PowerShell module path
 
     ```PowerShell
-    $env:PSModulePath = "$env:PSModulePath;<path-to-module-directory>"
+    $env:PSModulePath += ";<path-to-module-directory>"
     ```
 
-3. Import the module
+1. Install module dependencies
+
+    ```powershell
+    Install-Module -Name ThreadJob -Force
+    Install-Module -Name HNS -AllowClobber -Force
+    ```
+
+1. Import the module
 
     ```PowerShell
     Import-Module -Name containers-toolkit -Force
