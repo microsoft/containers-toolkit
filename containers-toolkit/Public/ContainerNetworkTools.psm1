@@ -213,7 +213,7 @@ function Initialize-NatNetwork {
                     Subnet        = $subnet
                     CNIConfDir    = $cniConfDir
                 }
-                Set-DefaultCNICInfig @params
+                Set-DefaultCNIConfig @params
 
                 Write-Output "Successfully created new NAT network called '$($hnsNetwork.Name)' with Gateway $($hnsNetwork.Subnets.GatewayAddress), and Subnet Mask $($hnsNetwork.Subnets.AddressPrefix)"
             }
@@ -334,7 +334,7 @@ function Import-HNSModule {
             $DownloadParams = @(
                 @{
                     Feature      = "HNS.psm1"
-                    Uri          = 'https://raw.githubusercontent.com/microsoft/SDN/master/Kubernetes/windows/hns.psm1'
+                    Uri          = 'https://raw.githubusercontent.com/microsoft/SDN/dd4e8708ed184b49d3fddd611b6027f1755c6edb/Kubernetes/windows/hns.psm1'
                     DownloadPath = $WinCNIPath
                 }
             )
@@ -371,7 +371,7 @@ function Install-MissingPlugin {
 
 
 # FIXME: nerdctl- Warning when user tries to run container with this network config
-function Set-DefaultCNICInfig {
+function Set-DefaultCNIConfig {
     [CmdletBinding(
         SupportsShouldProcess = $true,
         ConfirmImpact = 'Low'
