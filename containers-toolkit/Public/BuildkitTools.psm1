@@ -398,8 +398,8 @@ function Uninstall-BuildkitHelper {
     # Remove the folder where buildkit is installed and related folders
     Remove-Item -Path $Path -Recurse -Force
 
-    # FIXME: Access to the path denied
-    Remove-Item -Path "$ENV:ProgramData\Buildkit" -Recurse -Force -ErrorAction Ignore
+    # Delete Buildkit programdata
+    Uninstall-ProgramFiles "$ENV:ProgramData\Buildkit"
 
     # Remove from env path
     Remove-FeatureFromPath -Feature "buildkit"

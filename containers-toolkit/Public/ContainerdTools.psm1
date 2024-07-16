@@ -79,6 +79,7 @@ function Install-Containerd {
             $containerdTarFile = "containerd-${version}-windows-amd64.tar.gz"
             $DownloadPath = "$DownloadPath\$($containerdTarFile)"
 
+            # TODO: Use downloaded file if it exists
             # Download files
             $DownloadParams = @(
                 @{
@@ -233,13 +234,13 @@ function Register-ContainerdService {
 
             $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "config default"
             $output.StandardOutput.ReadToEnd() | Out-File -FilePath $containerdConfigFile  -Encoding ascii -Force
-            
+
             # Check config file is not empty
             $isEmptyConfig = Test-ConfFileEmpty -Path  "$containerdConfigFile"
             if ($isEmptyConfig) {
                 Throw "Config file is empty. '$containerdConfigFile'"
             }
-            
+
             Write-Output "Review containerd configutations at $containerdConfigFile"
 
             # Register containerd service
@@ -356,8 +357,8 @@ function Uninstall-ContainerdHelper {
     # Remove the folder where containerd is installed and related folders
     Remove-Item -Path $Path -Recurse -Force
 
-    # FIXME: Access to the path denied
-    Remove-Item -Path "$ENV:ProgramData\Containerd" -Recurse -Force -ErrorAction Ignore
+    # Delete containerd programdata
+    Uninstall-ProgramFiles "$ENV:ProgramData\Containerd"
 
     # Remove from env path
     Remove-FeatureFromPath -Feature "containerd"

@@ -299,6 +299,7 @@ Describe "BuildkitTools.psm1" {
             Mock Unregister-Buildkitd -ModuleName 'BuildkitTools'
             Mock Remove-Item -ModuleName 'BuildkitTools'
             Mock Remove-FeatureFromPath -ModuleName 'BuildkitTools'
+            Mock Uninstall-ProgramFiles -ModuleName 'BuildkitTools'
         }
 
         It "Should successfully uninstall Buildkit" {
@@ -335,7 +336,7 @@ Describe "BuildkitTools.psm1" {
                 -ParameterFilter { $Path -eq 'HKLM:\SYSTEM\CurrentControlSet\Services\buildkit' }
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "BuildkitTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Buildkit' }
-            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "BuildkitTools" `
+            Should -Invoke Uninstall-ProgramFiles -Times 1 -Scope It -ModuleName "BuildkitTools" `
                 -ParameterFilter { $Path -eq "$ENV:ProgramData\Buildkit" }
             Should -Invoke Remove-FeatureFromPath -Times 1 -Scope It -ModuleName "BuildkitTools" `
                 -ParameterFilter { $Feature -eq "buildkit" }

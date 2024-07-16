@@ -178,13 +178,13 @@ Describe "ContainerdTools.psm1" {
 
             # Mock for default config
             $mockConfigStdOut = New-MockObject -Type 'System.IO.StreamReader' -Methods @{ ReadToEnd = { return "Sample containerd default config data" } }
-            $mockConfigProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ 
-                StandardOutput = $mockConfigStdOut 
+            $mockConfigProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{
+                StandardOutput = $mockConfigStdOut
             }
             Mock Invoke-ExecutableCommand -ModuleName "ContainerdTools" `
                 -ParameterFilter { $Arguments -eq "config default" } `
                 -MockWith { return $mockConfigProcess }
-           
+
             Mock Get-Service -ModuleName "ContainerdTools" -MockWith { return [MockService]::new('Containerd') }
             Mock Set-Service -ModuleName "ContainerdTools"
             Mock Start-ContainerdService -ModuleName "ContainerdTools"
@@ -262,8 +262,8 @@ Describe "ContainerdTools.psm1" {
         It "Should throw an error if config file is empty" {
             # Mock for default config
             $mockConfigStdOut = New-MockObject -Type 'System.IO.StreamReader' -Methods @{ ReadToEnd = { return } }
-            $mockConfigProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ 
-                StandardOutput = $mockConfigStdOut 
+            $mockConfigProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{
+                StandardOutput = $mockConfigStdOut
             }
             Mock Invoke-ExecutableCommand -ModuleName "ContainerdTools" `
                 -ParameterFilter { $Arguments -eq "config default" } `
@@ -282,6 +282,7 @@ Describe "ContainerdTools.psm1" {
             Mock Unregister-Containerd -ModuleName 'ContainerdTools'
             Mock Remove-Item -ModuleName 'ContainerdTools'
             Mock Remove-FeatureFromPath -ModuleName 'ContainerdTools'
+            Mock Uninstall-ProgramFiles -ModuleName 'ContainerdTools'
         }
 
         It "Should successfully uninstall Containerd" {
@@ -318,7 +319,7 @@ Describe "ContainerdTools.psm1" {
                 -ParameterFilter { $Path -eq 'HKLM:\SYSTEM\CurrentControlSet\Services\containerd' }
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "ContainerdTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Containerd' }
-            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "ContainerdTools" `
+            Should -Invoke Uninstall-ProgramFiles -Times 1 -Scope It -ModuleName "ContainerdTools" `
                 -ParameterFilter { $Path -eq "$ENV:ProgramData\Containerd" }
             Should -Invoke Remove-FeatureFromPath -Times 1 -Scope It -ModuleName "ContainerdTools" `
                 -ParameterFilter { $Feature -eq "containerd" }
