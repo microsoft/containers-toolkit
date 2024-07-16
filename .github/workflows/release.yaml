@@ -47,7 +47,7 @@ jobs:
         shell: pwsh
         run: |
           Set-PSRepository PSGallery -InstallationPolicy Trusted
-          $requiredModules = @('ThreadJob', 'HNS')
+          $requiredModules = @('ThreadJob')
           $missingModules = $requiredModules | Where-Object { -not (Get-Module -ListAvailable -Name $_) }
 
           if ($missingModules) {
@@ -110,4 +110,4 @@ jobs:
         shell: pwsh
         run: |
           $tag="${{ steps.update-version.outputs.NEW_VERSION }}"
-          echo ":rocket: Succefully released Containers.Toolkit v$tag" >> $GITHUB_STEP_SUMMARY
+          echo ":rocket: Successfully released Containers.Toolkit v$tag" >> $env:GITHUB_STEP_SUMMARY

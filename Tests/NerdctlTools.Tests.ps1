@@ -23,8 +23,11 @@ Describe "NerdctlTools.psm1" {
     }
 
     AfterAll {
-        Remove-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force -ErrorAction Ignore
-        Remove-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "CommonToolUtilities" -Force -ErrorAction Ignore
+        Remove-Module -Name "BuildkitTools" -Force -ErrorAction Ignore
+        Remove-Module -Name "ContainerdTools" -Force -ErrorAction Ignore
+        Remove-Module -Name "ContainerNetworkTools" -Force -ErrorAction Ignore
+        Remove-Module -Name "NerdctlTools" -Force -ErrorAction Ignore
     }
 
     Context "Install-Nerdctl" -Tag "Install-Nerdctl" {

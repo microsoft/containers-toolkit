@@ -35,8 +35,8 @@ Describe "ContainerdTools.psm1" {
     }
 
     AfterAll {
-        Remove-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force -ErrorAction Ignore
-        Remove-Module -Name "$ModuleParentPath\Public\ContainerdTools.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "CommonToolUtilities" -Force -ErrorAction Ignore
+        Remove-Module -Name "ContainerdTools" -Force -ErrorAction Ignore
     }
 
     Context "Install-Containerd" -Tag "Install-Containerd" {

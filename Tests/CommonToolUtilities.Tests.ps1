@@ -24,7 +24,8 @@ Describe "CommonToolUtilities.psm1" {
     AfterAll {
         Get-ChildItem "TestDrive:\" | Remove-Item -Recurse -Force
 
-        Remove-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "CommonToolUtilities" -Force -ErrorAction Ignore
+        Remove-Module -Name "UpdateEnvironmentPath" -Force -ErrorAction Ignore
     }
 
     Context "Get-LatestToolVersion" -Tag "Get-LatestToolVersion" {

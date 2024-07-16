@@ -34,8 +34,8 @@ Describe "BuildkitTools.psm1" {
     }
 
     AfterAll {
-        Remove-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force -ErrorAction Ignore
-        Remove-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "CommonToolUtilities" -Force -ErrorAction Ignore
+        Remove-Module -Name "BuildkitTools" -Force -ErrorAction Ignore
     }
 
     Context "Install-Buildkit" -Tag "Install-Buildkit" {
