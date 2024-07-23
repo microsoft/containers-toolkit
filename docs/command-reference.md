@@ -62,7 +62,7 @@ Downloads container tool (Containerd, BuildKit, nerdctl) asynchronously and inst
 | DownloadPath | String | Path to download container tools  | `$HOME\Downloads` |
 | Cleanup | Switch | Specifies whether to cleanup after installation is done  |  |
 | Force | Switch | Force install the tools even if they already exists at the specified path |  |
-| RegisterServices | Switch | Register and Start Conatinerd and Buildkitd services and set up NAT network |  |
+| RegisterServices | Switch | Register and Start Containerd and Buildkitd services and set up NAT network |  |
 | Confirm | Switch | Prompts for confirmation before running the cmdlet. For more information, see the following articles: [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference) and [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact) |  |
 | WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
@@ -86,7 +86,7 @@ String
 
 #### Install-Containerd
 
-Downloads Containerd files from [Containerd releases](https://github.com/containerd/containerd/releases) and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.
+Downloads Containerd files from [Containerd releases](https://github.com/containerd/containerd/releases) and installs them at the provided path. After the installation is complete, the downloaded files are deleted to save disk space.
 
 Once Containerd is installed and added to the environment path, we can get the path where it is installed using:
 
@@ -189,7 +189,7 @@ String
 
 #### Install-BuildKit
 
-Downloads BuildKit files from [Containerd releases](https://github.com/moby/buildkit/releases) and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.
+Downloads BuildKit files from [Containerd releases](https://github.com/moby/buildkit/releases) and installs them at the provided path. After the installation is complete, the downloaded files are deleted to save disk space.
 
 Once BuildKit is installed and added to the environment path, we can get the path where it is installed using:
 
@@ -234,7 +234,7 @@ None
 
 #### Start-BuildkitdService
 
-Starts BuildKit service and waits for 30 seconds for the service to start. If the service does not start within the this time, execution terminates with an error.
+Starts BuildKit service and waits for 30 seconds for the service to start. If the service does not start within this time, execution terminates with an error.
 
 **Parameters**
 
@@ -292,7 +292,7 @@ String
 
 #### Install-Nerdctl
 
-Downloads Containerd files from [nerdctl releases](https://github.com/containerd/nerdctl/releases) and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.
+Downloads Containerd files from [nerdctl releases](https://github.com/containerd/nerdctl/releases) and installs them at the provided path. After the installation is complete, the downloaded files are deleted to save disk space.
 
 **Parameters**
 
