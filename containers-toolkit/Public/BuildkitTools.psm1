@@ -53,18 +53,18 @@ function Install-Buildkit {
         # Check if Buildkit is alread installed
         $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
 
-        $WhatIfMessage = "Buildkit will be installed"
+        $WhatIfMessage = "Buildkit will be installed at $InstallPath"
         if ($isInstalled) {
-            $WhatIfMessage = "Buildkit will be uninstalled and reinstalled"
+            $WhatIfMessage = "Buildkit will be uninstalled from and reinstalled at $InstallPath"
         }
         if ($Setup) {
             <# Action when this condition is true #>
-            $WhatIfMessage = "Buildkit will be installed and buildkitd service will be registered and started"
+            $WhatIfMessage = "Buildkit will be installed at $InstallPath and buildkitd service will be registered and started"
         }
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess($InstallPath, $WhatIfMessage)) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
                 $errMsg = "Buildkit already exists at $InstallPath or the directory is not empty"
@@ -217,7 +217,7 @@ function Register-BuildkitdService {
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess("$BuildKitPath\bin\buildkitd.exe", $WhatIfMessage)) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             if (Test-EmptyDirectory -Path $BuildKitPath) {
                 Throw "Buildkit does not exist at $BuildKitPath or the directory is empty"
             }

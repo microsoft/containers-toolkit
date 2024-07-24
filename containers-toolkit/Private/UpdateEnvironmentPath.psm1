@@ -27,7 +27,7 @@ function Update-EnvironmentPath {
     )
 
     process {
-        if ($PSCmdlet.ShouldProcess($InstallPath, "$path will be added to environment path")) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, "$path will be added to environment path")) {
             # Get current environment path
             $parsedPathString = switch ($PathType) {
                 "System" {

@@ -1,0 +1,68 @@
+on:
+  pull_request:
+    branches:
+      - main
+      - "releases/**"
+    paths:
+      - "docs/**"
+      - "README.md"
+      - en-US/**"
+
+name: Check modified markdown files
+permissions:
+  contents: read
+
+jobs:
+  markdown-check:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      # - uses: actions/setup-node@v4
+      #   with:
+      #     node-version: 21
+
+      - name: Install npm dependencies
+        run: npm install -g markdown-link-check textlint textlint-rule-spelling dictionary-en
+
+      - name: Markdown link check
+        shell: pwsh
+        run: |
+          # Check all markdown files in the repository
+          $mlc_error_file = "link-errors.txt"
+          Get-ChildItem -Path "README.md", ".\docs\" -Filter "*.md" -Recurse | `
+              ForEach-Object { & markdown-link-check $_.FullName -q 2>>$error_file }
+
+          # Check if the error file exists
+          if (-not (Test-Path "$error_file")) {
+              return
+          }
+
+          # Check if the error file file contains errors
+          if (Select-String -Path "$error_file" -Pattern "ERROR: ") {
+              $Link_Check_Summary = ":x: [Markdown Link Check] Broken links found. Please check the output for more information."
+          }
+          else {
+              $Link_Check_Summary = ":white_check_mark: [Markdown Link Check] All links are valid."
+          }
+          echo $Link_Check_Summary >> $env:GITHUB_STEP_SUMMARY
+
+      - name: Markdown spell check
+        shell: pwsh
+        run: |
+          # Run spell check on all markdown files in the repository
+          $sc_error_file = "sc-errors.txt"
+          npx textlint README.md docs/**/*.md >>$sc_error_file
+
+          # Check if the error file exists
+          if (-not (Test-Path "$sc_error_file")) {
+              return
+          }
+
+          # Check if the error file file contains errors. If the file is empty, it means no errors were found.
+          if ([string]::IsNullOrWhiteSpace((Get-Content -Path $sc_error_file))) {
+              $Spell_Check_Summary = ":white_check_mark: [Markdown Spell Check] No spelling errors found."
+          }
+          else {
+              $Spell_Check_Summary = ":x: [Markdown Spell Check] Spelling errors found. Please check the output for more information."
+          }
+          echo $Spell_Check_Summary >> $env:GITHUB_STEP_SUMMARY

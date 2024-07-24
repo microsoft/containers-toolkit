@@ -21,7 +21,16 @@
     Copyright         = '(c) Microsoft Corporation. All rights reserved.'
 
     # Description of the functionality provided by this module
-    Description       = 'PowerShell functions that allow you to download, install, and configure Containerd, Buildkit, nerdctl, and Windows CNI plugins. Requires modules ThreadJob and HNS. If HostNetworkingService module exists, the commands from the HostNetworkingService will be used instead of HNS.'
+    Description       = @"
+The Containers-Toolkit module contains PowerShell functions for downloading, installing, and configuring Containerd, Buildkit, nerdctl, and Windows CNI plugins for container networks. It also allows you to get a list of the container tools and their installation statuses.
+
+Configurations done with these functions are default configurations that allow you to get started with interacting with the tools. Further configurations may be necessary.
+You can find documentation for these functions here: [Containers-Toolkit Documentation](https://github.com/microsoft/containers-toolkit/tree/main/docs/command-reference.md)
+
+This module requires the ThreadJob module. Additionally, it requires the HNS module to execute the "Initialize-NatNetwork" command. The Host Networking Service (HNS) and the Host Compute Service (HCS) work together to create containers and attach endpoints to a network. The HNS module is necessary because the HostNetworkingService module does not include the "New-HNSNetwork" cmdlet.
+
+Note that the HostNetworkingService module is available only when the Hyper-V Windows feature is enabled.
+"@
 
     # Minimum version of the PowerShell engine required by this module
     PowerShellVersion = '5.0'
@@ -42,7 +51,7 @@
     # ProcessorArchitecture = ''
 
     # Modules that must be imported into the global environment prior to importing this module
-    RequiredModules   = @( 'ThreadJob', "HNS" )
+    RequiredModules   = @( 'ThreadJob' )
 
     # Assemblies that must be loaded prior to importing this module
     # RequiredAssemblies = @()
@@ -148,7 +157,7 @@
             RequireLicenseAcceptance   = $true
 
             # External dependent modules of this module
-            ExternalModuleDependencies = @('HNS', 'ThreadJob')
+            ExternalModuleDependencies = @('ThreadJob')
 
         } # End of PSData hashtable
 
