@@ -19,7 +19,7 @@ Describe "UpdateEnvironmentPath.psm1" {
     }
 
     AfterAll {
-        Remove-Module -Name "UpdateEnvironmentPath" -Force -ErrorAction Ignore
+        Remove-Module -Name "$ModuleParentPath\Private\UpdateEnvironmentPath.psm1" -Force -ErrorAction Ignore
     }
 
     Context "Add feature from env path" -Tag "Update-EnvironmentPath" {

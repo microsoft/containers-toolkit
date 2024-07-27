@@ -19,12 +19,24 @@ class ContainerTool {
     [string]$EnvPath
 }
 
+class FileDigest {
+    [string]$HashFunction
+    [string]$Digest
+
+    FileDigest([string]$hashFunction, [string]$digest) {
+        $this.HashFunction = $hashFunction
+        $this.Digest = $digest
+    }
+}
+
 Add-Type @'
 public enum ActionConsent {
     Yes = 0,
     No = 1
 }
 '@
+
+$VALID_HASH_FUNCTIONS = @("SHA1", "SHA256", "SHA384", "SHA512", "MD5")
 
 
 function Get-LatestToolVersion($repository) {
@@ -111,6 +123,294 @@ function Get-InstallationFile {
     }
 }
 
+function Test-CheckSum {
+    param(
+        [Parameter(Mandatory, ParameterSetName = 'Default')]
+        [Parameter(Mandatory, ParameterSetName = 'JSON')]
+        [ValidateNotNullOrEmpty()]
+        [string] $DownloadedFile,
+
+        [Parameter(Mandatory, ParameterSetName = 'Default')]
+        [Parameter(Mandatory, ParameterSetName = 'JSON')]
+        [ValidateNotNullOrEmpty()]
+        [string] $ChecksumUri,
+
+        [Parameter(Mandatory, ParameterSetName = 'JSON')]
+        [switch]$JSON,
+
+        [Parameter(Mandatory, ParameterSetName = 'JSON')]
+        [ValidateNotNullOrEmpty()]
+        [string]$SchemaFile,
+
+        [Parameter(ParameterSetName = 'JSON')]
+        [ScriptBlock]$ExtractDigestScriptBlock,
+
+        [Parameter(ParameterSetName = 'JSON')]
+        [System.Array]$ExtractDigestArguments
+    )
+
+    Write-Debug "Checksum verification for $downloadedFile"
+    Write-Debug "Checksum URI: $ChecksumUri"
+
+    if (-not (Test-Path -Path $downloadedFile)) {
+        Throw "Downloaded file not found: $downloadedFile"
+    }
+
+    if ($JSON) {
+        Write-Debug "Checksum file format: JSON"
+        Write-Debug "SchemaFile: $SchemaFile"
+        return (
+            Test-JSONChecksum `
+                -DownloadedFile $downloadedFile `
+                -ChecksumUri $ChecksumUri `
+                -SchemaFile $SchemaFile `
+                -ExtractDigestScriptBlock $ExtractDigestScriptBlock `
+                -ExtractDigestArguments $ExtractDigestArguments
+        )
+    }
+
+    Write-Debug "Checksum file format: Text"
+    return Test-FileChecksum -DownloadedFile $DownloadedFile -ChecksumUri $ChecksumUri
+}
+
+function Test-FileChecksum {
+    # https://learn.microsoft.com/en-us/powershell/utility-modules/psscriptanalyzer/rules/usedeclaredvarsmorethanassignments?view=ps-modules#special-cases
+    [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "isValid", Justification = "Special case")]
+    [System.Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "found", Justification = "Special case")]
+
+    [OutputType([bool])]
+    param(
+        [parameter(Mandatory)]
+        [string] $DownloadedFile,
+
+        [Parameter(Mandatory)]
+        [string] $ChecksumUri
+    )
+
+    # Download checksum file
+    $downloadDirPath = Split-Path -Parent $DownloadedFile
+    $checksumFile = DownloadCheckSumFile -DownloadPath $downloadDirPath -ChecksumUri $ChecksumUri
+
+    Write-Debug "Checksum file: $checksumFile"
+
+    # Get download file name from downloaded file
+    $downloadedFileName = Split-Path -Leaf $DownloadedFile
+
+    $isValid = $false
+    try {
+        # Extract algorithm from checksum file name
+        if ($checksumFile -notmatch "($($VALID_HASH_FUNCTIONS -join "|"))") {
+            Throw "Invalid hash function. Supported hash functions: $($VALID_HASH_FUNCTIONS -join ', ')"
+        }
+        $algorithm = $matches[1]
+        $downloadedChecksum = Get-FileHash -Path $DownloadedFile -Algorithm $algorithm
+
+        # checksum is stored in a file named SHA256SUMS
+        # checksum file content format: <checksum>  <filename>
+        #    separate by two spaces
+        $found = $false
+        Get-Content -Path $checksumFile | ForEach-Object {
+            # Split the read line to extract checksum and filename
+            if ($_ -notmatch "^([\d\w]+)(\s){1,2}([\S]+)$") {
+                Throw "Invalid checksum file content format in $checksumFile. Expected format: <checksum> <filename>."
+            }
+
+            # 0: full match, 1: checksum, 2: space, 3: filename
+            $checksum = $matches[1]
+            $filename = $matches[3]
+
+            # Check if the downloaded file name matches any of the file names in the checksum file
+            if ($filename -match "^(?:\.\/release\/)?($downloadedFileName)$") {
+                $isValid = $downloadedChecksum.Hash -eq $checksum
+                $found = $true
+                return
+            }
+        }
+
+        if (-not $found) {
+            Throw "Checksum not found for `"$downloadedFileName`" in $checksumFile"
+        }
+    }
+    catch {
+        Throw "Checksum verification failed for $DownloadedFile. $_"
+    }
+    finally {
+        # Delete checksum file
+        Write-Debug "Deleting checksum file $checksumFile"
+        Remove-Item -Path $checksumFile -Force
+    }
+
+    Write-Debug "Checksum verification status. {success: $isValid}"
+    return $isValid
+}
+
+function Test-JSONChecksum {
+    [OutputType([bool])]
+    param(
+        [parameter(Mandatory)]
+        [string] $DownloadedFile,
+
+        [parameter(Mandatory)]
+        [string] $ChecksumUri,
+
+        [Parameter(Mandatory)]
+        [string] $SchemaFile,
+
+        [Parameter(HelpMessage = "Script block to extract checksum from JSON file. If the ScriptBlock takes any parameters, pass them as an object with ``ExtractDigestArguments``. The function must return a FileDigest object with HashFunction (string) and Digest (string).")]
+        [ScriptBlock]$ExtractDigestScriptBlock,
+
+        [Parameter(HelpMessage = "Parameters to pass to the script block.")]
+        [System.Array]$ExtractDigestArguments
+    )
+
+    # Download checksum file
+    $downloadDirPath = Split-Path -Parent $DownloadedFile
+    $checksumFile = DownloadCheckSumFile -DownloadPath $downloadDirPath -ChecksumUri $ChecksumUri
+
+    # Validate the checksum file
+    $isJsonValid = ValidateJSONChecksumFile -ChecksumFilePath $checksumFile -SchemaFile $SchemaFile
+    Write-Debug "Checksum JSON file validation status. {success: $isJsonValid}"
+
+    if ($null -eq $ExtractDigestScriptBlock) {
+        Write-Debug "Using default JSON checksum extraction script block"
+        $ExtractDigestScriptBlock = ${function:GenericExtractDigest}
+        $ExtractDigestArguments = @($DownloadedFile, $checksumFile)
+    }
+
+    # Invoke the script block to extract the file digest
+    Write-Debug "Extracting file digest from $checksumFile"
+    $extractedFileDigest = & $ExtractDigestScriptBlock @ExtractDigestArguments
+
+    # Since Invoke() returns a collection, we need to extract the first item
+    if ( ($null -eq $extractedFileDigest) -or
+        ($extractedFileDigest.Count -ne 1) -or
+        ($extractedFileDigest[0].GetType().Name -ne "FileDigest")
+    ) {
+        Throw 'Invalid value. Requires a value with type "FileDigest".'
+    }
+
+    # Validate the hash function and checksum
+    $isValid = $false
+    try {
+        $algorithm = $extractedFileDigest[0].HashFunction.ToUpper()
+        $digest = $extractedFileDigest[0].Digest
+
+        # Validate the hash function
+        if ($VALID_HASH_FUNCTIONS -notcontains $algorithm) {
+            Throw "Invalid hash function, `"$algorithm`". Supported algorithms are: $($VALID_HASH_FUNCTIONS -join ', ')"
+        }
+
+        # Validate the checksum
+        $hash = Get-FileHash -Path $DownloadedFile -Algorithm $algorithm
+        $isValid = ($digest -eq $hash.Hash)
+    }
+    catch {
+        Throw "Checksum verification failed for $downloadedFile. $_"
+    }
+    finally {
+        # Delete checksum checksumFile
+        Write-Debug "Deleting checksum file $checksumFile"
+        Remove-Item -Path $checksumFile -Force
+    }
+
+    Write-Debug "Checksum verification status. {success: $isValid}"
+    return $isValid
+}
+
+function DownloadCheckSumFile {
+    [OutputType([string])]
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Downloaded file path")]
+        [String]$DownloadPath,
+
+        [parameter(Mandatory = $true, HelpMessage = "Checksum URI")]
+        [String]$ChecksumUri
+    )
+
+    # Get checksum file name
+    $OutFile = Join-Path -Path $DownloadPath -ChildPath ($checksumUri -split '/' | Select-Object -Last 1)
+
+    # Download checksum file
+    Write-Debug "Downloading checksum file from $checksumUri"
+    try {
+        Invoke-WebRequest -Uri $checksumUri -OutFile $OutFile -UseBasicParsing
+    }
+    catch {
+        Throw "Checksum file download failed: $checksumUri.`n$($_.Exception.Message)"
+    }
+
+    return $OutFile
+}
+
+function ValidateJSONChecksumFile {
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Downloaded checksum file path")]
+        [String]$ChecksumFilePath,
+        [parameter(Mandatory = $true, HelpMessage = "JSON schema file path")]
+        [String]$SchemaFile
+    )
+
+    # Check if the schema file exists
+    if (-not (Test-Path -Path $SchemaFile)) {
+        Throw "Couldn't find the provided schema file: $SchemaFile"
+    }
+
+    $schemaFileContent = Get-Content -Path $SchemaFile -Raw
+    if ([string]::IsNullOrWhiteSpace($schemaFileContent)) {
+        Throw "Invalid schema file: $SchemaFile. Schema file is empty."
+    }
+
+    # Test JSON checksum file is valid
+    try {
+        Write-Debug "Validating checksum JSON file $checksumFilePath"
+        return (Test-Json -Path "$checksumFilePath" -SchemaFile $SchemaFile)
+    }
+    catch {
+        Throw "Invalid JSON format in checksum file. $_"
+    }
+}
+
+function GenericExtractDigest {
+    param(
+        [parameter(Mandatory = $true, HelpMessage = "Downloaded tool file path")]
+        [String]$DownloadedFile,
+
+        [parameter(Mandatory = $true, HelpMessage = "Downloaded checksum file path")]
+        [String]$ChecksumFile
+    )
+
+    Write-Debug "Extracting digest from $checksumFile using default script block for in-toto SBOM format"
+
+    # Read the JSON file and get the checksum
+    $jsonContent = Get-Content -Path $ChecksumFile -Raw | ConvertFrom-Json
+
+    # Check if using in-toto SBOM format: https://github.com/in-toto/attestation/tree/v0.1.0/spec#statement
+    if ($jsonContent._type -notlike "https://in-toto.io/*") {
+        Throw( -join (
+                "Invalid checksum JSON format. Expected in-toto SBOM format: $($jsonContent._type). ",
+                "Please provide an appropriate script block to extract the digest for $($jsonContent._type) format."))
+        return
+    }
+
+    # Check if the downloaded filename is the same as subject.name
+    $downloadedFileName = Split-Path "$DownloadedFile" -Leaf
+    for ($i = 0; $i -lt $jsonContent.subject.Count; $i++) {
+        $subject = $jsonContent.subject[$i]
+
+        if ($subject.name -ne $downloadedFileName) {
+            continue
+        }
+
+        $digest = $subject.digest
+        $algorithm = ($digest | Get-Member -MemberType NoteProperty).Name
+        $checksum = $digest.$algorithm
+
+        return ([FileDigest]::new($algorithm, $checksum))
+    }
+
+    Throw "Downloaded file name does not match the subject name ($($subject.name)) in the JSON file."
+}
+
 function Get-DefaultInstallPath($tool) {
     switch ($tool) {
         "buildkit" {
@@ -158,27 +458,6 @@ function Install-RequiredFeature {
         Write-Output "Cleanup to remove downloaded files"
         Remove-Item $downloadPath -Force -ErrorAction Ignore
     }
-}
-
-function Install-ContainerToolConsent ($tool) {
-    $caption = ""
-    $question = "The following tools will be installed: `n`t`t$tool `nDo you wish to proceed?"
-    $choices = '&Yes', '&No'
-
-    $defaultChoice = [ActionConsent]::No.value__
-    $consent = (Get-Host).UI.PromptForChoice($caption, $question, $choices, $defaultChoice)
-
-    return [ActionConsent]$consent -eq [ActionConsent]::Yes
-}
-
-function Uninstall-ContainerToolConsent ($tool, $path) {
-    $question = "Do you want to uninstall $tool from $($path)?"
-    $choices = '&Yes', '&No'
-
-    $defaultChoice = [ActionConsent]::No.value__
-    $consent = (Get-Host).UI.PromptForChoice($warning, $question, $choices, $defaultChoice)
-
-    return [ActionConsent]$consent -eq [ActionConsent]::Yes
 }
 
 function Add-FeatureToPath ($Path, $Feature) {
@@ -276,7 +555,7 @@ function Test-ConfFileEmpty($Path) {
 
 function Uninstall-ProgramFiles($path) {
     try {
-        Remove-Item -Path "$path" -Recurse -Force
+        Get-Item -Path "$path" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
     }
     catch {
         $errMsg = $_
@@ -324,13 +603,12 @@ function Invoke-ExecutableCommand {
 }
 
 
+Export-ModuleMember -Variable VALID_HASH_FUNCTIONS
 Export-ModuleMember -Function Get-LatestToolVersion
 Export-ModuleMember -Function Get-DefaultInstallPath
 Export-ModuleMember -Function Test-EmptyDirectory
 Export-ModuleMember -Function Get-InstallationFile
 Export-ModuleMember -Function Install-RequiredFeature
-Export-ModuleMember -Function Install-ContainerToolConsent
-Export-ModuleMember -Function Uninstall-ContainerToolConsent
 Export-ModuleMember -Function Invoke-ExecutableCommand
 Export-ModuleMember -Function Test-ServiceRegistered
 Export-ModuleMember -Function Add-FeatureToPath
@@ -338,3 +616,4 @@ Export-ModuleMember -Function Remove-FeatureFromPath
 Export-ModuleMember -Function Invoke-ServiceAction
 Export-ModuleMember -Function Test-ConfFileEmpty
 Export-ModuleMember -Function Uninstall-ProgramFiles
+Export-ModuleMember -Function Test-CheckSum
