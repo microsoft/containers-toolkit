@@ -58,16 +58,12 @@ function Install-ContainerTools {
         [parameter(HelpMessage = "Path to download files. Defaults to user's Downloads folder")]
         $DownloadPath = "$HOME\Downloads",
 
-        [switch]
-        [parameter(HelpMessage = "Cleanup after installation is done")]
-        $CleanUp,
-
         [Switch]
         [parameter(HelpMessage = "Force install the tools even if they already exists at the specified path")]
         $Force,
 
         [switch]
-        [parameter(HelpMessage = "Register and Start Conatinerd and Buildkitd services and set up NAT network")]
+        [parameter(HelpMessage = "Register and Start Containerd and Buildkitd services and set up NAT network")]
         $RegisterServices
     )
 
@@ -77,121 +73,95 @@ function Install-ContainerTools {
         $buildKitVersion = $buildKitVersion.TrimStart("v")
         $nerdctlVersion = $nerdctlVersion.TrimStart("v")
 
-        $toInstall = @("containerd v($containerdVersion)", "buildkit v($buildKitVersion)", "nerdctl v($nerdctlVersion)")
+        $toInstall = @("containerd v$containerdVersion", "buildkit v$buildKitVersion", "nerdctl v$nerdctlVersion")
         $toInstallString = $($toInstall -join ', ')
 
-        $WhatIfMessage = "$toInstallString will be installed"
+        $WhatIfMessage = "$toInstallString will be installed. Any downloaded files will be removed"
         if ($Force) {
-            <# Action when this condition is true #>
-            $WhatIfMessage = "$toInstallString will be automativally uninstalled (if they are already installed) and reinstalled"
-        }
-        if ($CleanUp) {
-            <# Action when this condition is true #>
-            $WhatIfMessage += " and downloaded files will be removed"
+            $WhatIfMessage = "$toInstallString will be automatically uninstalled (if they are already installed) and reinstalled. Any downloaded files will be removed"
         }
     }
 
     process {
         if ($PSCmdlet.ShouldProcess($InstallPath, $WhatIfMessage)) {
-            Write-Output "Tools to install: $toInstallString"
+            Write-Output "The following tools will be installed: $toInstallString"
 
-            # Global Variables needed for the script
-            $containerdTarFile = "containerd-${containerdVersion}-windows-amd64.tar.gz"
-            $buildKitTarFile = "buildkit-v${buildKitVersion}.windows-amd64.tar.gz"
-            $nerdctlTarFile = "nerdctl-${nerdctlVersion}-windows-amd64.tar.gz"
+            Write-Debug "Downloading files to $DownloadPath"
+            Write-Debug "Installing files to $InstallPath"
 
-            # Installation paths
-            $ContainerdPath = "$InstallPath\Containerd"
-            $BuildkitPath = "$InstallPath\Buildkit"
-            $NerdCTLPath = "$InstallPath\nerdctl"
+            $completedInstalls = @()
+            $failedInstalls = @()
 
-            $files = @(
-                [PSCustomObject]@{
-                    Feature      = "Containerd"
-                    Uri          = "https://github.com/containerd/containerd/releases/download/v$containerdVersion/$containerdTarFile"
-                    Version      = $containerdVersion
-                    DownloadPath = "$DownloadPath\$($containerdTarFile)"
-                    InstallPath  = $ContainerdPath
-                    EnvPath      = "$ContainerdPath\bin"
-                }
-                [PSCustomObject]@{
-                    Feature      = "BuildKit"
-                    Uri          = "https://github.com/moby/buildkit/releases/download/v${BuildKitVersion}/$BuildKitTarFile"
-                    Version      = $BuildKitVersion
-                    DownloadPath = "$DownloadPath\$($BuildKitTarFile)"
-                    InstallPath  = $BuildkitPath
-                    EnvPath      = "$BuildkitPath\bin"
-                }
-                [PSCustomObject]@{
-                    Feature      = "nerdctl"
-                    Uri          = "https://github.com/containerd/nerdctl/releases/download/v${nerdctlVersion}/$nerdctlTarFile"
-                    Version      = $nerdctlVersion
-                    DownloadPath = "$DownloadPath\$($nerdctlTarFile)"
-                    InstallPath  = $NerdCTLPath
-                    EnvPath      = $NerdCTLPath
+            $installTasks = @(
+                @{
+                    name     = "Containerd"
+                    function = {
+                        Install-Containerd -Force:$force -Confirm:$false `
+                            -Version $containerdVersion `
+                            -InstallPath "$InstallPath\Containerd" `
+                            -DownloadPath "$DownloadPath" `
+                            -Setup:$RegisterServices
+                    }
+                },
+                @{
+                    name     = "Buildkit"
+                    function = {
+                        Install-Buildkit -Force:$force -Confirm:$false `
+                            -Version $buildKitVersion `
+                            -InstallPath "$InstallPath\Buildkit" `
+                            -DownloadPath "$DownloadPath" `
+                            -Setup:$RegisterServices
+                    }
+                },
+                @{
+                    name     = "nerdctl"
+                    function = {
+                        Install-Nerdctl -Force:$force -Confirm:$false `
+                            -Version $nerdctlVersion `
+                            -InstallPath "$InstallPath\nerdctl" `
+                            -DownloadPath "$DownloadPath"
+                    }
                 }
             )
 
-            # Download files
-            Get-InstallationFile -Files $files
-
-            $completedInstalls = @()
-
-            # Install tools
-            foreach ($params in $files) {
-                Write-Output "Installing $($params.Feature)"
-
+            foreach ($task in $installTasks) {
                 try {
-                    # Uninstall if tool exists at specified location. Requires user consent
-                    if (-not (Test-EmptyDirectory -Path $params.InstallPath) ) {
-                        Write-Warning "Uninstalling $($params.Feature) from $($params.InstallPath)"
-                        Uninstall-ContainerTool -Tool $params.Feature -Path $params.InstallPath -Force:$force
-                    }
-
-                    # Untar downloaded files to the specified installation path
-                    $InstallParams = @{
-                        Feature      = $params.Feature
-                        InstallPath  = $params.InstallPath
-                        DownloadPath = $params.DownloadPath
-                        EnvPath      = $params.EnvPath
-                    }
-                    Install-RequiredFeature @InstallParams -Cleanup $CleanUp
-
-                    $completedInstalls += $params.Feature
-
-                    if ($RegisterServices) {
-                        $RegisterParams = @{
-                            force       = $force
-                            feature     = $params.Feature
-                            installPath = $params.InstallPath
-                        }
-                        Register-Service @RegisterParams
-                    }
+                    & $task.Function
+                    $completedInstalls += $task.Name
                 }
                 catch {
-                    Write-Error "Installation failed for $($params.feature). $_"
+                    Write-Error "$($task.Name) Installation failed. $_"
+                    $failedInstalls += $task.Name
                 }
             }
 
-            $isError = $false
+            if ($completedInstalls) {
+                Write-Output "$($completedInstalls -join ', ') installed successfully.`n"
+            }
+
+            if ($failedInstalls) {
+                Write-Warning "Installation failed for $($failedInstalls -join ', ')`n"
+            }
+
             if ($RegisterServices) {
                 try {
                     Initialize-NatNetwork -Force:$force -Confirm:$false
                 }
                 catch {
-                    $isError = $true
                     Write-Error "Failed to initialize NAT network. $_"
                 }
             }
             else {
-                $message = "To register containerd and buildkitd services, run the following commands:`n`tRegister-ContainerdService -ContainerdPath '$ContainerdPath' -Start`n`tRegister-BuildkitdService -BuildkitPath '$BuildkitPath' -Start"
-                $message += "`nThen, to create a NAT network for nerdctl, run the following command:`n`tInitialize-NatNetwork"
+                $message = @"
+To register containerd and buildkitd services and create a NAT network, see help on the following commands:
+    Get-Help Register-ContainerdService
+    Get-Help Register-BuildkitdService
+    Get-Help Initialize-NatNetwork
+"@
                 Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
             }
 
-            if (!$isError) {
-                Write-Output "$($completedInstalls -join ', ') installed successfully."
-            }
+            Write-Output "Installation complete. See logs for more details"
         }
         else {
             # Code that should be processed if doing a WhatIf operation
@@ -199,11 +169,6 @@ function Install-ContainerTools {
             return
         }
     }
-}
-
-function Uninstall-ContainerTool($Tool, $Path, $force) {
-    $uninstallCommand = "Uninstall-$($Tool)"
-    & $uninstallCommand -Path "$Path" -Force:$Force -Confirm:$false
 }
 
 function Get-InstalledVersion($feature, $Latest) {
@@ -296,29 +261,5 @@ function getDaemonStatus($daemon) {
     return $daemonStatus.Status
 }
 
-function Register-Service {
-    param (
-        [bool]$force,
-        [string]$feature,
-        [string]$installPath
-    )
-
-    switch ($feature) {
-        "Containerd" {
-            $RegisterParams = @{
-                ContainerdPath = $installPath
-            }
-            Register-ContainerdService @RegisterParams -Start -Force:$force
-        }
-        "BuildKit" {
-            $RegisterParams = @{
-                BuildKitPath = $installPath
-            }
-            Register-BuildkitdService @RegisterParams -Start -Force:$force
-        }
-    }
-}
-
 Export-ModuleMember -Function Show-ContainerTools
 Export-ModuleMember -Function Install-ContainerTools
-Export-ModuleMember -Function Uninstall-ContainerTool
