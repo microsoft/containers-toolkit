@@ -59,18 +59,14 @@ Describe "AllToolsUtilities.psm1" {
             Mock Get-ContainerdLatestVersion -ModuleName 'AllToolsUtilities' -MockWith { return '4.9.0' }
             Mock Get-BuildkitLatestVersion -ModuleName 'AllToolsUtilities' -MockWith { return '8.9.7' }
             Mock Get-NerdctlLatestVersion -ModuleName 'AllToolsUtilities' -MockWith { return '1.5.3' }
-            Mock Get-InstallationFile -ModuleName 'AllToolsUtilities'
-            Mock Uninstall-ContainerTool -ModuleName 'AllToolsUtilities'
-            Mock Install-RequiredFeature -ModuleName 'AllToolsUtilities'
-            Mock Install-ContainerToolConsent -ModuleName 'AllToolsUtilities' -MockWith { return $true }
-            Mock Install-ContainerTools -ModuleName 'AllToolsUtilities'
-            Mock Register-ContainerdService -ModuleName 'AllToolsUtilities'
-            Mock Register-BuildkitdService -ModuleName 'AllToolsUtilities'
+            Mock Install-Containerd -ModuleName 'AllToolsUtilities'
+            Mock Install-Buildkit -ModuleName 'AllToolsUtilities'
+            Mock Install-Nerdctl -ModuleName 'AllToolsUtilities'
             Mock Initialize-NatNetwork -ModuleName 'AllToolsUtilities'
-            Mock Test-EmptyDirectory -ModuleName 'AllToolsUtilities' -MockWith { return $false }
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
+            Mock Install-ContainerTools -ModuleName "AllToolsUtilities"
             {
                 $WhatIfPreference = $true
                 Install-ContainerTools
@@ -79,6 +75,8 @@ Describe "AllToolsUtilities.psm1" {
         }
 
         It 'Should not process on explicit request for validation (-WhatIf)' {
+            Mock Install-ContainerTools -ModuleName "AllToolsUtilities"
+
             { Install-ContainerTools -WhatIf }
             Should -Invoke -CommandName Install-ContainerTools -ModuleName 'AllToolsUtilities' -Exactly -Times 0 -Scope It
         }
@@ -86,64 +84,33 @@ Describe "AllToolsUtilities.psm1" {
         It "Should use defaults" {
             Install-ContainerTools -Confirm:$false
 
-            $containerdTarFile = "containerd-4.9.0-windows-amd64.tar.gz"
-            $BuildKitTarFile = "buildkit-v8.9.7.windows-amd64.tar.gz"
-            $nerdctlTarFile = "nerdctl-1.5.3-windows-amd64.tar.gz"
-            $MockToolParams = @(
-                [PSCustomObject]@{
-                    Feature      = "Containerd"
-                    Uri          = "https://github.com/containerd/containerd/releases/download/v4.9.0/$containerdTarFile"
-                    Version      = '4.9.0'
-                    DownloadPath = "$HOME\Downloads\$($containerdTarFile)"
-                    InstallPath  = "$Env:ProgramFiles\Containerd"
-                    EnvPath      = "$Env:ProgramFiles\Containerd\bin"
-                }
-                [PSCustomObject]@{
-                    Feature      = "BuildKit"
-                    Uri          = "https://github.com/moby/buildkit/releases/download/v8.9.7/$BuildKitTarFile"
-                    Version      = '8.9.7'
-                    DownloadPath = "$HOME\Downloads\$($BuildKitTarFile)"
-                    InstallPath  = "$Env:ProgramFiles\BuildKit"
-                    EnvPath      = "$Env:ProgramFiles\BuildKit\bin"
-                }
-                [PSCustomObject]@{
-                    Feature      = "nerdctl"
-                    Uri          = "https://github.com/containerd/nerdctl/releases/download/v1.5.3/$nerdctlTarFile"
-                    Version      = '1.5.3'
-                    DownloadPath = "$HOME\Downloads\$($nerdctlTarFile)"
-                    InstallPath  = "$Env:ProgramFiles\nerdctl"
-                    EnvPath      = "$Env:ProgramFiles\nerdctl"
-                }
-            )
-
-            Should -Invoke Get-InstallationFile -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It `
-                -ParameterFilter { @{$Files = $MockToolParams } }
-
-            foreach ($mockParam in $MockToolParams) {
-                $MockInstallParams = @{
-                    Feature      = $mockParam.Feature
-                    InstallPath  = $mockParam.InstallPath
-                    DownloadPath = $mockParam.DownloadPath
-                    EnvPath      = $mockParam.EnvPath
-                }
-
-                Should -Invoke "Get-$($mockParam.Feature)LatestVersion" -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It
-
-                # "Should uninstall tool if it is already installed"
-                Should -Invoke Uninstall-ContainerTool -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It `
-                    -ParameterFilter { $Tool -eq $mockParam.Feature -and $Path -eq $mockParam.InstallPath -and $force -eq $false }
-
-                Should -Invoke Install-RequiredFeature -ModuleName 'AllToolsUtilities' -ParameterFilter { $MockInstallParams -and $cleanup -eq $false }
+            Should -Invoke Install-Containerd -ModuleName 'AllToolsUtilities' `
+                -ParameterFilter {
+                $Version -eq '4.9.0' -and
+                $InstallPath -eq "$Env:ProgramFiles\Containerd" -and
+                $DownloadPath -eq "$HOME\Downloads" -and
+                $Setup -eq $false
             }
 
-            Should -Invoke Register-ContainerdService -ModuleName 'AllToolsUtilities' -Times 0
-            Should -Invoke Register-BuildkitdService -ModuleName 'AllToolsUtilities' -Times 0
+            Should -Invoke Install-Buildkit -ModuleName 'AllToolsUtilities' `
+                -ParameterFilter {
+                $Version -eq '8.9.7' -and
+                $InstallPath -eq "$Env:ProgramFiles\BuildKit" -and
+                $DownloadPath -eq "$HOME\Downloads" -and
+                $Setup -eq $false
+            }
+
+            Should -Invoke Install-Nerdctl -ModuleName 'AllToolsUtilities' `
+                -ParameterFilter {
+                $Version -eq '1.5.3' -and
+                $InstallPath -eq "$Env:ProgramFiles\nerdctl" -and
+                $DownloadPath -eq "$HOME\Downloads"
+            }
+
             Should -Invoke Initialize-NatNetwork -ModuleName 'AllToolsUtilities' -Times 0
         }
 
         It "Should use user-specified values" {
-            Mock Test-EmptyDirectory -ModuleName 'AllToolsUtilities' -MockWith { return $true }
-
             Install-ContainerTools `
                 -ContainerDVersion '7.8.9' `
                 -BuildKitVersion '4.5.6' `
@@ -152,82 +119,53 @@ Describe "AllToolsUtilities.psm1" {
                 -DownloadPath 'TestDrive:\Download Directory' `
                 -Force -Confirm:$false
 
-            $containerdTarFile = "containerd-7.8.9-windows-amd64.tar.gz"
-            $BuildKitTarFile = "buildkit-v4.5.6.windows-amd64.tar.gz"
-            $nerdctlTarFile = "nerdctl-3.2.1-windows-amd64.tar.gz"
-            $MockToolParams = @(
-                [PSCustomObject]@{
-                    Feature      = "Containerd"
-                    Uri          = "https://github.com/containerd/containerd/releases/download/v7.8.9/$containerdTarFile"
-                    Version      = '7.8.9'
-                    DownloadPath = "$HOME\Downloads\$($containerdTarFile)"
-                    InstallPath  = "TestDrive:\Install Directory\Containerd"
-                    EnvPath      = "TestDrive:\Install Directory\Containerd\bin"
-                }
-                [PSCustomObject]@{
-                    Feature      = "BuildKit"
-                    Uri          = "https://github.com/moby/buildkit/releases/download/v4.5.6/$BuildKitTarFile"
-                    Version      = '4.5.6'
-                    DownloadPath = "$HOME\Downloads\$($BuildKitTarFile)"
-                    InstallPath  = "TestDrive:\Install Directory\BuildKit"
-                    EnvPath      = "TestDrive:\Install Directory\BuildKit\bin"
-                }
-                [PSCustomObject]@{
-                    Feature      = "nerdctl"
-                    Uri          = "https://github.com/containerd/nerdctl/releases/download/v3.2.1/$nerdctlTarFile"
-                    Version      = '3.2.1'
-                    DownloadPath = "$HOME\Downloads\$($nerdctlTarFile)"
-                    InstallPath  = "TestDrive:\Install Directory\nerdctl"
-                    EnvPath      = "TestDrive:\Install Directory\nerdctl"
-                }
-            )
 
-            Should -Invoke Get-InstallationFile -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It `
-                -ParameterFilter { @{$Files = $MockToolParams } }
-
-            foreach ($mockParam in $MockToolParams) {
-                $MockInstallParams = @{
-                    Feature      = $mockParam.Feature
-                    InstallPath  = $mockParam.InstallPath
-                    DownloadPath = $mockParam.DownloadPath
-                    EnvPath      = $mockParam.EnvPath
-                }
-
-                Should -Invoke "Get-$($mockParam.Feature)LatestVersion" -ModuleName 'AllToolsUtilities' -Times 0 -Scope It
-                Should -Invoke Uninstall-ContainerTool -ModuleName 'AllToolsUtilities' -Times 0 -Exactly -Scope It
-                Should -Invoke Install-RequiredFeature -ModuleName 'AllToolsUtilities' -ParameterFilter { $MockInstallParams }
+            Should -Invoke Install-Containerd -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It `
+                -ParameterFilter {
+                $Version -eq '7.8.9' -and
+                $InstallPath -eq "TestDrive:\Install Directory\Containerd" -and
+                $DownloadPath -eq "TestDrive:\Download Directory" -and
+                $Setup -eq $false
             }
+
+            Should -Invoke Install-Buildkit -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It `
+                -ParameterFilter {
+                $Version -eq '4.5.6' -and
+                $InstallPath -eq "TestDrive:\Install Directory\BuildKit" -and
+                $DownloadPath -eq "TestDrive:\Download Directory" -and
+                $Setup -eq $false
+            }
+
+            Should -Invoke Install-Nerdctl -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It `
+                -ParameterFilter {
+                $Version -eq '3.2.1' -and
+                $InstallPath -eq "TestDrive:\Install Directory\nerdctl" -and
+                $DownloadPath -eq "TestDrive:\Download Directory"
+            }
+
+            Should -Invoke Initialize-NatNetwork -ModuleName 'AllToolsUtilities' -Times 0
         }
 
         It "Should continue installation of other tools on failure" {
-            Mock Uninstall-ContainerTool -ModuleName 'AllToolsUtilities' -ParameterFilter { $Tool -eq 'Containerd' } -MockWith { Throw 'Error message' }
+            Mock Install-Containerd -ModuleName 'AllToolsUtilities' -MockWith { Throw 'Error message' }
 
             Install-ContainerTools -Force -Confirm:$false
 
-            Should -Invoke Install-RequiredFeature -ModuleName 'AllToolsUtilities' -Times 0 -Exactly -Scope It -ParameterFilter { $Feature -eq 'Containerd' }
+            $Error[0].Exception.Message | Should -Be 'Containerd Installation failed. Error message'
 
             foreach ($tool in @('buildkit', 'nerdctl')) {
-                Should -Invoke Install-RequiredFeature -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It -ParameterFilter { $Feature -eq $tool }
+                Should -Invoke "Install-$tool" -ModuleName 'AllToolsUtilities' -Times 1 -Exactly -Scope It
             }
         }
 
-        It "Should register services and initialize NAT network" {
+        It "Should register services and initialize NAT network when argument '-RegisterServices' is passed" {
             Install-ContainerTools `
                 -InstallPath 'TestDrive:\Install Directory' `
                 -Force -Confirm:$false `
                 -RegisterServices
 
-            $RegisterContainerdParams = @{
-                ContainerdPath = "$InstallPath\Containerd"
-            }
-            $RegisterBuildKitdParams = @{
-                BuildKitPath = "$InstallPath\Buildkit"
-            }
-
-            Should -Invoke Register-ContainerdService -ModuleName 'AllToolsUtilities' -Times 1 `
-                -ParameterFilter { $RegisterContainerdParams -and $Start -eq $true -and $Force -eq $true }
-            Should -Invoke Register-BuildkitdService -ModuleName 'AllToolsUtilities' -Times 1 `
-                -ParameterFilter { $RegisterBuildKitdParams -and $Start -eq $true -and $Force -eq $true }
+            Should -Invoke Install-Containerd -ModuleName 'AllToolsUtilities' -Scope It -ParameterFilter { $Setup -eq $true }
+            Should -Invoke Install-Buildkit -ModuleName 'AllToolsUtilities' -Scope It -ParameterFilter { $Setup -eq $true }
             Should -Invoke Initialize-NatNetwork -ModuleName 'AllToolsUtilities' -Times 1
         }
 
