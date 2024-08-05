@@ -14,13 +14,13 @@
 ## Table of contents
 
 1. [Introduction](#introduction)
-2. [Usage](#usage)
+1. [Usage](#usage)
     - [Installing and importing Containers-Toolkit module](#installing-and-importing-containers-toolkit-module)
-        - [](#download-source-files)
     - [Command reference](#command-reference)
-3. [Important Notes](#important-notes)
-4. [Contribution](#contribution)
-5. [Related Projects](#related-projects)
+1. [Important Notes](#important-notes)
+1. [FAQs](#faqs)
+1. [Contribution](#contribution)
+1. [Related Projects](#related-projects)
 
 ## Introduction
 
@@ -42,20 +42,20 @@ Containers-Toolkit is a Windows PowerShell module for downloading, installing, a
 
 **Option 1:**  Clone containers-toolkit into one of the folder locations in the `$env:PSModulePath` environment variable.
 
-1. To get a possible module path:
+1. **To get a possible module path:**
 
     ```PowerShell
     $env:PSModulePath -split ";"
     ```
 
-2. Clone the repo
+1. **Clone the repo**
 
     ```PowerShell
     cd <selected-module-path>
     git clone https://github.com/microsoft/containers-toolkit.git
     ```
 
-3. Import the module
+1. **Import the module**
 
     ```PowerShell
     Import-Module -Name containers-toolkit -Force
@@ -63,26 +63,30 @@ Containers-Toolkit is a Windows PowerShell module for downloading, installing, a
 
 **Option 2:** Clone containers-toolkit to a folder location of choice and add the new module location to the Windows PowerShell module path
 
-1. Clone the repo
+1. **Clone the repo**
 
     ```PowerShell
     git clone https://github.com/microsoft/containers-toolkit.git
     ```
 
-1. Add the directory to Windows PowerShell module path
+1. **Add the directory to Windows PowerShell module path**
 
     ```PowerShell
     $env:PSModulePath += ";<path-to-module-directory>"
     ```
 
-1. Install module dependencies
+1. **Install module dependencies**
+   - Install `ThreadJob` module
 
     ```powershell
     Install-Module -Name ThreadJob -Force
-    Install-Module -Name HNS -AllowClobber -Force
     ```
 
-1. Import the module
+    - Install `HNS` module
+
+        To install the HNS module. follow the instructions here [instructions](./docs/FAQs.md#2-new-hnsnetwork-command-does-not-exist)
+
+1. **Import the module**
 
     ```PowerShell
     Import-Module -Name containers-toolkit -Force
@@ -95,7 +99,7 @@ Get-Help containers-toolkit
 ```
 
 ```PowerShell
-Get-Module -Name containers-toolkit
+Get-Module -Name containers-toolkit -ListAvailable
 ```
 
 ### Command reference
@@ -153,52 +157,33 @@ Get-Command -Module containers-toolkit
 
 ## FAQs
 
-1. Error when running Import-Module
-    - [Error when running Import-Module](https://vnote42.net/2019/07/30/error-when-running-import-module/)
-    - [Unblock a script to run it without changing the execution policy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy?view=powershell-7.4#example-7-unblock-a-script-to-run-it-without-changing-the-execution-policy)
-    - [Unblock-File](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/unblock-file?view=powershell-7.4)
-
-## TODO
-
-- [ ] Set up GitWorkflow files:
-  - [GitHub Repository Structure Best Practices](https://medium.com/code-factory-berlin/github-repository-structure-best-practices-248e6effc405)
-  - Setup ARM64 [self-hosted runner](https://docs.github.com/en/actions/hosting-your-own-runners/managing-self-hosted-runners/about-self-hosted-runners)
-  - Dependabot to update version in main + Licence
-- [ ] Pipeline configuration:
-  - Code Analysis with [DevSkim](https://aka.ms/DevSkim)
-- [ ] Publish module to PSGallery
-- [ ] Fix Code analysis warnings
-- [ ] Dev install: (Hacks) Add functions in Containerd and BuildKit to build from source files. (Is this really necessary? May be an overkill)
-- [ ] Publish to Microsoft Learn: [MicrosoftDocs
-/
-Virtualization-Documentation](https://github.com/MicrosoftDocs/Virtualization-Documentation/tree/live/virtualization/windowscontainers)
-  - [Contribute to the Microsoft Learn platform](https://learn.microsoft.com/en-us/contribute/content/?source=recommendations)
-- [x] Rename this module to containerstoolkit: The current name for this module might cause confusion with repository named windows-containers-tools
-- [x] Update README.md (Documentation)
-- [x] Update containers-toolkit/containers-toolkit.Format.ps1xml (Documentation)
-- [x] Update Containers-Toolkit/Containers-ToolkitlsForWindows.help.txt (Documentation)
-- [x] Use Containers-Toolkit
-- [x] Add Pester test
-- [x] Replace GitHub username in URL: <https://github.com/...>
-- [ ] ~~Rootless installation~~: Not needed for Windows
+See [FAQs.md](./docs/FAQs.md)
 
 ## Contribution
 
+See [CONTRIBUTING.md](./CONTRIBUTING.md)
+
 ## Related Projects
 
-This project builds on work done by others to create a PowerShell module.
+This project builds on the work of others to create a PowerShell module.
 
-- [Install-ContainerdRuntime](https://github.com/microsoft/Windows-Containers/blob/Main/helpful_tools/Install-ContainerdRuntime/install-containerd-runtime.ps1)
-- [sig-windows-tools- Install-Containerd.ps1](https://github.com/kubernetes-sigs/sig-windows-tools/blob/master/hostprocess/Install-Containerd.ps1)
-- [containerd-installer](https://github.com/lippertmarkus/containerd-installer)
-- [Install MCR on Windows Servers](https://docs.mirantis.com/mcr/20.10/install/mcr-windows.html)
-- [Stevedore](https://github.com/slonopotamus/stevedore)
-- [setup_buildkitd_on_windows.ps1](https://gist.github.com/gabriel-samfira/6e56238ad11c24f490ac109bdd378471)
-- [Windows Containers on Windows 10 without Docker (using Containerd)](https://www.jamessturtevant.com/posts/Windows-Containers-on-Windows-10-without-Docker-using-Containerd/)
+Credits (in alphabetic order):
 
-## Other relevant repositories
+| Repo/ Author                       | Link                                                                                                                                                                          |
+|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Anthony Nandaa (@profnandaa)       | [cni-setup-legacy.ps1](https://gist.github.com/profnandaa/33d65d85964181a42539bfd0b4f9561a)                                                                                   |
+| Gabriel Samfira (@gabriel-samfira) | [setup_buildkitd_on_windows.ps1](https://gist.github.com/gabriel-samfira/6e56238ad11c24f490ac109bdd378471)                                                                    |
+| James Sturtevant (@jsturtevant)    | [Windows Containers on Windows 10 without Docker (using Containerd)](https://www.jamessturtevant.com/posts/Windows-Containers-on-Windows-10-without-Docker-using-Containerd/) |
+| kubernetes-sigs/sig-windows-tools  | [Install-Containerd.ps1](https://github.com/kubernetes-sigs/sig-windows-tools/blob/master/hostprocess/Install-Containerd.ps1)                                                 |
+| Marat Radchenko (@slonopotamus)    | [Stevedore](https://github.com/slonopotamus/stevedore)                                                                                                                        |
+| Markus Lippert (@lippertmarkus)    | [containerd-installer](https://github.com/lippertmarkus/containerd-installer)                                                                                                 |
+| microsoft/Windows-Containers       | [install-containerd-runtime.ps1](https://github.com/microsoft/Windows-Containers/blob/Main/helpful_tools/Install-ContainerdRuntime/install-containerd-runtime.ps1)            |
+| Mirantis                           | [Install MCR on Windows Servers](https://docs.mirantis.com/mcr/20.10/install/mcr-windows.html)                                                                                |
+
+## Container tools installed with this module
 
 - [Containerd](https://github.com/containerd/containerd)
 - [BuildKit](https://github.com/moby/buildkit)
 - [nerdctl](https://github.com/containerd/nerdctl)
 - [Container networking plugins for Windows containers](https://github.com/microsoft/windows-container-networking)
+- [Container Network Interface - networking for Linux containers](https://github.com/containernetworking/cni)

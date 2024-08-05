@@ -233,7 +233,7 @@ function Register-ContainerdService {
             Write-Debug "Containerd config file: $containerdConfigFile"
 
             $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "config default"
-            $output.StandardOutput.ReadToEnd() | Out-File -FilePath $containerdConfigFile  -Encoding ascii -Force
+            $output.StandardOutput.ReadToEnd() | Out-File -FilePath $containerdConfigFile -Encoding ascii -Force
 
             # Check config file is not empty
             $isEmptyConfig = Test-ConfFileEmpty -Path  "$containerdConfigFile"

@@ -20,12 +20,12 @@ Describe "AllToolsUtilities.psm1" {
     }
 
     AfterAll {
-        Remove-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force -ErrorAction Ignore
-        Remove-Module -Name "$ModuleParentPath\Public\AllToolsUtilities.psm1" -Force -ErrorAction Ignore
-        Remove-Module -Name "$ModuleParentPath\Public\ContainerdTools.psm1" -Force -ErrorAction Ignore
-        Remove-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force -ErrorAction Ignore
-        Remove-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1" -Force -ErrorAction Ignore
-        Remove-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "CommonToolUtilities" -Force -ErrorAction Ignore
+        Remove-Module -Name "AllToolsUtilities" -Force -ErrorAction Ignore
+        Remove-Module -Name "ContainerdTools" -Force -ErrorAction Ignore
+        Remove-Module -Name "BuildkitTools" -Force -ErrorAction Ignore
+        Remove-Module -Name "NerdctlTools" -Force -ErrorAction Ignore
+        Remove-Module -Name "ContainerNetworkTools" -Force -ErrorAction Ignore
     }
 
     Context "Show-ContainerTools" -Tag "Show-ContainerTools" {

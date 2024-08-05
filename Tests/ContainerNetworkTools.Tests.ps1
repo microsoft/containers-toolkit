@@ -11,8 +11,10 @@ Describe "ContainerNetworkTools.psm1" {
     BeforeAll {
         $RootPath = Split-Path -Parent $PSScriptRoot
         $ModuleParentPath = Join-Path -Path $RootPath -ChildPath 'Containers-Toolkit'
+
         Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1" -Force
+        Import-Module -Name "$RootPath\Tests\TestData\MockClasses.psm1" -Force
     }
 
     AfterEach {
@@ -22,8 +24,9 @@ Describe "ContainerNetworkTools.psm1" {
     AfterAll {
         Get-ChildItem -Path 'TestDrive:\' | Remove-Item -Recurse -Force
 
-        Remove-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force -ErrorAction Ignore
-        Remove-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "CommonToolUtilities" -Force -ErrorAction Ignore
+        Remove-Module -Name "ContainerNetworkTools" -Force -ErrorAction Ignore
+        Remove-Module -Name "MockClasses" -Force -ErrorAction Ignore
     }
 
     Context "Install-WinCNIPlugin" -Tag "Install-WinCNIPlugin" {
@@ -137,7 +140,6 @@ Describe "ContainerNetworkTools.psm1" {
         It "Should use defaults" {
             Initialize-NatNetwork -Force
 
-            Should -Invoke Import-Module -ModuleName 'ContainerNetworkTools'
             Should -Invoke Get-NetRoute -ModuleName 'ContainerNetworkTools'
             Should -Invoke New-HNSNetwork -ModuleName 'ContainerNetworkTools' -ParameterFilter {
                 $Name -eq 'NAT'
@@ -190,47 +192,45 @@ Describe "ContainerNetworkTools.psm1" {
             { Initialize-NatNetwork } | Should -Throw "Windows CNI plugins have not been installed*"
         }
 
-        It "Should install HNS module if it does not exist" {
+        It "Should throw error if HostNetworkingService and HNS module are not installed" {
             Mock Get-Module -ModuleName 'ContainerNetworkTools'
-            Mock Install-Module -ModuleName 'ContainerNetworkTools'
 
-            Initialize-NatNetwork -Force
-            Should -Invoke Install-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
-            Should -Invoke Import-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
+            { Initialize-NatNetwork -Force } | Should -Throw "Could not import HNS module.*"
+            Should -Invoke Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HostNetworkingService' -or $Name -eq 'HNS' }
         }
 
-        It "Should download HNS module file if it does not exist and failed to install module" {
-            Mock Get-Module -ModuleName 'ContainerNetworkTools'
-            Mock Install-Module -ModuleName 'ContainerNetworkTools' -MockWith { Throw 'Could not download HNS module' }
-            Mock Test-Path -ModuleName 'ContainerNetworkTools' -MockWith { $false } `
-                -ParameterFilter { $path -eq "$Env:ProgramFiles\containerd\cni\hns.psm1" }
-            Mock Get-InstallationFile -ModuleName 'ContainerNetworkTools'
+        It "Should first check HostNetworkingService module by default" {
+            Mock Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HostNetworkingService' } -MockWith { return @{} }
+            Mock Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
 
             Initialize-NatNetwork -Force
-            Should -Invoke Install-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
-            Should -Invoke Get-InstallationFile -ModuleName 'ContainerNetworkTools' -ParameterFilter {
-                $Files -like @(
-                    @{
-                        Feature      = "HNS.psm1"
-                        Uri          = 'https://raw.githubusercontent.com/microsoft/SDN/master/Kubernetes/windows/hns.psm1'
-                        DownloadPath = "$Env:ProgramFiles\containerd\cni"
-                    }
-                )
-            }
-            Should -Invoke Import-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq "$Env:ProgramFiles\containerd\cni\hns.psm1" }
+
+            Should -Invoke Import-Module -Times 0 -Scope It -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
+            Should -Invoke Get-Module -Times 0 -Scope It -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
+        }
+
+        It "Should use HNS module if HostNetworkingService is not installed" {
+            Mock Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HostNetworkingService' }
+            Mock Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' } -MockWith { return @{} }
+
+            Initialize-NatNetwork -Force
+
+            Should -Invoke Import-Module -Times 0 -Scope It -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HostNetworkingService' }
+            Should -Invoke Import-Module -Times 1 -Scope It -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
         }
 
         It "Should throw an error when importing HNS module fails" {
-            Mock Test-Path -ModuleName 'ContainerNetworkTools' -MockWith { $true } `
-                -ParameterFilter { $path -eq "$Env:ProgramFiles\containerd\cni\hns.psm1" }
+            Mock Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HostNetworkingService' }
+            Mock Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' } -MockWith { return @{} }
             Mock Import-Module -ModuleName 'ContainerNetworkTools' -MockWith { Throw 'Error message.' }
 
             { Initialize-NatNetwork -Force } | Should -Throw "Could not import HNS module. Error message."
         }
 
         It "Should throw an error if network exists" {
-            Mock Get-HnsNetwork -ModuleName 'ContainerNetworkTools' -MockWith { return @{Name = 'TestN/W' } }
-            { Initialize-NatNetwork -NetworkName 'TestN/W' -Force } | Should -Throw "TestN/W already exists.*"
+            Mock Get-HnsNetwork -ModuleName 'ContainerNetworkTools' -MockWith { return @{ Name = 'TestN/W' } }
+            { Initialize-NatNetwork -NetworkName 'TestN/W' -Force } | Should -Not -Throw
+            Should -Invoke New-HNSNetwork -Times 0 -Scope It -ModuleName 'ContainerNetworkTools'
         }
 
         It "Should throw an error if creating a new network fails" {
