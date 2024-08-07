@@ -83,15 +83,30 @@ function Install-WinCNIPlugin {
             # Download file from repo
             $cniZipFile = "windows-container-networking-cni-amd64-v${WinCNIVersion}.zip"
             $DownloadPath = "$HOME\Downloads\$cniZipFile"
+            $Uri = "https://github.com/microsoft/windows-container-networking/releases/download/v$WinCNIVersion/$cniZipFile"
             $DownloadParams = @(
                 @{
                     Feature      = "WinCNIPlugin"
-                    Uri          = "https://github.com/microsoft/windows-container-networking/releases/download/v$WinCNIVersion/$cniZipFile"
+                    Uri          = $Uri
                     Version      = $WinCNIVersion
                     DownloadPath = $DownloadPath
                 }
             )
             Get-InstallationFile -Files $DownloadParams
+
+            # Verify downloaded file checksum
+            Write-OutPut "Verifying checksum for $DownloadPath"
+            $checksumUri = "$Uri.sha512"
+            if (-not (Test-CheckSum -DownloadedFile $DownloadPath -ChecksumUri $checksumUri)) {
+                $errMsg = "Checksum verification failed for $DownloadPath"
+                Write-Error $errMsg
+
+                # Clean up downloaded file
+                Write-Warning "Removing downloaded file $DownloadPath"
+                Remove-Item -Path $DownloadPath -Force
+
+                Throw $errMsg
+            }
 
             # Expand zip file and install Win CNI plugin
             $WinCNIBin = "$WinCNIPath\bin"

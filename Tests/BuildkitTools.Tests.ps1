@@ -34,13 +34,13 @@ Describe "BuildkitTools.psm1" {
     }
 
     AfterAll {
-        Remove-Module -Name "CommonToolUtilities" -Force -ErrorAction Ignore
-        Remove-Module -Name "BuildkitTools" -Force -ErrorAction Ignore
+        Remove-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force -ErrorAction Ignore
     }
 
     Context "Install-Buildkit" -Tag "Install-Buildkit" {
         BeforeAll {
-            Mock Get-BuildkitLatestVersion { return '1.0.0' } -ModuleName 'BuildkitTools'
+            Mock Get-BuildkitLatestVersion -ModuleName 'BuildkitTools' -MockWith { return '1.0.0' }
             Mock Get-InstallationFile -ModuleName 'BuildkitTools'
             Mock Install-RequiredFeature -ModuleName 'BuildkitTools'
             Mock Register-BuildkitdService -ModuleName 'BuildkitTools'
@@ -49,10 +49,12 @@ Describe "BuildkitTools.psm1" {
             Mock Get-Command -ModuleName 'BuildkitTools'
             Mock Get-ChildItem -ModuleName 'BuildkitTools'
             Mock Test-EmptyDirectory  -ModuleName 'BuildkitTools' -MockWith { return $true }
-            Mock Install-ContainerToolConsent -ModuleName 'BuildkitTools' -MockWith { return $true }
             Mock Install-Buildkit -ModuleName 'BuildkitTools'
+            Mock Test-CheckSum -ModuleName 'BuildkitTools' -MockWith { return $true }
+            Mock Remove-Item -ModuleName 'BuildkitTools'
 
             $Script:BuildkitRepo = 'https://github.com/moby/buildkit/releases/download'
+            $Script:TestDownloadPath = "$HOME\Downloads\buildkit-v1.0.0.windows-amd64.tar.gz"
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -78,15 +80,21 @@ Describe "BuildkitTools.psm1" {
                         Feature      = "Buildkit"
                         Uri          = "$Script:BuildkitRepo/v1.0.0/buildkit-v1.0.0.windows-amd64.tar.gz"
                         Version      = '1.0.0'
-                        DownloadPath = "$HOME\Downloads\buildkit-v1.0.0.windows-amd64.tar.gz"
+                        DownloadPath = "$Script:TestDownloadPath"
                     }
                 )
             }
+
+            Should -Invoke Test-CheckSum -ModuleName 'BuildkitTools' -Times 1 -ParameterFilter {
+                $DownloadedFile -eq "$Script:TestDownloadPath" -and
+                $ChecksumUri -eq "$Script:BuildkitRepo/v1.0.0/buildkit-v1.0.0.windows-amd64.sbom.json"
+            }
+
             Should -Invoke Install-RequiredFeature -ModuleName 'BuildkitTools' -ParameterFilter {
-                $Feature -eq "Buildkit"
+                $Feature -eq "Buildkit" -and
                 $InstallPath -eq "$Env:ProgramFiles\Buildkit" -and
-                $DownloadPath -eq "$HOME\Downloads\buildkit-v1.0.0.windows-amd64.tar.gz"
-                $EnvPath -eq "$Env:ProgramFiles\Buildkit\bin"
+                $DownloadPath -eq "$Script:TestDownloadPath" -and
+                $EnvPath -eq "$Env:ProgramFiles\Buildkit\bin" -and
                 $cleanup -eq $true
             }
             Should -Invoke Register-BuildkitdService -ModuleName 'BuildkitTools' -Times 0 -Exactly -Scope It
@@ -108,11 +116,20 @@ Describe "BuildkitTools.psm1" {
                 )
             }
             Should -Invoke Install-RequiredFeature -ModuleName 'BuildkitTools' -ParameterFilter {
-                $Feature -eq "Buildkit"
+                $Feature -eq "Buildkit" -and
                 $InstallPath -eq 'TestDrive:\BuildKit' -and
-                $DownloadPath -eq 'TestDrive:\Downloads\buildkit-v0.2.3.windows-amd64.tar.gz'
-                $EnvPath -eq 'TestDrive:\Buildkit\bin'
+                $DownloadPath -eq 'TestDrive:\Downloads\buildkit-v0.2.3.windows-amd64.tar.gz' -and
+                $EnvPath -eq 'TestDrive:\Buildkit\bin' -and
                 $cleanup -eq $true
+            }
+        }
+
+        It "should throw an error when checksum verification fails" {
+            Mock Test-CheckSum -ModuleName 'BuildkitTools' -MockWith { return $false }
+
+            { Install-Buildkit -Force -Confirm:$false } | Should -Throw "Checksum verification failed for $Script:TestDownloadPath"
+            Should -Invoke Remove-Item -ModuleName 'BuildkitTools' -ParameterFilter {
+                $Path -eq "$Script:TestDownloadPath"
             }
         }
 
@@ -180,8 +197,6 @@ Describe "BuildkitTools.psm1" {
             $obj = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ ExitCode = 0 }
             Mock Invoke-ExecutableCommand -ModuleName "BuildkitTools" -MockWith { return $obj }
 
-            # $MockService = New-MockObject -Type System.ServiceProcess.ServiceController -Methods @{ WaitForStatus = { } }
-            # Mock Get-Service -ModuleName "BuildkitTools" -MockWith { return $MockService }
             Mock Get-Service -ModuleName "BuildkitTools" -MockWith { return [MockService]::new('Buildkitd') }
             Mock Set-Service -ModuleName "BuildkitTools"
             Mock Start-BuildkitdService -ModuleName "BuildkitTools"
@@ -294,7 +309,6 @@ Describe "BuildkitTools.psm1" {
         BeforeAll {
             Mock Get-DefaultInstallPath -ModuleName 'BuildkitTools' -MockWith { return 'TestDrive:\Program Files\Buildkit' }
             Mock Test-EmptyDirectory -ModuleName 'BuildkitTools' -MockWith { return  $false }
-            Mock Uninstall-ContainerToolConsent -ModuleName 'BuildkitTools' -MockWith { return $true }
             Mock Stop-BuildkitdService -ModuleName 'BuildkitTools'
             Mock Unregister-Buildkitd -ModuleName 'BuildkitTools'
             Mock Remove-Item -ModuleName 'BuildkitTools'
@@ -321,8 +335,6 @@ Describe "BuildkitTools.psm1" {
         }
 
         It "Should throw an error if user does not consent to uninstalling Buildkit" {
-            Mock Uninstall-ContainerToolConsent -ModuleName 'BuildkitTools' -MockWith { return $false }
-
             $ENV:PESTER = $true
             { Uninstall-Buildkit -Path 'TestDrive:\Program Files\Buildkit' -Confirm:$false -Force:$false } | Should -Throw "Buildkit uninstallation cancelled."
         }

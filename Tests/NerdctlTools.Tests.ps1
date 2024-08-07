@@ -12,7 +12,7 @@ Describe "NerdctlTools.psm1" {
         $RootPath = Split-Path -Parent $PSScriptRoot
         $ModuleParentPath = Join-Path -Path $RootPath -ChildPath 'Containers-Toolkit'
         Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
-        Import-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1"
+        Import-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1"
         Import-Module -Name "$ModuleParentPath\Public\ContainerdTools.psm1"
         Import-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1"
         Import-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1" -Force
@@ -23,11 +23,11 @@ Describe "NerdctlTools.psm1" {
     }
 
     AfterAll {
-        Remove-Module -Name "CommonToolUtilities" -Force -ErrorAction Ignore
-        Remove-Module -Name "BuildkitTools" -Force -ErrorAction Ignore
-        Remove-Module -Name "ContainerdTools" -Force -ErrorAction Ignore
-        Remove-Module -Name "ContainerNetworkTools" -Force -ErrorAction Ignore
-        Remove-Module -Name "NerdctlTools" -Force -ErrorAction Ignore
+        Remove-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "$ModuleParentPath\Public\ContainerdTools.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1" -Force -ErrorAction Ignore
     }
 
     Context "Install-Nerdctl" -Tag "Install-Nerdctl" {
@@ -43,8 +43,11 @@ Describe "NerdctlTools.psm1" {
             Mock Install-Buildkit -ModuleName 'NerdctlTools'
             Mock Install-WinCNIPlugin -ModuleName 'NerdctlTools'
             Mock Install-Nerdctl -ModuleName 'NerdctlTools'
+            Mock Test-CheckSum -ModuleName 'NerdctlTools' -MockWith { return $true }
+            Mock Remove-Item -ModuleName 'NerdctlTools'
 
             $Script:nerdctlRepo = 'https://github.com/containerd/nerdctl/releases/download'
+            $Script:TestDownloadPath = "$HOME\Downloads\nerdctl-7.9.8-windows-amd64.tar.gz"
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -70,15 +73,21 @@ Describe "NerdctlTools.psm1" {
                         Feature      = "nerdctl"
                         Uri          = "$Script:nerdctlRepo/v7.9.8/nerdctl-7.9.8-windows-amd64.tar.gz"
                         Version      = '7.9.8'
-                        DownloadPath = "$HOME\Downloads\nerdctl-7.9.8-windows-amd64.tar.gz"
+                        DownloadPath = "$Script:TestDownloadPath"
                     }
                 )
             }
+
+            Should -Invoke Test-CheckSum -ModuleName 'NerdctlTools' -Times 1 -ParameterFilter {
+                $DownloadedFile -eq "$Script:TestDownloadPath" -and
+                $ChecksumUri -eq "$Script:nerdctlRepo/v7.9.8/SHA256SUMS"
+            }
+
             Should -Invoke Install-RequiredFeature -ModuleName 'NerdctlTools' -ParameterFilter {
-                $Feature -eq "nerdctl"
-                $InstallPath -eq "$Env:ProgramFiles\nerdctl"
-                $DownloadPath -eq "$HOME\Downloads\nerdctl-7.9.8-windows-amd64.tar.gz"
-                $EnvPath -eq "$Env:ProgramFiles\nerdctl\bin"
+                $Feature -eq "nerdctl" -and
+                $InstallPath -eq "$Env:ProgramFiles\nerdctl" -and
+                $DownloadPath -eq "$HOME\Downloads\nerdctl-7.9.8-windows-amd64.tar.gz" -and
+                $EnvPath -eq "$Env:ProgramFiles\nerdctl" -and
                 $cleanup -eq $true
             }
 
@@ -112,6 +121,15 @@ Describe "NerdctlTools.psm1" {
             Should -Invoke Install-Containerd -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It
             Should -Invoke Install-Buildkit -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
             Should -Invoke Install-WinCNIPlugin -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
+        }
+
+        It "should throw an error when checksum verification fails" {
+            Mock Test-CheckSum -ModuleName 'NerdctlTools' -MockWith { return $false }
+
+            { Install-Nerdctl -Force -Confirm:$false } | Should -Throw "Checksum verification failed for $Script:TestDownloadPath"
+            Should -Invoke Remove-Item -ModuleName 'NerdctlTools' -ParameterFilter {
+                $Path -eq "$Script:TestDownloadPath"
+            }
         }
 
         It "Should uninstall tool if it is already installed" {
@@ -151,7 +169,6 @@ Describe "NerdctlTools.psm1" {
         BeforeAll {
             Mock Get-DefaultInstallPath -ModuleName 'NerdctlTools' -MockWith { return 'TestDrive:\Program Files\nerdctl' }
             Mock Test-EmptyDirectory -ModuleName 'NerdctlTools' -MockWith { return  $false }
-            Mock Uninstall-ContainerToolConsent -ModuleName 'NerdctlTools' -MockWith { return $true }
             Mock Remove-Item -ModuleName 'NerdctlTools'
             Mock Remove-FeatureFromPath -ModuleName 'NerdctlTools'
             Mock Uninstall-ProgramFiles -ModuleName 'NerdctlTools'
@@ -176,8 +193,6 @@ Describe "NerdctlTools.psm1" {
         }
 
         It "Should throw an error if user does not consent to uninstalling nerdctl" {
-            Mock Uninstall-ContainerToolConsent -ModuleName 'NerdctlTools' -MockWith { return $false }
-
             $ENV:PESTER = $true
             { Uninstall-Nerdctl -Confirm:$false -Path 'TestDrive:\Program Files\nerdctl'-Force:$false } | Should -Throw 'nerdctl uninstallation cancelled.'
         }

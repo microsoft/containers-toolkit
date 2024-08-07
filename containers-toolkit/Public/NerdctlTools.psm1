@@ -120,20 +120,38 @@ function Install-Nerdctl {
                 $Version = Get-NerdctlLatestVersion
             }
             $Version = $Version.TrimStart('v')
+
             Write-Output "Downloading and installing nerdctl v$version at $InstallPath"
 
             # Download file from repo
             $nerdctlTarFile = "nerdctl-$version-windows-amd64.tar.gz"
             $DownloadPath = "$DownloadPath\$nerdctlTarFile"
+
+            # Download files
+            $baseUri = "https://github.com/containerd/nerdctl/releases/download/v${version}"
             $DownloadParams = @(
                 @{
                     Feature      = "nerdctl"
-                    Uri          = "https://github.com/containerd/nerdctl/releases/download/v${version}/$nerdctlTarFile"
+                    Uri          = "$baseUri/$nerdctlTarFile"
                     Version      = $version
                     DownloadPath = $DownloadPath
                 }
             )
             Get-InstallationFile -Files $DownloadParams
+
+            # Verify downloaded file checksum
+            Write-OutPut "Verifying checksum for $DownloadPath"
+            $checksumUri = "$baseUri/SHA256SUMS"
+            if (-not (Test-CheckSum -DownloadedFile $DownloadPath -ChecksumUri $checksumUri)) {
+                $errMsg = "Checksum verification failed for $DownloadPath"
+                Write-Error $errMsg
+
+                # Clean up downloaded file
+                Write-Warning "Removing downloaded file $DownloadPath"
+                Remove-Item -Path $DownloadPath -Force
+
+                Throw $errMsg
+            }
 
             # Untar and install tool
             $params = @{
@@ -146,7 +164,7 @@ function Install-Nerdctl {
             Install-RequiredFeature @params
 
             Write-Output "nerdctl v$version successfully installed at $InstallPath"
-            Write-Output "For nerdctl usage: run 'nerdctl -h'"
+            Write-Output "For nerdctl usage: run 'nerdctl -h'`n"
 
             # Install dependencies
             Install-NerdctlDependencies -Dependencies $dependencies -Force:$true

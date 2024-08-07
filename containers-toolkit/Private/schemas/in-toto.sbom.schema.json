@@ -1,0 +1,37 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "type": "object",
+    "properties": {
+        "_type": {
+            "type": "string"
+        },
+        "subject": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "type": "string"
+                    },
+                    "digest": {
+                        "type": "object",
+                        "patternProperties": {
+                            "^.*$": {
+                                "type": "string"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                "required": [
+                    "name",
+                    "digest"
+                ]
+            }
+        }
+    },
+    "required": [
+        "_type",
+        "subject"
+    ]
+}

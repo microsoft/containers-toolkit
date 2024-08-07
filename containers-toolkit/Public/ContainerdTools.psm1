@@ -81,15 +81,30 @@ function Install-Containerd {
 
             # TODO: Use downloaded file if it exists
             # Download files
+            $Uri = "https://github.com/containerd/containerd/releases/download/v$version/$($containerdTarFile)"
             $DownloadParams = @(
                 @{
                     Feature      = "Containerd"
-                    Uri          = "https://github.com/containerd/containerd/releases/download/v$version/$($containerdTarFile)"
+                    Uri          = $Uri
                     Version      = $version
                     DownloadPath = $DownloadPath
                 }
             )
             Get-InstallationFile -Files $DownloadParams
+
+            # Verify downloaded file checksum
+            Write-OutPut "Verifying checksum for $DownloadPath"
+            $checksumUri = "$Uri.sha256sum"
+            if (-not (Test-CheckSum -DownloadedFile $DownloadPath -ChecksumUri $checksumUri)) {
+                $errMsg = "Checksum verification failed for $DownloadPath"
+                Write-Error $errMsg
+
+                # Clean up downloaded file
+                Write-Warning "Removing downloaded file $DownloadPath"
+                Remove-Item -Path $DownloadPath -Force
+
+                Throw $errMsg
+            }
 
             # Untar and install tool
             $params = @{
@@ -120,7 +135,7 @@ function Install-Containerd {
                 Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
             }
 
-            Write-Output "For containerd usage: run 'containerd -h'"
+            Write-Output "For containerd usage: run 'containerd -h'`n"
         }
         else {
             # Code that should be processed if doing a WhatIf operation
