@@ -1,6 +1,8 @@
 {
   "plugins": {},
-  "filters": {},
+  "filters": {
+    "comments": true
+  },
   "rules": {
     "spelling": {
       "language": "en",
@@ -37,7 +39,6 @@
         "ThreadJob",
         "/unregisters/gi",
         "WinCNIPlugin",
-
         // Parameter names
         "DownloadPath",
         "InstallPath",

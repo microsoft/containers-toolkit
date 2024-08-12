@@ -29,7 +29,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Install npm dependencies
-        run: npm install -g markdown-link-check textlint textlint-rule-spelling dictionary-en
+        run: npm install -g markdown-link-check textlint textlint-rule-spelling dictionary-en textlint-filter-rule-comments
 
       - name: Markdown link check
         shell: pwsh

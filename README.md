@@ -151,7 +151,9 @@ This project builds on the work of others to create a PowerShell module.
 
 Credits (in alphabetic order):
 
-| Repo/ Author                       | Link                                                                                                                                                                          |
+<!-- textlint-disable -->
+
+| Author/Repository                  | Link                                                                                                                                                                          |
 |------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Anthony Nandaa (@profnandaa)       | [cni-setup-legacy.ps1](https://gist.github.com/profnandaa/33d65d85964181a42539bfd0b4f9561a)                                                                                   |
 | Gabriel Samfira (@gabriel-samfira) | [setup_buildkitd_on_windows.ps1](https://gist.github.com/gabriel-samfira/6e56238ad11c24f490ac109bdd378471)                                                                    |
@@ -161,6 +163,8 @@ Credits (in alphabetic order):
 | Markus Lippert (@lippertmarkus)    | [containerd-installer](https://github.com/lippertmarkus/containerd-installer)                                                                                                 |
 | microsoft/Windows-Containers       | [install-containerd-runtime.ps1](https://github.com/microsoft/Windows-Containers/blob/Main/helpful_tools/Install-ContainerdRuntime/install-containerd-runtime.ps1)            |
 | Mirantis                           | [Install MCR on Windows Servers](https://docs.mirantis.com/mcr/20.10/install/mcr-windows.html)                                                                                |
+
+<!-- textlint-enable -->
 
 ## Container tools installed with this module
 

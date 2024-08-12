@@ -2,9 +2,8 @@
 
 ## Table of Contents
 
-- [Uninstall Error (Access to path denied)](#resolving-uninstall-error-access-to-path-denied)
 - [`Import-Module` issues](#import-module-issues)
-- [Uninstallation issues](#uninstallation-issues)
+- [Tool uninstall issues](#tool-uninstall-issues)
 - [`Initialize-NatNetwork` issues](#initialize-natnetwork-issues)
 
 ## `Import-Module` issues
@@ -13,7 +12,7 @@
 - [Error when running Import-Module](https://vnote42.net/2019/07/30/error-when-running-import-module/)
 - [Unblock a script to run it without changing the execution policy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy?view=powershell-7.4#example-7-unblock-a-script-to-run-it-without-changing-the-execution-policy)
 
-## Uninstallation issues
+## Tool uninstall issues
 
 <!-- 
 #####################################################################
