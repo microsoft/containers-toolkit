@@ -44,14 +44,14 @@ function Install-WinCNIPlugin {
 
         $plugin = "Windows CNI plugins"
 
-        $WhatIfMessage = "$plugin will be installed"
+        $WhatIfMessage = "$plugin will be installed at $WINCNIPath"
         if ($isInstalled) {
-            $WhatIfMessage = "$plugin will be uninstalled and reinstalled"
+            $WhatIfMessage = "$plugin will be uninstalled from and reinstalled at $WINCNIPath"
         }
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess($WinCNIPath, $WhatIfMessage)) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
                 $errMsg = "Windows CNI plugins already exists at $WinCNIPath or the directory is not empty"
@@ -275,11 +275,11 @@ function Uninstall-WinCNIPlugin {
 
         $Path = $Path -replace '(\\bin\\?)$', ''
 
-        $WhatIfMessage = "Windows CNI plugins will be uninstalled"
+        $WhatIfMessage = "Windows CNI plugins will be uninstalled from $path"
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess($Path, $WhatIfMessage)) {
+        if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             if (Test-EmptyDirectory -Path $path) {
                 Write-Output "Windows CNI plugins does not exist at $Path or the directory is empty"
                 return
