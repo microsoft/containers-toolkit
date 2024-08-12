@@ -1,3 +1,13 @@
+###########################################################################
+#                                                                         #
+#   Copyright (c) Microsoft Corporation. All rights reserved.             #
+#                                                                         #
+#   This code is licensed under the MIT License (MIT).                    #
+#                                                                         #
+###########################################################################
+
+name: Markdown Lint
+
 on:
   pull_request:
     branches:
@@ -8,18 +18,15 @@ on:
       - "README.md"
       - en-US/**"
 
-name: Check modified markdown files
 permissions:
   contents: read
 
 jobs:
   markdown-check:
     runs-on: windows-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-      # - uses: actions/setup-node@v4
-      #   with:
-      #     node-version: 21
 
       - name: Install npm dependencies
         run: npm install -g markdown-link-check textlint textlint-rule-spelling dictionary-en
@@ -29,28 +36,33 @@ jobs:
         run: |
           # Check all markdown files in the repository
           $mlc_error_file = "link-errors.txt"
+          Remove-Item -Path $mlc_error_file -Recurse -Force -ErrorAction SilentlyContinue
           Get-ChildItem -Path "README.md", ".\docs\" -Filter "*.md" -Recurse | `
-              ForEach-Object { & markdown-link-check $_.FullName -q 2>>$error_file }
+              ForEach-Object { & markdown-link-check $_.FullName -q 2>>$mlc_error_file }
 
           # Check if the error file exists
-          if (-not (Test-Path "$error_file")) {
+          if (-not (Test-Path "$mlc_error_file")) {
               return
           }
 
           # Check if the error file file contains errors
-          if (Select-String -Path "$error_file" -Pattern "ERROR: ") {
-              $Link_Check_Summary = ":x: [Markdown Link Check] Broken links found. Please check the output for more information."
+          if (Select-String -Path "$mlc_error_file" -Pattern "ERROR: ") {
+              $errormsg = "Broken links found. Please check the output for more information."
+              $Link_Check_Summary = ":x: [Markdown Link Check] $errormsg"
+              echo $Link_Check_Summary >> $env:GITHUB_STEP_SUMMARY
+              throw $errormsg
           }
           else {
               $Link_Check_Summary = ":white_check_mark: [Markdown Link Check] All links are valid."
+              echo $Link_Check_Summary >> $env:GITHUB_STEP_SUMMARY
           }
-          echo $Link_Check_Summary >> $env:GITHUB_STEP_SUMMARY
 
       - name: Markdown spell check
         shell: pwsh
         run: |
           # Run spell check on all markdown files in the repository
           $sc_error_file = "sc-errors.txt"
+          Remove-Item -Path $sc_error_file -Recurse -Force -ErrorAction SilentlyContinue
           npx textlint README.md docs/**/*.md >>$sc_error_file
 
           # Check if the error file exists
@@ -64,5 +76,6 @@ jobs:
           }
           else {
               $Spell_Check_Summary = ":x: [Markdown Spell Check] Spelling errors found. Please check the output for more information."
+              cat $sc_error_file
           }
           echo $Spell_Check_Summary >> $env:GITHUB_STEP_SUMMARY
