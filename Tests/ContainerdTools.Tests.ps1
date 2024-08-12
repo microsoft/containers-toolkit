@@ -50,10 +50,12 @@ Describe "ContainerdTools.psm1" {
             Mock Get-Command -ModuleName 'ContainerdTools'
             Mock Get-ChildItem -ModuleName 'ContainerdTools'
             Mock Test-EmptyDirectory  -ModuleName 'ContainerdTools' -MockWith { return $true }
-            Mock Install-ContainerToolConsent -ModuleName 'ContainerdTools' -MockWith { return $true }
             Mock Install-Containerd -ModuleName 'ContainerdTools'
+            Mock Test-CheckSum -ModuleName 'ContainerdTools' -MockWith { return $true }
+            Mock Remove-Item -ModuleName 'ContainerdTools'
 
             $Script:ContainerdRepo = 'https://github.com/containerd/containerd/releases/download'
+            $Script:TestDownloadPath = "$HOME\Downloads\containerd-1.0.0-windows-amd64.tar.gz"
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -79,15 +81,19 @@ Describe "ContainerdTools.psm1" {
                         Feature      = "Containerd"
                         Uri          = "$Script:ContainerdRepo/v1.0.0/containerd-1.0.0-windows-amd64.tar.gz"
                         Version      = '1.0.0'
-                        DownloadPath = "$HOME\Downloads\containerd-1.0.0-windows-amd64.tar.gz"
+                        DownloadPath = "$Script:TestDownloadPath"
                     }
                 )
             }
+            Should -Invoke Test-CheckSum -ModuleName 'ContainerdTools' -ParameterFilter {
+                $DownloadedFile -eq "$Script:TestDownloadPath" -and
+                $ChecksumUri -eq "$Script:ContainerdRepo/v1.0.0/containerd-1.0.0-windows-amd64.tar.gz.sha256sum"
+            }
             Should -Invoke Install-RequiredFeature -ModuleName 'ContainerdTools' -ParameterFilter {
-                $Feature -eq "Containerd"
+                $Feature -eq "Containerd" -and
                 $InstallPath -eq "$Env:ProgramFiles\Containerd" -and
-                $DownloadPath -eq "$HOME\Downloads\containerd-1.0.0-windows-amd64.tar.gz"
-                $EnvPath -eq "$Env:ProgramFiles\Containerd\bin"
+                $DownloadPath -eq "$Script:TestDownloadPath" -and
+                $EnvPath -eq "$Env:ProgramFiles\Containerd\bin" -and
                 $cleanup -eq $true
             }
 
@@ -115,6 +121,15 @@ Describe "ContainerdTools.psm1" {
                 $DownloadPath -eq 'TestDrive:\Downloads\containerd-1.2.3-windows-amd64.tar.gz'
                 $EnvPath -eq 'TestDrive:\Containerd\bin'
                 $cleanup -eq $true
+            }
+        }
+
+        It "should throw an error when checksum verification fails" {
+            Mock Test-CheckSum -ModuleName 'ContainerdTools' -MockWith { return $false }
+
+            { Install-Containerd -Force -Confirm:$false } | Should -Throw "Checksum verification failed for $Script:TestDownloadPath"
+            Should -Invoke Remove-Item -ModuleName 'ContainerdTools' -ParameterFilter {
+                $Path -eq "$Script:TestDownloadPath"
             }
         }
 
@@ -277,7 +292,6 @@ Describe "ContainerdTools.psm1" {
         BeforeAll {
             Mock Get-DefaultInstallPath -ModuleName 'ContainerdTools' -MockWith { return 'TestDrive:\Program Files\Containerd' }
             Mock Test-EmptyDirectory -ModuleName 'ContainerdTools' -MockWith { return  $false }
-            Mock Uninstall-ContainerToolConsent -ModuleName 'ContainerdTools' -MockWith { return $true }
             Mock Stop-ContainerdService -ModuleName 'ContainerdTools'
             Mock Unregister-Containerd -ModuleName 'ContainerdTools'
             Mock Remove-Item -ModuleName 'ContainerdTools'
@@ -304,8 +318,6 @@ Describe "ContainerdTools.psm1" {
         }
 
         It "Should throw an error if user does not consent to uninstalling Containerd" {
-            Mock Uninstall-ContainerToolConsent -ModuleName 'ContainerdTools' -MockWith { return $false }
-
             $ENV:PESTER = $true
             { Uninstall-Containerd -Path 'TestDrive:\Program Files\Containerd' -Confirm:$false -Force:$false } | Should -Throw "Containerd uninstallation cancelled."
         }

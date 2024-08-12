@@ -18,6 +18,7 @@
 1. [Installation and Setup](#installation-and-setup)
 1. [Usage](#usage)
 1. [Important Notes](#important-notes)
+1. [FAQs](#faqs)
 1. [Contribution](#contribution)
 
 ## Introduction
@@ -68,7 +69,7 @@ Get-Help containers-toolkit
 ```
 
 ```PowerShell
-Get-Module -Name containers-toolkit
+Get-Module -Name containers-toolkit -ListAvailable
 ```
 
 ### Command reference
@@ -146,19 +147,25 @@ For any security issues, please see our [Security Policy](./SECURITY.md).
 
 ## Attributions
 
-This project builds on work done by others to create a PowerShell module.
+This project builds on the work of others to create a PowerShell module.
 
-- [Install-ContainerdRuntime](https://github.com/microsoft/Windows-Containers/blob/Main/helpful_tools/Install-ContainerdRuntime/install-containerd-runtime.ps1)
-- [sig-windows-tools- Install-Containerd.ps1](https://github.com/kubernetes-sigs/sig-windows-tools/blob/master/hostprocess/Install-Containerd.ps1)
-- [containerd-installer](https://github.com/lippertmarkus/containerd-installer)
-- [Install MCR on Windows Servers](https://docs.mirantis.com/mcr/20.10/install/mcr-windows.html)
-- [Stevedore](https://github.com/slonopotamus/stevedore)
-- [setup_buildkitd_on_windows.ps1](https://gist.github.com/gabriel-samfira/6e56238ad11c24f490ac109bdd378471)
-- [Windows Containers on Windows 10 without Docker (using Containerd)](https://www.jamessturtevant.com/posts/Windows-Containers-on-Windows-10-without-Docker-using-Containerd/)
+Credits (in alphabetic order):
 
-## Other relevant repositories
+| Repo/ Author                       | Link                                                                                                                                                                          |
+|------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Anthony Nandaa (@profnandaa)       | [cni-setup-legacy.ps1](https://gist.github.com/profnandaa/33d65d85964181a42539bfd0b4f9561a)                                                                                   |
+| Gabriel Samfira (@gabriel-samfira) | [setup_buildkitd_on_windows.ps1](https://gist.github.com/gabriel-samfira/6e56238ad11c24f490ac109bdd378471)                                                                    |
+| James Sturtevant (@jsturtevant)    | [Windows Containers on Windows 10 without Docker (using Containerd)](https://www.jamessturtevant.com/posts/Windows-Containers-on-Windows-10-without-Docker-using-Containerd/) |
+| kubernetes-sigs/sig-windows-tools  | [Install-Containerd.ps1](https://github.com/kubernetes-sigs/sig-windows-tools/blob/master/hostprocess/Install-Containerd.ps1)                                                 |
+| Marat Radchenko (@slonopotamus)    | [Stevedore](https://github.com/slonopotamus/stevedore)                                                                                                                        |
+| Markus Lippert (@lippertmarkus)    | [containerd-installer](https://github.com/lippertmarkus/containerd-installer)                                                                                                 |
+| microsoft/Windows-Containers       | [install-containerd-runtime.ps1](https://github.com/microsoft/Windows-Containers/blob/Main/helpful_tools/Install-ContainerdRuntime/install-containerd-runtime.ps1)            |
+| Mirantis                           | [Install MCR on Windows Servers](https://docs.mirantis.com/mcr/20.10/install/mcr-windows.html)                                                                                |
+
+## Container tools installed with this module
 
 - [Containerd](https://github.com/containerd/containerd)
 - [BuildKit](https://github.com/moby/buildkit)
 - [nerdctl](https://github.com/containerd/nerdctl)
 - [Container networking plugins for Windows containers](https://github.com/microsoft/windows-container-networking)
+- [Container Network Interface - networking for Linux containers](https://github.com/containernetworking/cni)

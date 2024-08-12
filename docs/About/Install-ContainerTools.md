@@ -15,7 +15,7 @@ Downloads and installs container tool (Containerd, BuildKit, and nerdctl).
 
 ```
 Install-ContainerTools [[-ContainerDVersion] <String>] [[-BuildKitVersion] <String>]
- [[-NerdCTLVersion] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-CleanUp] [-Force] [-RegisterServices]
+ [[-NerdCTLVersion] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-Force] [-RegisterServices]
  [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
@@ -41,17 +41,9 @@ Download Containerd version 1.6.8 and default nerdctl and BuildKit versions
 PS C:\> Install-ContainerTools -ContainerDVersion 1.6.8
 ```
 
-### Example 3: Cleanup after installation is complete
+### Example 3: Register and Start Containerd and Buildkitd services and set up NAT network
 
-Deletes downloaded files after installation is complete to save on disk space.
-
-```powershell
-PS C:\> Install-ContainerTools -Cleanup
-```
-
-### Example 4: Register and Start Conatinerd and Buildkitd services and set up NAT network
-
-Register and Start Conatinerd and Buildkitd services and set up NAT network
+Register and Start Containerd and Buildkitd services and set up NAT network
 
 ```powershell
 PS C:\> Install-ContainerTools -RegisterServices
@@ -71,22 +63,6 @@ Aliases:
 Required: False
 Position: 1
 Default value: Latest version
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -CleanUp
-
-Cleanup after installation is done
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -160,7 +136,7 @@ Accept wildcard characters: False
 
 ### -RegisterServices
 
-Register and Start Conatinerd and Buildkitd services and set up NAT network.
+Register and Start Containerd and Buildkitd services and set up NAT network.
 
 ```yaml
 Type: SwitchParameter

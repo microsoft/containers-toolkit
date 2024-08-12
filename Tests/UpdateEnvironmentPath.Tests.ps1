@@ -18,6 +18,10 @@ Describe "UpdateEnvironmentPath.psm1" {
         $Script:originalSysPathString = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
     }
 
+    AfterAll {
+        Remove-Module -Name "$ModuleParentPath\Private\UpdateEnvironmentPath.psm1" -Force -ErrorAction Ignore
+    }
+
     Context "Add feature from env path" -Tag "Update-EnvironmentPath" {
         It "Should successfully add the tool to the System environment path" {
             # Arrange

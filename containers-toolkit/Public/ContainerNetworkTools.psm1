@@ -83,15 +83,30 @@ function Install-WinCNIPlugin {
             # Download file from repo
             $cniZipFile = "windows-container-networking-cni-amd64-v${WinCNIVersion}.zip"
             $DownloadPath = "$HOME\Downloads\$cniZipFile"
+            $Uri = "https://github.com/microsoft/windows-container-networking/releases/download/v$WinCNIVersion/$cniZipFile"
             $DownloadParams = @(
                 @{
                     Feature      = "WinCNIPlugin"
-                    Uri          = "https://github.com/microsoft/windows-container-networking/releases/download/v$WinCNIVersion/$cniZipFile"
+                    Uri          = $Uri
                     Version      = $WinCNIVersion
                     DownloadPath = $DownloadPath
                 }
             )
             Get-InstallationFile -Files $DownloadParams
+
+            # Verify downloaded file checksum
+            Write-OutPut "Verifying checksum for $DownloadPath"
+            $checksumUri = "$Uri.sha512"
+            if (-not (Test-CheckSum -DownloadedFile $DownloadPath -ChecksumUri $checksumUri)) {
+                $errMsg = "Checksum verification failed for $DownloadPath"
+                Write-Error $errMsg
+
+                # Clean up downloaded file
+                Write-Warning "Removing downloaded file $DownloadPath"
+                Remove-Item -Path $DownloadPath -Force
+
+                Throw $errMsg
+            }
 
             # Expand zip file and install Win CNI plugin
             $WinCNIBin = "$WinCNIPath\bin"
@@ -134,12 +149,6 @@ function Initialize-NatNetwork {
     )
 
     begin {
-        # Check of NAT exists
-        $natInfo = Get-HnsNetwork -ErrorAction Ignore | Where-Object { $_.Name -eq $networkName }
-        if ($null -ne $natInfo) {
-            Throw "$networkName already exists. To view existing networks, use `Get-HnsNetwork`. To remove the existing network use the `Remove-HNSNetwork` command."
-        }
-
         if (!$WinCNIPath) {
             $ContainerdPath = Get-DefaultInstallPath -Tool "containerd"
             $WinCNIPath = "$ContainerdPath\cni"
@@ -152,7 +161,7 @@ function Initialize-NatNetwork {
 
         $WhatIfMessage = "Initialises a NAT network using Windows CNI plugins installed"
         if (!$isInstalled) {
-            $WhatIfMessage = "Installs Windows CNI plugins at $WinCNIPath and initialises a NAT network using Windows CNI plugins installed"
+            $WhatIfMessage = "`n`t1. Import `"HostNetworkingService`" or `"HNS`" module,`n`t2. Install Windows CNI plugins, and 3. Initialize a NAT network using Windows CNI plugins installed`n"
         }
     }
 
@@ -160,11 +169,26 @@ function Initialize-NatNetwork {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             if (!$force) {
                 if (!$ENV:PESTER) {
-                    if (-not $PSCmdlet.ShouldContinue('', "Are you sure you want to initialises a NAT network? Missing dependencies (Windows CNI Plugins and HNS module) will be installed if missing.")) {
+                    if (-not $PSCmdlet.ShouldContinue('', "Are you sure you want to initialises a NAT network?`n`t`tHNS module will be imported and missing dependencies (Windows CNI Plugins) will be installed if missing.")) {
                         Write-Error "NAT network initialisation cancelled."
                         return
                     }
                 }
+            }
+
+            # Import HNS module
+            try {
+                Import-HNSModule -Force:$Force
+            }
+            catch {
+                Throw "Could not import HNS module. $_"
+            }
+
+            # Check of NAT exists
+            $natInfo = Get-HnsNetwork -ErrorAction Ignore | Where-Object { $_.Name -eq $networkName }
+            if ($null -ne $natInfo) {
+                Write-Warning "$networkName already exists. To view existing networks, use `"Get-HnsNetwork`". To remove the existing network use the `"Remove-HNSNetwork`" command."
+                return
             }
 
             Write-Information -MessageData "Creating NAT network" -InformationAction Continue
@@ -176,12 +200,9 @@ function Initialize-NatNetwork {
 
             New-Item -ItemType 'Directory' -Path $cniConfDir -Force | Out-Null
 
-            # Import HNS module
-            try {
-                Import-HNSModule -Force:$Force
-            }
-            catch {
-                Throw "Could not import HNS module. $_"
+            # Check if `New-HNSNetwork` command exists
+            if (-not (Get-Command -Name 'New-HNSNetwork' -ErrorAction SilentlyContinue)) {
+                Throw "`"New-HNSNetwork`" command does not exist. Ensure the HNS module is installed. To resolve this issue, see`n`thttps://github.com/microsoft/containers-toolkit/blob/main/docs/FAQs.md#2-new-hnsnetwork-command-does-not-exist"
             }
 
             # Set default gateway if gateway us null and generate subnet mash=k from Gateway
@@ -202,10 +223,12 @@ function Initialize-NatNetwork {
 
             try {
                 # Restart HNS service
-                Restart-Service 'hns' -ErrorAction SilentlyContinue
+                Get-Service "hns" -ErrorAction SilentlyContinue | Restart-Service -Force -ErrorAction SilentlyContinue
 
+                # Create NAT network
                 $hnsNetwork = New-HNSNetwork -Name $networkName -Type NAT -AddressPrefix $subnet -Gateway $gateway
 
+                # Set default CNI config
                 $params = @{
                     WinCNIVersion = $WinCNIVersion
                     NetworkName   = $networkName
@@ -223,7 +246,7 @@ function Initialize-NatNetwork {
         }
         else {
             # Code that should be processed if doing a WhatIf operation
-            # Must NOT change anything outside of the function / script
+            # Must NOT change anything outside of the function/script
             return
         }
     }
@@ -313,36 +336,20 @@ function Import-HNSModule {
     )
 
     $ModuleName = 'HostNetworkingService'
-    if ((Get-Module -ListAvailable -Name $ModuleName)) {
-        Import-Module -Name $ModuleName -DisableNameChecking -Force
+    # https://learn.microsoft.com/en-us/powershell/module/hostnetworkingservice/?view=windowsserver2025-ps
+    if ((Get-Module -Name $ModuleName)) {
         return
     }
 
     $ModuleName = 'HNS'
-    try {
-        # https://www.powershellgallery.com/packages/HNS/0.2.4
-        if ($null -eq ( Get-Module -ListAvailable -Name $ModuleName)) {
-            Install-Module -Name $ModuleName -Scope CurrentUser -AllowClobber -Force:$Force
-        }
-
-        Import-Module -Name $ModuleName -DisableNameChecking -Force
+    # https://www.powershellgallery.com/packages/HNS/0.2.4
+    if (Get-Module -ListAvailable -Name $ModuleName) {
+        Import-Module -Name $ModuleName -DisableNameChecking -Force:$Force
+        return
     }
-    catch {
-        $WinCNIPath = "$Env:ProgramFiles\containerd\cni"
-        $path = "$WinCNIPath\hns.psm1"
-        if (!(Test-Path -Path $path)) {
-            $DownloadParams = @(
-                @{
-                    Feature      = "HNS.psm1"
-                    Uri          = 'https://raw.githubusercontent.com/microsoft/SDN/dd4e8708ed184b49d3fddd611b6027f1755c6edb/Kubernetes/windows/hns.psm1'
-                    DownloadPath = $WinCNIPath
-                }
-            )
-            Get-InstallationFile -Files $DownloadParams
-        }
 
-        Import-Module $path -DisableNameChecking -Force
-    }
+    # Throw an error if the module is not installed
+    Throw "`"HostNetworkingService`" or `"HNS`" module is not installed. To resolve this issue, see`n`thttps://github.com/microsoft/containers-toolkit/blob/main/docs/FAQs.md#2-new-hnsnetwork-command-does-not-exist"
 }
 
 function Install-MissingPlugin {
@@ -362,7 +369,7 @@ function Install-MissingPlugin {
 
         if (-not $consent) {
             $downloadPath = "https://github.com/microsoft/windows-container-networking"
-            Throw "Windows CNI plugins have not been installed. To install, run the command `Install-WinCNIPlugin` or download from $downloadPath, then rerun this command"
+            Throw "Windows CNI plugins have not been installed. To install, run the command `"Install-WinCNIPlugin`" or download from $downloadPath."
         }
     }
 

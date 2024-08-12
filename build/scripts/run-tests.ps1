@@ -15,14 +15,16 @@ Runs containers-toolkit module tests.
 https://pester.dev/docs/commands/New-PesterConfiguration
 https://pester.dev/docs/usage/output
 
-.PARAMETER FileName
-Comma-separated list of specific module file (.psm1) in this module to run tests for
+.PARAMETER ModuleName
+Comma-separated list of specific module file (.psm1) in this module to run tests on
 
 .PARAMETER Tag
-Comma-separated list of specific commands/functions in this module to run tests for
+Comma-separated list of specific commands/functions in this module to run tests on
+    https://pester.dev/docs/usage/tags
 
 .PARAMETER Verbosity
 The verbosity of output, options are None, Normal, Detailed and Diagnostic. Default value: 'Detailed'
+    https://pester.dev/docs/usage/output#verbosity
 
 .EXAMPLE
 PS> .\run-tests.ps1
@@ -36,7 +38,7 @@ To run tests for specific module file, provide the name of the file or a comma-s
 PS> .\run-tests.ps1 ModuleName "BuildkitTools.psm1"
 
 .NOTES
-    - Set $erroractionPreference = "Continue" to ensure that Write-Error messages are not treated as terminating errors.
+    - Set $ErrorActionPreference = "Continue" to ensure that Write-Error messages are not treated as terminating errors.
 
 #>
 
@@ -54,6 +56,28 @@ param (
     [string] $Tag,
 
     [Parameter(HelpMessage = "Run tests for a specific module file, eg: ContainerdTools.psm1")]
+    [ValidateScript(
+        {
+            $parentPath = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+            $validNames = (Get-ChildItem -Path $parentPath\containers-toolkit\ -Recurse -Filter "*.psm1").Name | Sort-Object -Unique
+
+            # Check if the module name is valid with the extension
+            if ($_ -in $validNames) {
+                return $true
+            }
+
+            # Remove the extension from the valid names
+            $validNames = $validNames | ForEach-Object { $_ -replace '\.psm1$' }
+            if ($_ -in $validNames) {
+                return $true
+            }
+
+            # Throw an error if the module name is not valid
+            $_validNames = ($validNames | ForEach-Object { $_ + '(.psm1)' }) -join ', '
+            throw "Invalid module name '$_'. The valid names are: $_validNames"
+        },
+        ErrorMessage = "Please specify a valid .psm1 file name."
+    )]
     [string] $ModuleName
 )
 Write-Output "ErrorActionPreference: $ErrorActionPreference"
@@ -70,16 +94,10 @@ Write-Output "Importing modules"
 Import-Module PowerShellGet # Needed to avoid error: "CommandNotFoundException: Could not find Command Install-Module"
 Import-Module Pester -Force
 
-if (!(Get-Module -ListAvailable -Name HNS)) {
-    Install-Module -Name HNS -AllowClobber -Force
-}
-Import-Module -Name HNS -DisableNameChecking -Force
-
 if (!(Get-Module -ListAvailable -Name ThreadJob)) {
     Install-Module -Name ThreadJob -Force
 }
 Import-Module -Name ThreadJob -Force
-
 
 #######################################################
 ################### DISCONVER TESTS ###################

@@ -6,6 +6,7 @@
 #                                                                         #
 ###########################################################################
 
+using module "..\Private\CommonToolUtilities.psm1"
 
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
@@ -92,15 +93,35 @@ function Install-Buildkit {
             $DownloadPath = "$DownloadPath\$buildkitTarFile"
 
             # Download files
+            $Uri = "https://github.com/moby/buildkit/releases/download/v${Version}/$($BuildKitTarFile)"
             $DownloadParams = @(
                 @{
                     Feature      = "Buildkit"
-                    Uri          = "https://github.com/moby/buildkit/releases/download/v${Version}/$($BuildKitTarFile)"
+                    Uri          = $Uri
                     Version      = $version
                     DownloadPath = $DownloadPath
                 }
             )
             Get-InstallationFile -Files $DownloadParams
+
+            # Verify downloaded file checksum
+            # Buildkit checksum digest is stored in the .provenance.json or sbom.json file
+            # that uses in-toto schema: https://github.com/in-toto/attestation/tree/v0.1.0/spec#statement
+            Write-OutPut "Verifying checksum for $DownloadPath"
+            $isValidChecksum = Test-Checksum -JSON `
+                -DownloadedFile $downloadPath `
+                -ChecksumUri ($uri -replace ".tar.gz", ".sbom.json")`
+                -SchemaFile "$ModuleParentPath\Private\schemas\in-toto.sbom.schema.json"
+            if (-not $isValidChecksum) {
+                $errMsg = "Checksum verification failed for $DownloadPath"
+                Write-Error $errMsg
+
+                # Clean up downloaded file
+                Write-Warning "Removing downloaded file $DownloadPath"
+                Remove-Item -Path $DownloadPath -Force
+
+                Throw $errMsg
+            }
 
             # Untar downloaded file at install path
             $params = @{
@@ -134,8 +155,11 @@ function Install-Buildkit {
 
             # Show buildkit binaries help
             Get-ChildItem -Path "C:\Program Files\buildkit\bin" | ForEach-Object {
-                $message = "For buildctl usage: run '$($_.Name) -h'"
-                Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
+                $executable = $_.Name
+                # Remove extension from executable
+                $commandName = $executable -replace ".exe", ""
+                $message = "For $commandName usage: run `"$executable -h`""
+                Write-Information -MessageData "$message`n" -Tags "Instructions" -InformationAction Continue
             }
         }
         else {
@@ -230,10 +254,10 @@ function Register-BuildkitdService {
 
             # Check buildkitd service is already registered
             if (Test-ServiceRegistered -Service 'Buildkitd') {
-                Write-Warning (-join @("buildkitd service already registered. To re-register the service, "
-                "stop the service by running 'Stop-Service buildkitd' or 'Stop-BuildkitdService', then "
-                "run 'buildkitd --unregister-service'. Wait for buildkitd service to be deregistered, "
-                "then re-reun this command."))
+                Write-Warning ( -join @("buildkitd service already registered. To re-register the service, "
+                        "stop the service by running 'Stop-Service buildkitd' or 'Stop-BuildkitdService', then "
+                        "run 'buildkitd --unregister-service'. Wait for buildkitd service to be deregistered, "
+                        "then re-reun this command."))
                 return
             }
 
