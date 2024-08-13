@@ -14,83 +14,53 @@
 ## Table of contents
 
 1. [Introduction](#introduction)
+1. [Prerequisites](#prerequisites)
+1. [Installation and Setup](#installation-and-setup)
 1. [Usage](#usage)
-    - [Installing and importing Containers-Toolkit module](#installing-and-importing-containers-toolkit-module)
-    - [Command reference](#command-reference)
 1. [Important Notes](#important-notes)
 1. [FAQs](#faqs)
 1. [Contribution](#contribution)
-1. [Related Projects](#related-projects)
 
 ## Introduction
 
-Containers-Toolkit is a Windows PowerShell module for downloading, installing, and setting up default configs for Containerd, BuildKit, Windows CNI plugin, and nerdctl.
+Containers-Toolkit is a Windows PowerShell module for downloading, installing, and configuring Containerd, Buildkit, nerdctl, and Windows CNI plugins for container networks. It also allows you to get a list of the container tools and their installation statuses.
 
-## Usage
+Configurations done with these functions are default configurations that allow you to get started with interacting with the tools. Further configurations may be necessary.
+You can find documentation for these functions here: [Containers-Toolkit Documentation](https://github.com/microsoft/containers-toolkit/tree/main/docs/command-reference.md)
 
-### Installing and importing Containers-Toolkit module
+## Prerequisites
 
-#### Install the module from PowerShell Gallery
+This module requires `ThreadJob` and `HNS` modules.
 
-> COMING SOON: We are currently working on publishing this module to PS Gallery to make it easier to import the module
-
-#### Download Source files
-
-> Coming soon
-
-#### Clone the repo
-
-**Option 1:**  Clone containers-toolkit into one of the folder locations in the `$env:PSModulePath` environment variable.
-
-1. **To get a possible module path:**
-
-    ```PowerShell
-    $env:PSModulePath -split ";"
-    ```
-
-1. **Clone the repo**
-
-    ```PowerShell
-    cd <selected-module-path>
-    git clone https://github.com/microsoft/containers-toolkit.git
-    ```
-
-1. **Import the module**
-
-    ```PowerShell
-    Import-Module -Name containers-toolkit -Force
-    ```
-
-**Option 2:** Clone containers-toolkit to a folder location of choice and add the new module location to the Windows PowerShell module path
-
-1. **Clone the repo**
-
-    ```PowerShell
-    git clone https://github.com/microsoft/containers-toolkit.git
-    ```
-
-1. **Add the directory to Windows PowerShell module path**
-
-    ```PowerShell
-    $env:PSModulePath += ";<path-to-module-directory>"
-    ```
-
-1. **Install module dependencies**
-   - Install `ThreadJob` module
+1. `ThreadJob` module
 
     ```powershell
     Install-Module -Name ThreadJob -Force
     ```
 
-    - Install `HNS` module
+1. `HNS` module
 
-        To install the HNS module. follow the instructions here [instructions](./docs/FAQs.md#2-new-hnsnetwork-command-does-not-exist)
+    To install the HNS module, follow the [instructions here](./docs/FAQs.md#2-new-hnsnetwork-command-does-not-exist)
 
-1. **Import the module**
+    **Reference:**
+    - [HostNetworkingService](https://docs.microsoft.com/en-us/powershell/module/hostnetworkingservice/?view=windowsserver2022-ps)
+    - [Container Network Management with Host Network Service (HNS)](https://learn.microsoft.com/en-us/virtualization/windowscontainers/container-networking/architecture#container-network-management-with-host-network-service)
 
-    ```PowerShell
-    Import-Module -Name containers-toolkit -Force
-    ```
+## Installation and Setup
+
+### Install Containers-Toolkit module from PowerShell Gallery
+
+> COMING SOON: We are currently working on publishing this module to PS Gallery to make it easier to import the module
+
+### Download signed source files
+
+> Coming soon
+
+### Downloading the source code from Containers-Toolkit repository
+
+To use the module, fork/clone the repository to your local machine and [setup your development environment](./CONTRIBUTING.md#setup-development-environment)
+
+## Usage
 
 ### Get the module details
 
@@ -153,23 +123,37 @@ Get-Command -Module containers-toolkit
     Enable-WindowsOptionalFeature -Online -FeatureName '<Feature-Name-Here>' -All -NoRestart
     ```
 
-1. Requires PowerShell modules [HNS](https://www.powershellgallery.com/packages/HNS) and [ThreadJob](https://www.powershellgallery.com/packages/ThreadJob)
+1. Requires PowerShell modules [HNS](https://raw.githubusercontent.com/microsoft/SDN/master/Kubernetes/windows/hns.v2.psm1) and [ThreadJob](https://www.powershellgallery.com/packages/ThreadJob)
 
 ## FAQs
 
-See [FAQs.md](./docs/FAQs.md)
+Please visit the [FAQs.md](./docs/FAQs.md) to see the how to resolve common issues.
 
 ## Contribution
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md)
+Please look into the [Contribution Guide](./CONTRIBUTING.md) to know how to develop and contribute.
 
-## Related Projects
+## Legal and Licensing
+
+PowerShell is licensed under the [MIT license](./LICENSE).
+
+## Code of Conduct
+
+Please see our [Code of Conduct](./CODE_OF_CONDUCT.md) before participating in this project.
+
+## Security Policy
+
+For any security issues, please see our [Security Policy](./SECURITY.md).
+
+## Attributions
 
 This project builds on the work of others to create a PowerShell module.
 
 Credits (in alphabetic order):
 
-| Repo/ Author                       | Link                                                                                                                                                                          |
+<!-- textlint-disable -->
+
+| Author/Repository                  | Link                                                                                                                                                                          |
 |------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Anthony Nandaa (@profnandaa)       | [cni-setup-legacy.ps1](https://gist.github.com/profnandaa/33d65d85964181a42539bfd0b4f9561a)                                                                                   |
 | Gabriel Samfira (@gabriel-samfira) | [setup_buildkitd_on_windows.ps1](https://gist.github.com/gabriel-samfira/6e56238ad11c24f490ac109bdd378471)                                                                    |
@@ -179,6 +163,8 @@ Credits (in alphabetic order):
 | Markus Lippert (@lippertmarkus)    | [containerd-installer](https://github.com/lippertmarkus/containerd-installer)                                                                                                 |
 | microsoft/Windows-Containers       | [install-containerd-runtime.ps1](https://github.com/microsoft/Windows-Containers/blob/Main/helpful_tools/Install-ContainerdRuntime/install-containerd-runtime.ps1)            |
 | Mirantis                           | [Install MCR on Windows Servers](https://docs.mirantis.com/mcr/20.10/install/mcr-windows.html)                                                                                |
+
+<!-- textlint-enable -->
 
 ## Container tools installed with this module
 

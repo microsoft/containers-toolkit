@@ -3,7 +3,7 @@
 ## Table of Contents
 
 - [`Import-Module` issues](#import-module-issues)
-- [Uninstallation issues](#uninstallation-issues)
+- [Tool uninstall issues](#tool-uninstall-issues)
 - [`Initialize-NatNetwork` issues](#initialize-natnetwork-issues)
 
 ## `Import-Module` issues
@@ -12,7 +12,7 @@
 - [Error when running Import-Module](https://vnote42.net/2019/07/30/error-when-running-import-module/)
 - [Unblock a script to run it without changing the execution policy](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy?view=powershell-7.4#example-7-unblock-a-script-to-run-it-without-changing-the-execution-policy)
 
-## Uninstallation issues
+## Tool uninstall issues
 
 <!-- 
 #####################################################################
@@ -21,7 +21,7 @@
 -->
 ### Access to path denied
 
-If you encounter an Access to path denied error during the uninstallation process, even with Administrator privileges, it typically stems from issues with folder ownership. To resolve this, you'll need to reassign ownership to an account with administrative privileges. You can accomplish this using the `takeown` command.
+If you encounter an Access to path denied error during the uninstall process, even with Administrator privileges, it typically stems from issues with folder ownership. To resolve this, you'll need to reassign ownership to an account with administrative privileges. You can accomplish this using the `takeown` command.
 
 Example:
 
@@ -31,7 +31,7 @@ takeown /f "C:\ProgramData\containerd" /r /d Y
 
 After successfully changing the ownership, you can proceed to remove the folder manually.
 
-If the issue persists, navigate to the folder's properties and choose the option to `Replace all child object permission entries with inheritable permission entries from this object`. This action will apply the inheritable permissions set on this folder to all subfolders and files within it.
+If the issue persists, navigate to the folder's properties and choose the option to `Replace all child object permission entries with inheritable permission entries from this object`. This action will apply the inheritable permissions set on this folder to all sub-folders and files within it.
 
 ![alt text](../assets/child-object-permission.png)
 
@@ -87,7 +87,7 @@ You can download it directly from the [microsoft/sdn](https://github.com/microso
 
 ```powershell
 $dirPath = (New-Item -Path "$(Split-Path $PROFILE.CurrentUserCurrentHost)/Modules/HNS" -ItemType Directory -Force).FullName
-$Uri = 'https://raw.githubusercontent.com/microsoft/SDN/dd4e8708ed184b49d3fddd611b6027f1755c6edb/Kubernetes/windows/hns.psm1'
+$Uri = 'https://raw.githubusercontent.com/microsoft/SDN/dd4e8708ed184b49d3fddd611b6027f1755c6edb/Kubernetes/windows/hns.v2.psm1'
 Invoke-WebRequest -Uri $Uri -OutFile "$dirPath/hns.psm1"
 ```
 
