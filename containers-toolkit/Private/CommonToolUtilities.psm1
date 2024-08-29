@@ -1,4 +1,4 @@
-﻿###########################################################################
+###########################################################################
 #                                                                         #
 #   Copyright (c) Microsoft Corporation. All rights reserved.             #
 #                                                                         #
@@ -339,6 +339,7 @@ function DownloadCheckSumFile {
         Throw "Checksum file download failed: $checksumUri.`n$($_.Exception.Message)"
     }
 
+    Write-Debug "Checksum file downloaded to `"$OutFile`""
     return $OutFile
 }
 
@@ -349,6 +350,8 @@ function ValidateJSONChecksumFile {
         [parameter(Mandatory = $true, HelpMessage = "JSON schema file path")]
         [String]$SchemaFile
     )
+
+    Write-Debug "Validating JSON checksum file...`n`tChecksum file path:$ChecksumFilePath`n`tSchema file: $SchemaFile"
 
     # Check if the schema file exists
     if (-not (Test-Path -Path $SchemaFile)) {
@@ -362,8 +365,8 @@ function ValidateJSONChecksumFile {
 
     # Test JSON checksum file is valid
     try {
-        Write-Debug "Validating checksum JSON file $checksumFilePath"
-        return (Test-Json -Path "$checksumFilePath" -SchemaFile $SchemaFile)
+        $isValidJSON = Test-Json -Json (Get-Content -Path $checksumFilePath -Raw) -Schema (Get-Content -Path $schemafile -Raw)
+	return $isValidJSON
     }
     catch {
         Throw "Invalid JSON format in checksum file. $_"

@@ -423,18 +423,10 @@ Describe "CommonToolUtilities.psm1" {
             }
 
             # Validate Checksum file content
-            Should -Invoke Get-Content -ModuleName "CommonToolUtilities" -ParameterFilter {
-                $Path -eq $Script:ChecksumFile
-            }
+            Should -Invoke Get-Content -ModuleName "CommonToolUtilities" -ParameterFilter { $Path -eq $Script:ChecksumFile }
 
             # Validate JSON file
-            # Should -Invoke Get-Content -ModuleName "CommonToolUtilities" -ParameterFilter {
-            #     $Path -eq "$Script:SchemaFile"
-            # } # FIXME: This test is failing
-            Should -Invoke Test-Json -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {
-                $Path -eq $Script:ChecksumFile -and
-                $SchemaFile -eq $Script:SchemaFile
-            }
+            Should -Invoke Test-Json -Times 1 -Scope It -ModuleName "CommonToolUtilities"
 
             # Assert success
             Should -Invoke Get-FileHash -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {
@@ -467,12 +459,12 @@ Describe "CommonToolUtilities.psm1" {
 
             # Validate JSON file
             Should -Invoke Get-Content -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {
+                $Path -eq $Script:ChecksumFile
+            }
+            Should -Invoke Get-Content -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {
                 $Path -eq $Script:SchemaFile
             }
-            Should -Invoke Test-Json -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {
-                $Path -eq $Script:ChecksumFile -and
-                $SchemaFile -eq $Script:SchemaFile
-            }
+            Should -Invoke Test-Json -Times 1 -Scope It -ModuleName "CommonToolUtilities"
 
             # Assert success
             Should -Invoke Get-FileHash -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {

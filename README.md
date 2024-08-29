@@ -30,7 +30,7 @@ You can find documentation for these functions here: [Containers-Toolkit Documen
 
 ## Prerequisites
 
-This module requires `ThreadJob` and `HNS` modules.
+1. PowerShell: Minimum Version 7
 
 1. `ThreadJob` module
 
