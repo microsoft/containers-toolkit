@@ -163,4 +163,4 @@ Invoke-Pester -Configuration $config
 ######################################################
 ###################### CLEANUP #######################
 ######################################################
-Remove-Item -Path Env:\Pester -Force
+Get-Item -Path Env:\Pester -ErrorAction SilentlyContinue | Remove-Item -Force

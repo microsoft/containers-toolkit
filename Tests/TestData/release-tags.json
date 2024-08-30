@@ -1,0 +1,32 @@
+[
+    {
+        "name": "v1.7.3",
+        "zipball_url": "https://api.github.com/repos/containerd/nerdctl/zipball/refs/tags/v1.7.3",
+        "tarball_url": "https://api.github.com/repos/containerd/nerdctl/tarball/refs/tags/v1.7.3",
+        "commit": {
+            "sha": "qwert123456",
+            "url": "https://api.github.com/repos/containerd/nerdctl/commits/qwert123456"
+        },
+        "node_id": "RANDOMNODEID123654=="
+    },
+    {
+        "name": "v2.0.0-rc.1",
+        "zipball_url": "https://api.github.com/repos/containerd/nerdctl/zipball/refs/tags/v2.0.0-rc.1",
+        "tarball_url": "https://api.github.com/repos/containerd/nerdctl/tarball/refs/tags/v2.0.0-rc.1",
+        "commit": {
+            "sha": "yt234567yut3wqw64",
+            "url": "https://api.github.com/repos/containerd/nerdctl/commits/yt234567yut3wqw64"
+        },
+        "node_id": "RANDOMNODEID087457=="
+    },
+    {
+        "name": "v1.7.0",
+        "zipball_url": "https://api.github.com/repos/containerd/nerdctl/zipball/refs/tags/v1.7.0",
+        "tarball_url": "https://api.github.com/repos/containerd/nerdctl/tarball/refs/tags/v1.7.0",
+        "commit": {
+            "sha": "87re0w9er879",
+            "url": "https://api.github.com/repos/containerd/nerdctl/commits/87re0w9er879"
+        },
+        "node_id": "RANDOMNODEID03722392=="
+    }
+]

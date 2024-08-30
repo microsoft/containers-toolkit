@@ -15,8 +15,7 @@ Downloads and installs container tool (Containerd, BuildKit, and nerdctl).
 
 ```
 Install-ContainerTools [[-ContainerDVersion] <String>] [[-BuildKitVersion] <String>]
- [[-NerdCTLVersion] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-Force] [-RegisterServices]
- [-Confirm] [-WhatIf] [<CommonParameters>]
+ [[-NerdCTLVersion] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-RegisterServices] [-OSArchitecture <string>] [-Force] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -178,6 +177,23 @@ Aliases:
 Required: False
 Position: 2
 Default value: Latest version
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -OSArchitecture
+
+OS architecture to download files for.
+Default is `$env:PROCESSOR_ARCHITECTURE`
+
+```yaml
+Type: String
+Parameter Sets: Setup
+Aliases:
+
+Required: False
+Position: Named
+Default value:  $env:PROCESSOR_ARCHITECTURE
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

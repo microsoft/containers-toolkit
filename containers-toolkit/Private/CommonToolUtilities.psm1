@@ -29,6 +29,37 @@ class FileDigest {
     }
 }
 
+class FileDownloadParameters {
+    [ValidateSet("Containerd", "Buildkit", "nerdctl", "WinCNIPlugin")]
+    [string]$Feature
+    [string]$Repo
+    [string]$Version = "latest"
+    [ValidateSet("386", "amd64", "arm64", "arm")]
+    [string]$OSArchitecture = "$env:PROCESSOR_ARCHITECTURE"
+    [string]$DownloadPath = "$HOME\Downloads"
+    [string]$ChecksumSchemaFile
+    [string]$FileFilterRegEx
+
+    FileDownloadParameters(
+        [string]$feature,
+        [string]$repo,
+        [string]$version = "latest",
+        [string]$arch = "$env:PROCESSOR_ARCHITECTURE",
+        [string]$downloadPath = "$HOME\Downloads",
+        [string]$checksumSchemaFile = $null,
+        [string]$fileFilterRegEx = $null
+    ) {
+        $this.Feature = $feature
+        $this.Repo = $repo
+        $this.Version = $version
+        $this.OSArchitecture = $arch
+        $this.DownloadPath = $downloadPath
+        $this.ChecksumSchemaFile = $checksumSchemaFile
+        $this.FileFilterRegEx = $fileFilterRegEx
+    }
+}
+
+
 Add-Type @'
 public enum ActionConsent {
     Yes = 0,
@@ -36,8 +67,10 @@ public enum ActionConsent {
 }
 '@
 
-$VALID_HASH_FUNCTIONS = @("SHA1", "SHA256", "SHA384", "SHA512", "MD5")
-
+$HASH_FUNCTIONS = @("SHA1", "SHA256", "SHA384", "SHA512", "MD5")
+$HASH_FUNCTIONS_STR = $HASH_FUNCTIONS -join '|' # SHA1|SHA256|SHA384|SHA512|MD5
+$NERDCTL_CHECKSUM_FILE_PATTERN = "(?<hashfunction>(?:^({0})))" -f ($HASH_FUNCTIONS -join '|')
+$NERDCTL_FILTER_SCRIPTBLOCK_STR = { (("{0}" -match "$NERDCTL_CHECKSUM_FILE_PATTERN") -and "{0}" -notmatch ".*.asc$") }.ToString()
 
 function Get-LatestToolVersion($repository) {
     try {
@@ -67,59 +100,303 @@ function Test-EmptyDirectory($path) {
     return ($itemCount.Count -eq 0)
 }
 
+function Get-ReleaseAssets {
+    [OutputType([PSCustomObject])]
+    param (
+        [string]$repo, # containers repo-owner/$repo-name
+        [string]$version,
+        [string]$OSArch
+    )
+
+    function Invoke-GitHubApi {
+        param($uri)
+        try {
+            Write-Debug "Invoking GitHub API. URI: $uri"
+            $response = Invoke-RestMethod -Uri "$uri" -Headers @{ "User-Agent" = "PowerShell" }
+            return $response
+        }
+        catch {
+            Throw "GitHub API error. URL: `"$uri`". Error: $($_.Exception.Message)"
+        }
+    }
+
+    Write-Debug "Getting release assets:`n`trepo: $repo`n`trelease version: $version`n`trelease architecture: $OSArch "
+    $baseApiUrl = "https://api.github.com/repos/$repo"
+    if ($version -eq "latest") {
+        $apiUrl = "$baseApiUrl/releases/latest"
+    }
+    else {
+        # We use this method to get the release assets for a specific version
+        # because creating a string for the version tag is not always consistent
+        # e.g. "v1.0.0" vs "1.0.0"
+        # The q parameter used for searching is not available in the GitHub API's /tags endpoint.
+        # GitHub's API for listing tags (/repos/{owner}/{repo}/tags) does not support querying or filtering
+        # directly through a q parameter like some other endpoints might (e.g., the search API).
+
+        # Get all releases tags
+        $response = Invoke-GitHubApi -Uri "$baseApiUrl/tags"
+        $releaseTag = $response | Where-Object { ($_.name.TrimStart("v")) -eq ($version.TrimStart("v")) }
+
+        if (-not $releaseTag) {
+            Throw "Couldn't find release tags for the provided version: '$version'"
+        }
+
+        if ($releaseTag.Count -gt 1) {
+            Write-Warning "Found multiple release tags for the provided version: '$version'. Using the first tag."
+        }
+
+        $releaseTagName = $releaseTag | Select-Object -First 1 -ExpandProperty name
+
+        # Get the release with the specified tag
+        Write-Debug "Release tag: $releaseTagName"
+        $apiUrl = "$baseApiUrl/releases/tags/$releaseTagName"
+    }
+    $response = Invoke-GitHubApi -Uri "$apiUrl"
+
+    # Filter list of assets by architecture and file name
+    $releaseAssets = $response | Select-Object -Property name, url, created_at, published_at, `
+    @{ l = "version"; e = { $_.tag_name } }, `
+    @{ l = "assets_url"; e = { $_.assets[0].url } }, `
+    @{ l = "release_assets"; e = {
+            $_.assets |
+            Where-Object {
+                (
+                    # Filter assets by OS (windows) and architecture
+                    # In the "zip|tar.gz" regex, we do not add the "$" at the end to allow for checksum files to be included
+                    # The checksum files end with eg: ".tar.gz.sha256sum"
+            ($_.name -match "(windows(.+)$OSArch)") -or
+
+                    # nerdctl checksum files are named "SHA256SUMS".
+            (& ([ScriptBlock]::Create($NERDCTL_FILTER_SCRIPTBLOCK_STR -f $_.name)))
+                )
+            } |
+            ForEach-Object {
+                Write-Debug ("Asset name: {0}" -f $_.Name)
+                [PSCustomObject]@{
+                    "asset_name"         = $_.name
+                    "asset_download_url" = $_.browser_download_url
+                    "asset_size"         = $_.size
+                }
+            }
+        }
+    }
+
+    # Check if any release assets were found for the specified architecture
+    $archReleaseAssets = $releaseAssets.release_assets | Where-Object { ($_.asset_name -match "windows(.+)$OSArch") }
+    if ($archReleaseAssets.Count -eq 0) {
+        Throw "Couldn't find release assets for the provided architecture: '$OSArch'"
+    }
+
+    if ($archReleaseAssets.Count -lt 2) {
+        Write-Warning "Some assets may be missing for the release. Expected at least 2 assets, found $($archReleaseAssets.Count)."
+    }
+
+    # Return the assets for the release. Includes the archive file for the binaries and the checksum files.
+    return $releaseAssets
+}
+
 function Get-InstallationFile {
+    [OutputType([string[]])]
     param(
-        [parameter(Mandatory, HelpMessage = "Files to download")]
-        [PSCustomObject[]] $Files
+        [parameter(Mandatory, HelpMessage = "Information (parameters) of the file to download")]
+        [PSCustomObject] $fileParameters
     )
 
     begin {
-        $functions = {
-            function Receive-File ($feature) {
-                Write-Information -InformationAction Continue -MessageData "Downloading $($feature.Feature) version v$($feature.Version)"
-                try {
-                    Invoke-WebRequest -Uri $feature.Uri -OutFile $feature.DownloadPath -UseBasicParsing
-                }
-                catch {
-                    Throw "$($feature.feature) downlooad failed: $($feature.uri).`n$($_.Exception.Message)"
-                }
+        function Receive-File {
+            param($params)
+            try {
+                Invoke-WebRequest -Uri $params.Uri -OutFile $params.DownloadPath -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 60
+            }
+            catch {
+                Throw "Couldn't download `"$($params.Feature)`" release assets. `"$($params.Uri)`".`n$($_.Exception.Message)"
             }
         }
-        . $functions
-        $jobs = @()
+
+        function DownloadAssets {
+            param(
+                [string]$featureName,
+                [string]$version,
+                [string]$downloadPath = "$HOME\Downloads",
+                [PSCustomObject]$releaseAssets,
+                [PSCustomObject]$file
+            )
+
+            $archiveFile = $checksumFile = $null
+            foreach ($asset in $releaseAssets.PSObject.Properties) {
+                $key = $asset.Name
+                $asset_params = $asset.Value
+
+                $destPath = Join-Path -Path $downloadPath -ChildPath $asset_params.asset_name
+                switch ($key) {
+                    "ArchiveFileAsset" { $archiveFile = $destPath }
+                    "ChecksumFileAsset" { $checksumFile = $destPath }
+                    default { Throw "Invalid input: $key" }
+                }
+
+                $downloadParams = [PSCustomObject]@{
+                    Feature      = $featureName
+                    Version      = $version
+                    Uri          = $asset_params.asset_download_url
+                    DownloadPath = $destPath
+                }
+
+                Write-Debug "Downloading asset $($asset_params.asset_name)...`n`tVersion: $version`n`tURI: $($downloadParams.Uri)`n`tDestination path: $($downloadParams.DownloadPath)"
+                try {
+                    Receive-File -Params $downloadParams
+                }
+                catch {
+                    Write-Error "Failed to download $($downloadParams.Feature) release assets. $($_.Exception.Message)"
+                    Throw $_  # Re-throw the exception to halt execution if a download fails
+                }
+            }
+
+            # Verify that both the archive and checksum files were downloaded
+            if (-not (Test-Path $archiveFile -ErrorAction SilentlyContinue)) {
+                Throw "Archive file not found in the release assets: `'$archiveFile`""
+            }
+            if (-not (Test-Path $checksumFile -ErrorAction SilentlyContinue)) {
+                Throw "Checksum file not found in the release assets: `'$checksumFile`""
+            }
+
+            # Verify checksum
+            try {
+                $isValidChecksum = if ([System.IO.Path]::GetExtension($checksumFile) -eq ".json") {
+                    Test-Checksum -JSON -DownloadedFile $archiveFile -ChecksumFile $checksumFile -SchemaFile $file.ChecksumSchemaFile
+                }
+                else {
+                    Test-Checksum -DownloadedFile $archiveFile -ChecksumFile $checksumFile
+                }
+            }
+            catch {
+                Write-Error "Checksum verification process failed: $($_.Exception.Message)"
+                Throw $_  # Re-throw the exception if checksum verification fails
+            }
+
+            # Remove the checksum file after verification
+            if (Test-Path -Path $checksumFile -ErrorAction SilentlyContinue) {
+                Remove-Item -Path $checksumFile -Force -ErrorAction SilentlyContinue
+            }
+
+            if (-not $isValidChecksum) {
+                Write-Error "Checksum verification failed for $archiveFile. The file will be deleted."
+
+                # Remove the checksum file after verification
+                if (Test-Path -Path $archiveFile -ErrorAction SilentlyContinue) {
+                    Remove-Item -Path $archiveFile -Force -ErrorAction SilentlyContinue
+                }
+                Throw "Checksum verification failed. One or more files are corrupted."
+            }
+
+            return $archiveFile
+        }
     }
 
     process {
-        # Download file from repo
-        if ($Files.Length -eq 1) {
-            Receive-File -feature $Files[0]
+        # Fetch the release assets based on the provided parameters
+        $releaseAssets = Get-ReleaseAssets -repo $fileParameters.Repo -version $fileParameters.Version -OSArch $fileParameters.OSArchitecture
+
+        # Filter file names based on the provided regex or default logic
+        if ([string]::IsNullOrWhiteSpace($fileParameters.FileFilterRegEx)) {
+            # Default logic to filter the archive and checksum files
+            $filteredAssets = $releaseAssets.release_assets | Where-Object {
+                # In the "zip|tar.gz" regex, we do not add the "$" at the end to allow for checksum files to be included
+                # The checksum files end with eg: ".sha256sum"
+                ($_.asset_name -match ".*(.zip|.tar.gz)") -or
+
+                # Buildkit checksum files are named ending with ".provenance.json" or ".sbom.json"
+                # We only need the ".sbom.json" file
+                ($_.asset_name -match ".*sbom.json$") -or
+
+                # nerdctl checksum files are named "SHA256SUMS". Check file names that have such a format.
+                (& ([ScriptBlock]::Create($NERDCTL_FILTER_SCRIPTBLOCK_STR -f $_.asset_name)))
+            }
         }
         else {
-            # Import ThreadJob module if not available
-            if (!(Get-Module -ListAvailable -Name ThreadJob)) {
-                Write-Information -InformationAction Continue -MessageData "Installing module ThreadJob from PowerShell Gallery."
-                Install-Module -Name ThreadJob -Scope CurrentUser -Force
+            # Use the provided regex to filter the archive and checksum files
+            $fileFilterRegEx = $fileParameters.FileFilterRegEx -replace "<__VERSION__>", "v?$($releaseAssets.version.TrimStart('v'))"
+            Write-Debug "File filter: `"$fileFilterRegEx`""
+            $filteredAssets = $releaseAssets.release_assets | Where-Object { $_.asset_name -match $fileFilterRegEx }
+        }
+
+        # Pair archive and checksum files
+        $assetsToDownload = @()
+        $archiveExtensionStr = @(".zip", ".tar.gz", ".tgz") -join "|"
+        $failedDownloads = @()
+        foreach ($asset in $filteredAssets) {
+            if ($asset.asset_name -notmatch "(?<extension>$archiveExtensionStr)$") {
+                continue
             }
-            Import-Module -Name ThreadJob -Force
 
-            # Download files asynchronously
-            Write-Information -InformationAction Continue -MessageData "Downloading $($Files.Length) container tools executables. This may take a few minutes."
+            $fileExtension = $matches.extension
 
-            # Create multiple thread jobs to download multiple files at the same time.
-            foreach ($file in $files) {
-                $jobs += Start-ThreadJob -Name $file.DownloadPath -InitializationScript $functions -ScriptBlock { Receive-File -Feature $using:file }
+            # Remove the trailing archive file extension to get the checksum file name
+            $assetFileName = $asset.asset_name -replace "$fileExtension", ""
+
+            # Find the checksum file that matches the archive
+            $checksumAsset = $filteredAssets | Where-Object {
+                ($_.asset_name -match "(?:(^$assetFileName).*($HASH_FUNCTIONS_STR))") -or
+
+                # Buildkit checksum is in .sbom.json
+                ($_.asset_name -match ".sbom.json$") -or
+
+                (& ([ScriptBlock]::Create($NERDCTL_FILTER_SCRIPTBLOCK_STR -f $_.asset_name)))
             }
 
-            Wait-Job -Job $jobs | Out-Null
+            if (-not $checksumAsset) {
+                Write-Error "Checksum file for $assetFileName not found. Skipping download."
+                $failedDownloads += $asset.asset_name
+                continue
+            }
 
-            foreach ($job in $jobs) {
-                Receive-Job -Job $job | Out-Null
+            $assetsToDownload += @{
+                FeatureName   = $releaseAssets.name
+                Version       = $releaseAssets.version
+                DownloadPath  = $fileParameters.DownloadPath
+                File          = $fileParameters
+                ReleaseAssets = [PSCustomObject]@{
+                    ArchiveFileAsset  = $asset
+                    ChecksumFileAsset = $checksumAsset
+                }
             }
         }
+
+        if ($failedDownloads) {
+            $errorMsg = "Failed to find checksum files for $($failedDownloads -join ', ')."
+        }
+
+        # Download the archive and verify checksum
+        $archiveFiles = $failedDownloads = @()
+        Write-Debug "Assets to download count: $($assetsToDownload.ReleaseAssets.Count)"
+        foreach ($asset in $assetsToDownload) {
+            try {
+                Write-Debug "Downloading $($asset.FeatureName) assets..."
+                $archiveFile = DownloadAssets @asset
+
+                Write-Debug "Downloaded archive file: `"$archiveFile`""
+                $archiveFiles += $archiveFile
+            }
+            catch {
+                Write-Error "Failed to download assets for `"$($asset.FeatureName)`". $_"
+                $failedDownloads += $asset.FeatureName
+            }
+        }
+
+        if ($errorMsg) {
+            Throw "Some files were not downloaded. $errorMsg"
+        }
+
+        if ($failedDownloads) {
+            Throw "Failed to download assets for $($failedDownloads -join ', '). See logs for detailed error information."
+        }
+
+        # Return the archive file path. May be multiple files.
+        # eg. containerd may contain containerd, cri-containerd, and cri-containerd-cni
+        return $archiveFiles
     }
 
     end {
-        $jobs | Remove-Job -Force -ErrorAction SilentlyContinue
+        Write-Information "File download and verification process completed."
     }
 }
 
@@ -133,7 +410,7 @@ function Test-CheckSum {
         [Parameter(Mandatory, ParameterSetName = 'Default')]
         [Parameter(Mandatory, ParameterSetName = 'JSON')]
         [ValidateNotNullOrEmpty()]
-        [string] $ChecksumUri,
+        [string] $ChecksumFile,
 
         [Parameter(Mandatory, ParameterSetName = 'JSON')]
         [switch]$JSON,
@@ -149,11 +426,14 @@ function Test-CheckSum {
         [System.Array]$ExtractDigestArguments
     )
 
-    Write-Debug "Checksum verification for $downloadedFile"
-    Write-Debug "Checksum URI: $ChecksumUri"
+    Write-Debug "Checksum verification...`n`tSource file: $DownloadedFile`n`tChecksum file: $ChecksumFile"
 
-    if (-not (Test-Path -Path $downloadedFile)) {
-        Throw "Downloaded file not found: $downloadedFile"
+    if (-not (Test-Path -Path $downloadedFile -ErrorAction Continue)) {
+        Throw "Couldn't find source file: `"$downloadedFile`"."
+    }
+
+    if (-not (Test-Path -Path $ChecksumFile -ErrorAction Continue)) {
+        Throw "Couldn't find checksum file: `"$ChecksumFile`"."
     }
 
     if ($JSON) {
@@ -162,7 +442,7 @@ function Test-CheckSum {
         return (
             Test-JSONChecksum `
                 -DownloadedFile $downloadedFile `
-                -ChecksumUri $ChecksumUri `
+                -ChecksumFile $ChecksumFile `
                 -SchemaFile $SchemaFile `
                 -ExtractDigestScriptBlock $ExtractDigestScriptBlock `
                 -ExtractDigestArguments $ExtractDigestArguments
@@ -170,7 +450,7 @@ function Test-CheckSum {
     }
 
     Write-Debug "Checksum file format: Text"
-    return Test-FileChecksum -DownloadedFile $DownloadedFile -ChecksumUri $ChecksumUri
+    return Test-FileChecksum -DownloadedFile $DownloadedFile -ChecksumFile $ChecksumFile
 }
 
 function Test-FileChecksum {
@@ -184,14 +464,8 @@ function Test-FileChecksum {
         [string] $DownloadedFile,
 
         [Parameter(Mandatory)]
-        [string] $ChecksumUri
+        [string] $checksumFile
     )
-
-    # Download checksum file
-    $downloadDirPath = Split-Path -Parent $DownloadedFile
-    $checksumFile = DownloadCheckSumFile -DownloadPath $downloadDirPath -ChecksumUri $ChecksumUri
-
-    Write-Debug "Checksum file: $checksumFile"
 
     # Get download file name from downloaded file
     $downloadedFileName = Split-Path -Leaf $DownloadedFile
@@ -199,10 +473,11 @@ function Test-FileChecksum {
     $isValid = $false
     try {
         # Extract algorithm from checksum file name
-        if ($checksumFile -notmatch "($($VALID_HASH_FUNCTIONS -join "|"))") {
-            Throw "Invalid hash function. Supported hash functions: $($VALID_HASH_FUNCTIONS -join ', ')"
+        if ($checksumFile -notmatch "(?<hashfunction>$HASH_FUNCTIONS_STR)") {
+            Throw "Invalid hash function. Supported hash functions: $($HASH_FUNCTIONS -join ', ')"
         }
-        $algorithm = $matches[1]
+        $algorithm = $matches.hashfunction
+        Write-Debug "Algorithm: $algorithm"
         $downloadedChecksum = Get-FileHash -Path $DownloadedFile -Algorithm $algorithm
 
         # checksum is stored in a file named SHA256SUMS
@@ -237,7 +512,9 @@ function Test-FileChecksum {
     finally {
         # Delete checksum file
         Write-Debug "Deleting checksum file $checksumFile"
-        Remove-Item -Path $checksumFile -Force
+        if (Test-Path -Path $checksumFile) {
+            Remove-Item -Path $checksumFile -Force -ErrorAction Ignore
+        }
     }
 
     Write-Debug "Checksum verification status. {success: $isValid}"
@@ -251,7 +528,7 @@ function Test-JSONChecksum {
         [string] $DownloadedFile,
 
         [parameter(Mandatory)]
-        [string] $ChecksumUri,
+        [string] $checksumFile,
 
         [Parameter(Mandatory)]
         [string] $SchemaFile,
@@ -262,10 +539,6 @@ function Test-JSONChecksum {
         [Parameter(HelpMessage = "Parameters to pass to the script block.")]
         [System.Array]$ExtractDigestArguments
     )
-
-    # Download checksum file
-    $downloadDirPath = Split-Path -Parent $DownloadedFile
-    $checksumFile = DownloadCheckSumFile -DownloadPath $downloadDirPath -ChecksumUri $ChecksumUri
 
     # Validate the checksum file
     $isJsonValid = ValidateJSONChecksumFile -ChecksumFilePath $checksumFile -SchemaFile $SchemaFile
@@ -296,8 +569,8 @@ function Test-JSONChecksum {
         $digest = $extractedFileDigest[0].Digest
 
         # Validate the hash function
-        if ($VALID_HASH_FUNCTIONS -notcontains $algorithm) {
-            Throw "Invalid hash function, `"$algorithm`". Supported algorithms are: $($VALID_HASH_FUNCTIONS -join ', ')"
+        if ($HASH_FUNCTIONS -notcontains $algorithm) {
+            Throw "Invalid hash function, `"$algorithm`". Supported algorithms are: $($HASH_FUNCTIONS -join ', ')"
         }
 
         # Validate the checksum
@@ -310,37 +583,13 @@ function Test-JSONChecksum {
     finally {
         # Delete checksum checksumFile
         Write-Debug "Deleting checksum file $checksumFile"
-        Remove-Item -Path $checksumFile -Force
+        if (Test-Path -Path $checksumFile) {
+            Remove-Item -Path $checksumFile -Force -ErrorAction Ignore
+        }
     }
 
     Write-Debug "Checksum verification status. {success: $isValid}"
     return $isValid
-}
-
-function DownloadCheckSumFile {
-    [OutputType([string])]
-    param(
-        [parameter(Mandatory = $true, HelpMessage = "Downloaded file path")]
-        [String]$DownloadPath,
-
-        [parameter(Mandatory = $true, HelpMessage = "Checksum URI")]
-        [String]$ChecksumUri
-    )
-
-    # Get checksum file name
-    $OutFile = Join-Path -Path $DownloadPath -ChildPath ($checksumUri -split '/' | Select-Object -Last 1)
-
-    # Download checksum file
-    Write-Debug "Downloading checksum file from $checksumUri"
-    try {
-        Invoke-WebRequest -Uri $checksumUri -OutFile $OutFile -UseBasicParsing
-    }
-    catch {
-        Throw "Checksum file download failed: $checksumUri.`n$($_.Exception.Message)"
-    }
-
-    Write-Debug "Checksum file downloaded to `"$OutFile`""
-    return $OutFile
 }
 
 function ValidateJSONChecksumFile {
@@ -351,11 +600,11 @@ function ValidateJSONChecksumFile {
         [String]$SchemaFile
     )
 
-    Write-Debug "Validating JSON checksum file...`n`tChecksum file path:$ChecksumFilePath`n`tSchema file: $SchemaFile"
+    Write-Debug "Validating JSON checksum file...`n`tChecksum file path: $ChecksumFilePath`n`tSchema file: $SchemaFile"
 
     # Check if the schema file exists
     if (-not (Test-Path -Path $SchemaFile)) {
-        Throw "Couldn't find the provided schema file: $SchemaFile"
+        Throw "Couldn't find the JSON schema file: `"$SchemaFile`"."
     }
 
     $schemaFileContent = Get-Content -Path $SchemaFile -Raw
@@ -365,8 +614,8 @@ function ValidateJSONChecksumFile {
 
     # Test JSON checksum file is valid
     try {
-        $isValidJSON = Test-Json -Json (Get-Content -Path $checksumFilePath -Raw) -Schema (Get-Content -Path $schemafile -Raw)
-	return $isValidJSON
+        $isValidJSON = Test-Json -Json "$(Get-Content -Path $ChecksumFilePath -Raw)" -Schema "$schemaFileContent"
+        return $isValidJSON
     }
     catch {
         Throw "Invalid JSON format in checksum file. $_"
@@ -437,7 +686,7 @@ function Install-RequiredFeature {
     param(
         [string] $Feature,
         [string] $InstallPath,
-        [string] $DownloadPath,
+        [string[]] $SourceFile,
         [string] $EnvPath,
         [boolean] $cleanup
     )
@@ -448,9 +697,22 @@ function Install-RequiredFeature {
     }
 
     # Untar file
-    $output = Invoke-ExecutableCommand -Executable 'tar.exe' -Arguments "-xf `"$DownloadPath`" -C `"$InstallPath`""
-    if ($output.ExitCode -ne 0) {
-        Throw "Could not untar file $DownloadPath at $InstallPath. $($output.StandardError.ReadToEnd())"
+    $failed = @()
+    foreach ($file in $SourceFile) {
+        if (-not (Test-Path -Path $file)) {
+            Throw "Couldn't find source file: `"$file`"."
+        }
+
+        Write-Debug "Expand archive:`n`tSource file: $file`n`tDestination Path: $InstallPath"
+        $cmdOutput = Invoke-ExecutableCommand -executable "tar.exe" -arguments "-xf `"$file`" -C `"$InstallPath`"" -timeout  (60 * 2)
+        if ($cmdOutput.ExitCode -ne 0) {
+            Write-Error "Failed to expand archive `"$file`" at `"$InstallPath`". Exit code: $($cmdOutput.ExitCode). $($cmdOutput.StandardError.ReadToEnd())"
+            $failed += $file
+        }
+    }
+
+    if ($failed) {
+        Throw "Couldn't expand archive file(s) $($failed -join ','). See logs for detailed error information."
     }
 
     # Add to env path
@@ -459,7 +721,9 @@ function Install-RequiredFeature {
     # Clean up
     if ($CleanUp) {
         Write-Output "Cleanup to remove downloaded files"
-        Remove-Item $downloadPath -Force -ErrorAction Ignore
+        if (Test-Path -Path $SourceFile) {
+            Remove-Item -Path $SourceFile -Force -ErrorAction Ignore
+        }
     }
 }
 
@@ -572,6 +836,7 @@ function Uninstall-ProgramFiles($path) {
 }
 
 function Invoke-ExecutableCommand {
+    [OutputType([System.Diagnostics.Process])]
     param (
         [parameter(Mandatory)]
         [String] $executable,
@@ -606,7 +871,6 @@ function Invoke-ExecutableCommand {
 }
 
 
-Export-ModuleMember -Variable VALID_HASH_FUNCTIONS
 Export-ModuleMember -Function Get-LatestToolVersion
 Export-ModuleMember -Function Get-DefaultInstallPath
 Export-ModuleMember -Function Test-EmptyDirectory
