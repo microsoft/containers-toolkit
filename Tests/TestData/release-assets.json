@@ -1,0 +1,93 @@
+{
+  "tag_name": "v2.0.0-rc.1",
+  "name": "v2.0.0-rc.1",
+  "url": "https://api.github.com/repos/containerd/nerdctl/releases/170730383",
+  "created_at": "2024-08-17T20:42:04Z",
+  "published_at": "2024-08-17T20:57:32Z",
+  "assets": [
+    {
+      "url": "https://api.github.com/repos/containerd/nerdctl/releases/assets/186602872",
+      "id": 186602872,
+      "node_id": "RA_kwDOEvuRnc4LH1V4",
+      "name": "nerdctl-2.0.0-rc.1-freebsd-arm64.tar.gz",
+      "label": "",
+      "content_type": "application/x-gtar",
+      "state": "uploaded",
+      "size": 8875928,
+      "download_count": 8,
+      "created_at": "2024-08-17T20:56:39Z",
+      "updated_at": "2024-08-17T20:56:40Z",
+      "browser_download_url": "https://github.com/containerd/nerdctl/releases/download/v2.0.0-rc.1/nerdctl-2.0.0-rc.1-freebsd-arm64.tar.gz"
+    },
+    {
+      "url": "https://api.github.com/repos/containerd/nerdctl/releases/assets/186602868",
+      "id": 186602868,
+      "node_id": "RA_kwDOEvuRnc4LH1V0",
+      "name": "nerdctl-2.0.0-rc.1-linux-amd64.tar.gz",
+      "label": "",
+      "content_type": "application/x-gtar",
+      "state": "uploaded",
+      "size": 9722129,
+      "download_count": 242,
+      "created_at": "2024-08-17T20:56:39Z",
+      "updated_at": "2024-08-17T20:56:40Z",
+      "browser_download_url": "https://github.com/containerd/nerdctl/releases/download/v2.0.0-rc.1/nerdctl-2.0.0-rc.1-linux-amd64.tar.gz"
+    },
+    {
+      "url": "https://api.github.com/repos/containerd/nerdctl/releases/assets/186602929",
+      "id": 186602929,
+      "node_id": "RA_kwDOEvuRnc4LH1Wx",
+      "name": "nerdctl-2.0.0-rc.1-windows-amd64.tar.gz",
+      "label": "",
+      "content_type": "application/x-gtar",
+      "state": "uploaded",
+      "size": 9189802,
+      "download_count": 47,
+      "created_at": "2024-08-17T20:56:45Z",
+      "updated_at": "2024-08-17T20:56:45Z",
+      "browser_download_url": "https://github.com/containerd/nerdctl/releases/download/v2.0.0-rc.1/nerdctl-2.0.0-rc.1-windows-amd64.tar.gz"
+    },
+    {
+      "url": "https://api.github.com/repos/containerd/nerdctl/releases/assets/186602928",
+      "id": 186602928,
+      "node_id": "RA_kwDOEvuRnc4LH1Ww",
+      "name": "nerdctl-full-2.0.0-rc.1-linux-arm64.tar.gz",
+      "label": "",
+      "content_type": "application/x-gtar",
+      "state": "uploaded",
+      "size": 249734229,
+      "download_count": 152,
+      "created_at": "2024-08-17T20:56:45Z",
+      "updated_at": "2024-08-17T20:56:52Z",
+      "browser_download_url": "https://github.com/containerd/nerdctl/releases/download/v2.0.0-rc.1/nerdctl-full-2.0.0-rc.1-linux-arm64.tar.gz"
+    },
+    {
+      "url": "https://api.github.com/repos/containerd/nerdctl/releases/assets/186602870",
+      "id": 186602870,
+      "node_id": "RA_kwDOEvuRnc4LH1V2",
+      "name": "SHA256SUMS",
+      "label": "",
+      "content_type": "application/octet-stream",
+      "state": "uploaded",
+      "size": 1165,
+      "download_count": 15,
+      "created_at": "2024-08-17T20:56:39Z",
+      "updated_at": "2024-08-17T20:56:39Z",
+      "browser_download_url": "https://github.com/containerd/nerdctl/releases/download/v2.0.0-rc.1/SHA256SUMS"
+    },
+    {
+      "url": "https://api.github.com/repos/containerd/nerdctl/releases/assets/186603171",
+      "id": 186603171,
+      "node_id": "RA_kwDOEvuRnc4LH1aj",
+      "name": "SHA256SUMS.asc",
+      "label": null,
+      "content_type": "application/octet-stream",
+      "state": "uploaded",
+      "size": 659,
+      "download_count": 3,
+      "created_at": "2024-08-17T20:57:14Z",
+      "updated_at": "2024-08-17T20:57:16Z",
+      "browser_download_url": "https://github.com/containerd/nerdctl/releases/download/v2.0.0-rc.1/SHA256SUMS.asc"
+    }
+  ]
+}

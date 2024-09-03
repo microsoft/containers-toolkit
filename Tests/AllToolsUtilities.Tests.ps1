@@ -56,9 +56,6 @@ Describe "AllToolsUtilities.psm1" {
 
     Context "Install-ContainerTools" -Tag "Install-ContainerTools" {
         BeforeAll {
-            Mock Get-ContainerdLatestVersion -ModuleName 'AllToolsUtilities' -MockWith { return '4.9.0' }
-            Mock Get-BuildkitLatestVersion -ModuleName 'AllToolsUtilities' -MockWith { return '8.9.7' }
-            Mock Get-NerdctlLatestVersion -ModuleName 'AllToolsUtilities' -MockWith { return '1.5.3' }
             Mock Install-Containerd -ModuleName 'AllToolsUtilities'
             Mock Install-Buildkit -ModuleName 'AllToolsUtilities'
             Mock Install-Nerdctl -ModuleName 'AllToolsUtilities'
@@ -86,7 +83,7 @@ Describe "AllToolsUtilities.psm1" {
 
             Should -Invoke Install-Containerd -ModuleName 'AllToolsUtilities' `
                 -ParameterFilter {
-                $Version -eq '4.9.0' -and
+                $Version -eq 'latest' -and
                 $InstallPath -eq "$Env:ProgramFiles\Containerd" -and
                 $DownloadPath -eq "$HOME\Downloads" -and
                 $Setup -eq $false
@@ -94,7 +91,7 @@ Describe "AllToolsUtilities.psm1" {
 
             Should -Invoke Install-Buildkit -ModuleName 'AllToolsUtilities' `
                 -ParameterFilter {
-                $Version -eq '8.9.7' -and
+                $Version -eq 'latest' -and
                 $InstallPath -eq "$Env:ProgramFiles\BuildKit" -and
                 $DownloadPath -eq "$HOME\Downloads" -and
                 $Setup -eq $false
@@ -102,7 +99,7 @@ Describe "AllToolsUtilities.psm1" {
 
             Should -Invoke Install-Nerdctl -ModuleName 'AllToolsUtilities' `
                 -ParameterFilter {
-                $Version -eq '1.5.3' -and
+                $Version -eq 'latest' -and
                 $InstallPath -eq "$Env:ProgramFiles\nerdctl" -and
                 $DownloadPath -eq "$HOME\Downloads"
             }

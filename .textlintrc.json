@@ -44,7 +44,9 @@
         "InstallPath",
         "LatestVersion",
         "NetworkName",
+        "OSArchitecture",
         "RegisterServices",
+        "SourceRepo",
         "WhatIf",
         "WinCNIPath",
         "WinCNIVersion"

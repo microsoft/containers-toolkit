@@ -7,6 +7,8 @@
 ###########################################################################
 
 
+using module "..\containers-toolkit\Private\CommonToolUtilities.psm1"
+
 Describe "ContainerNetworkTools.psm1" {
     BeforeAll {
         $RootPath = Split-Path -Parent $PSScriptRoot
@@ -31,18 +33,22 @@ Describe "ContainerNetworkTools.psm1" {
 
     Context "Install-WinCNIPlugin" -Tag "Install-WinCNIPlugin" {
         BeforeAll {
+            $Script:WinCNIRepo = 'https://github.com/microsoft/windows-container-networking/releases/download'
+            $Script:MockZipFileName = "windows-container-networking-cni-amd64-v1.0.0.zip"
+            $Script:TestDownloadPath = "$HOME\Downloads\$Script:MockZipFileName"
+
             Mock Get-WinCNILatestVersion { return '1.0.0' } -ModuleName 'ContainerNetworkTools'
             Mock Uninstall-WinCNIPlugin -ModuleName "ContainerNetworkTools"
             Mock New-Item -ModuleName 'ContainerNetworkTools'
-            Mock Get-InstallationFile -ModuleName 'ContainerNetworkTools'
+            Mock Get-Item -ModuleName 'ContainerNetworkTools' -MockWith { @{ Path = $Script:TestDownloadPath } } -ParameterFilter { $Path -eq $Script:TestDownloadPath }
+            Mock Get-InstallationFile -ModuleName 'ContainerNetworkTools' -MockWith { $Script:TestDownloadPath }
             Mock Expand-Archive -ModuleName 'ContainerNetworkTools'
             Mock Remove-Item -ModuleName 'ContainerNetworkTools'
             Mock Test-EmptyDirectory  -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
             Mock Install-WinCNIPlugin -ModuleName 'ContainerNetworkTools'
-            Mock Test-CheckSum -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
-
-            $Script:WinCNIRepo = 'https://github.com/microsoft/windows-container-networking/releases/download'
-            $Script:MockZipFileName = "windows-container-networking-cni-amd64-v1.0.0.zip"
+            Mock Test-Path -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
+            Mock Invoke-ExecutableCommand -ModuleName 'ContainerNetworkTools' -MockWith {
+                return New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ ExitCode = 0 } }
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -63,62 +69,39 @@ Describe "ContainerNetworkTools.psm1" {
 
             Should -Invoke Uninstall-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFile -ModuleName 'ContainerNetworkTools' -ParameterFilter {
-                $Files -like @(
-                    @{
-                        Feature      = "WinCNIPlugin"
-                        Uri          = "$Script:WinCNIRepo/v1.0.0/$Script:MockZipFileName"
-                        Version      = '1.0.0'
-                        DownloadPath = "$HOME\Downloads"
-                    }
-                )
+                $fileParameters[0].Feature -eq "WinCNIPlugin" -and
+                $fileParameters[0].Repo -eq "microsoft/windows-container-networking" -and
+                $fileParameters[0].Version -eq 'latest' -and
+                $fileParameters[0].DownloadPath -eq "$HOME\Downloads"
+                [string]::IsNullOrWhiteSpace($fileParameters.ChecksumSchemaFile) -and
+                $fileParameters[0].FileFilterRegEx -eq $null
             }
-
-            $TestDownloadPath = "$HOME\Downloads\$Script:MockZipFileName"
-            Should -Invoke Expand-Archive -ModuleName 'ContainerNetworkTools' -ParameterFilter {
-                $Path -eq "$TestDownloadPath" -and
-                $DestinationPath -eq "$Env:ProgramFiles\Containerd\cni\bin"
-            }
-            Should -Invoke Test-CheckSum -ModuleName 'ContainerNetworkTools' -ParameterFilter {
-                $DownloadedFile -eq "$TestDownloadPath" -and
-                $ChecksumUri -eq "$Script:WinCNIRepo/v1.0.0/$Script:MockZipFileName.sha512"
-            }
-            Should -Invoke Remove-Item -ModuleName 'ContainerNetworkTools' -ParameterFilter {
-                $Path -eq "$TestDownloadPath"
+            Should -Invoke Invoke-ExecutableCommand -ModuleName 'ContainerNetworkTools' -ParameterFilter {
+                $executable -eq "tar.exe" -and
+                $arguments -eq "-xf `"$Script:TestDownloadPath`" -C `"C:\Program Files\Containerd\cni\bin`""
             }
         }
 
         It "Should call function with user-specified values" {
-            Install-WinCNIPlugin -WinCNIVersion '1.2.3' -WinCNIPath 'TestDrive:\WinCNI\bin' -Force -Confirm:$false
+            # Mocks
+            $MockZipFileName = 'windows-container-networking-cni-386-v1.2.3.zip'
+            $MockDownloadFilePath = "$HOME\Downloads\$MockZipFileName"
+            Mock Get-InstallationFile -ModuleName 'ContainerNetworkTools' -MockWith { $MockDownloadFilePath }
 
+            # Test
+            Install-WinCNIPlugin -WinCNIVersion '1.2.3' -WinCNIPath 'TestDrive:\WinCNI\bin' -SourceRepo "containernetworking/plugins" -OSArchitecture '386' -Force -Confirm:$false
+
+            # Assertions
             Should -Invoke Uninstall-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -Times 0 -Exactly -Scope It
-
-            $MockZipFileName = 'windows-container-networking-cni-amd64-v1.2.3.zip'
             Should -Invoke Get-InstallationFile -ModuleName 'ContainerNetworkTools' -ParameterFilter {
-                $Files -like @(
-                    @{
-                        Feature      = "WinCNIPlugin"
-                        Uri          = "$Script:WinCNIRepo/v1.2.3/$MockZipFileName"
-                        Version      = '1.2.3'
-                        DownloadPath = "$HOME\Downloads"
-                    }
-                )
+                $fileParameters[0].Version -eq '1.2.3' -and
+                $fileParameters[0].Repo -eq 'containernetworking/plugins' -and
+                $fileParameters[0].OSArchitecture -eq '386' -and
+                $fileParameters[0].FileFilterRegEx -eq ".*tgz(.SHA512)?$"
             }
-            Should -Invoke Expand-Archive -ModuleName 'ContainerNetworkTools' -ParameterFilter {
-                $Path -eq "$HOME\Downloads\$MockZipFileName"
-                $DestinationPath -eq "TestDrive:\WinCNI\bin"
-            }
-            Should -Invoke Remove-Item -ModuleName 'ContainerNetworkTools' -ParameterFilter {
-                $Path -eq "$HOME\Downloads\$MockZipFileName"
-            }
-        }
-
-        It "should throw an error when checksum verification fails" {
-            Mock Test-CheckSum -ModuleName 'ContainerNetworkTools' -MockWith { return $false }
-
-            $TestDownloadPath ="$HOME\Downloads\$Script:MockZipFileName"
-            { Install-WinCNIPlugin -Force -Confirm:$false } | Should -Throw "Checksum verification failed for $TestDownloadPath"
-            Should -Invoke Remove-Item -ModuleName 'ContainerNetworkTools' -ParameterFilter {
-                $Path -eq "$TestDownloadPath"
+            Should -Invoke Invoke-ExecutableCommand -ModuleName 'ContainerNetworkTools' -ParameterFilter {
+                $executable -eq "tar.exe" -and
+                $arguments -eq "-xf `"$HOME\Downloads\$MockZipFileName`" -C `"TestDrive:\WinCNI\bin`""
             }
         }
 

@@ -6,6 +6,7 @@
 #                                                                         #
 ###########################################################################
 
+
 using module "..\Private\CommonToolUtilities.psm1"
 
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
@@ -25,8 +26,8 @@ function Install-Buildkit {
     param (
         [Parameter(ParameterSetName = 'Install')]
         [Parameter(ParameterSetName = 'Setup')]
-        [parameter(HelpMessage = "Buildkit version to use. Defaults to latest version")]
-        [string]$Version,
+        [parameter(HelpMessage = "Buildkit version to use. Defaults to 'latest'")]
+        [string]$Version = "latest",
 
         [Parameter(ParameterSetName = 'Install')]
         [Parameter(ParameterSetName = 'Setup')]
@@ -43,6 +44,10 @@ function Install-Buildkit {
 
         [Parameter(ParameterSetName = 'Setup')]
         [string]$WinCNIPath,
+
+        [Parameter(HelpMessage = 'OS architecture to download files for. Default is $env:PROCESSOR_ARCHITECTURE')]
+        [ValidateSet('amd64', '386', "arm", "arm64")]
+        [string]$OSArchitecture = $env:PROCESSOR_ARCHITECTURE,
 
         [Parameter(ParameterSetName = 'Install')]
         [Parameter(ParameterSetName = 'Setup')]
@@ -88,48 +93,34 @@ function Install-Buildkit {
 
             Write-Output "Downloading and installing Buildkit v$Version at $InstallPath"
 
-            # Download file from repo
-            $buildkitTarFile = "buildkit-v${Version}.windows-amd64.tar.gz"
-            $DownloadPath = "$DownloadPath\$buildkitTarFile"
-
             # Download files
-            $Uri = "https://github.com/moby/buildkit/releases/download/v${Version}/$($BuildKitTarFile)"
-            $DownloadParams = @(
-                @{
-                    Feature      = "Buildkit"
-                    Uri          = $Uri
-                    Version      = $version
-                    DownloadPath = $DownloadPath
-                }
-            )
-            Get-InstallationFile -Files $DownloadParams
-
-            # Verify downloaded file checksum
-            # Buildkit checksum digest is stored in the .provenance.json or sbom.json file
-            # that uses in-toto schema: https://github.com/in-toto/attestation/tree/v0.1.0/spec#statement
-            Write-OutPut "Verifying checksum for $DownloadPath"
-            $isValidChecksum = Test-Checksum -JSON `
-                -DownloadedFile $downloadPath `
-                -ChecksumUri ($uri -replace ".tar.gz", ".sbom.json")`
-                -SchemaFile "$ModuleParentPath\Private\schemas\in-toto.sbom.schema.json"
-            if (-not $isValidChecksum) {
-                $errMsg = "Checksum verification failed for $DownloadPath"
-                Write-Error $errMsg
-
-                # Clean up downloaded file
-                Write-Warning "Removing downloaded file $DownloadPath"
-                Remove-Item -Path $DownloadPath -Force
-
-                Throw $errMsg
+            $downloadParams = @{
+                ToolName = "Buildkit"
+                Repository = "moby/buildkit"
+                Version = $Version
+                OSArchitecture = $OSArchitecture
+                DownloadPath = $DownloadPath
+                ChecksumSchemaFile = "$ModuleParentPath\Private\schemas\in-toto.sbom.schema.json"
+                FileFilterRegEx = $null
             }
+            $downloadParamsProperties = [FileDownloadParameters]::new(
+                $downloadParams.ToolName,
+                $downloadParams.Repository,
+                $downloadParams.Version,
+                $downloadParams.OSArchitecture,
+                $downloadParams.DownloadPath,
+                $downloadParams.ChecksumSchemaFile,
+                $downloadParams.FileFilterRegEx
+            )
+            $sourceFile = Get-InstallationFile -FileParameters $downloadParamsProperties
 
             # Untar downloaded file at install path
             $params = @{
-                Feature      = "Buildkit"
-                InstallPath  = $InstallPath
-                DownloadPath = "$DownloadPath"
-                EnvPath      = "$InstallPath\bin"
-                cleanup      = $true
+                Feature     = "Buildkit"
+                InstallPath = $InstallPath
+                SourceFile  = "$sourceFile"
+                EnvPath     = "$InstallPath\bin"
+                cleanup     = $true
             }
             Install-RequiredFeature @params
 

@@ -6,6 +6,7 @@
 #                                                                         #
 ###########################################################################
 
+
 using module "..\containers-toolkit\Private\CommonToolUtilities.psm1"
 
 $Script:SampleSha256Sum = @'
@@ -142,74 +143,128 @@ Describe "CommonToolUtilities.psm1" {
     }
 
     Context "Get-InstallationFile" -Tag "Get-InstallationFile" {
-        BeforeAll {
+        BeforeEach {
             Mock Get-Module -ParameterFilter { $Name -eq 'ThreadJob' } { }
             Mock Import-Module -ParameterFilter { $Name -eq 'ThreadJob' } { }
-            Mock Invoke-WebRequest { } -ModuleName "CommonToolUtilities"
+            Mock Invoke-WebRequest -ModuleName "CommonToolUtilities" { }
+            Mock Invoke-RestMethod -ModuleName "CommonToolUtilities" {
+                return (Get-Content -Path "$PSScriptRoot\TestData\release-assets.json" -Raw | ConvertFrom-Json -Depth 3 )
+            }
+            # -ParameterFilter { $Uri -match "https://api.github.com/repos/containerd/nerdctl/releases" }
 
             $sampleJob = New-MockObject -Type 'ThreadJob.ThreadJob' -Properties @{ JobStateInfo = 'Completed' }
             Mock Start-ThreadJob -ModuleName "CommonToolUtilities" -MockWith { return $sampleJob }
             Mock Wait-Job -ModuleName "CommonToolUtilities"
             Mock Receive-Job -ModuleName "CommonToolUtilities"
             Mock Remove-Job -ModuleName "CommonToolUtilities"
-        }
+            Mock Test-Checksum -ModuleName "CommonToolUtilities" -MockWith { return $true }
 
-        It "Should successfully download single file" {
-            $params = @{
-                Feature      = "Containerd"
-                Uri          = "https://github.com/v1.0.0/downloadedfile.tar.gz"
-                Version      = '1.0.0'
-                DownloadPath = "$DownloadPath\downloadedfile.tar.gz"
-            }
-            $files = @($params)
-            Get-InstallationFile -Files $files
-
-            Should -Invoke Invoke-WebRequest -Exactly 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter { $Uri -eq $params.Uri -and $Outfile -eq $params.DownloadPath }
-            Should -Invoke Invoke-WebRequest -Exactly 1 -Scope It -ModuleName "CommonToolUtilities"
-            Should -Invoke Start-ThreadJob  -Exactly 0 -Scope It -ModuleName "CommonToolUtilities"
-        }
-
-        It "Should successfully download muliple files asynchronously" {
-
-            $files = @(
+            $Script:TestFileName = "nerdctl-2.0.0-rc.1-windows-amd64.tar.gz"
+            $Script:MockDownloadPath = "TestDrive:\Download\$testFileName"
+            $Script:MockCheckSumFile = "TestDrive:\Download\SHA256SUMS"
+            $Script:MockURL = "https://github.com/containerd/nerdctl/releases/download/v2.0.0-rc.1/$testFileName"
+            $Script:MockFiles = @(
                 @{
-                    Feature      = "Containerd"
-                    Uri          = "https://github.com/v1.0.0/Containerdfile.tar.gz"
-                    Version      = '1.0.0'
-                    DownloadPath = "$DownloadPath\downloadedfile.tar.gz"
-                }
-                @{
-                    Feature      = "Buildkit"
-                    Uri          = "https://github.com/v1.0.0/Buildkitfile.tar.gz"
-                    Version      = '1.0.0'
-                    DownloadPath = "$DownloadPath\downloadedfile.tar.gz"
+                    Feature        = "Containerd"
+                    Repo           = "containerd/nerdctl"
+                    Version        = 'latest'
+                    OSArchitecture = 'amd64'
+                    DownloadPath   = "TestDrive:\Download"
                 }
             )
-            # $containerdParams = $files[0]
-            # $buildkitParams = $files[1]
-            Get-InstallationFile -Files $files
 
-            # Should -Invoke Invoke-WebRequest -Exactly 1 -Scope It -ModuleName "CommonToolUtilities" `
-            #     -ParameterFilter { $Uri -eq $containerdParams.Uri -and $Outfile -eq $containerdParams.DownloadPath }
-            # Should -Invoke Invoke-WebRequest -Exactly 1 -Scope It -ModuleName "CommonToolUtilities" `
-            #     -ParameterFilter { $Uri -eq $buildkitParams.Uri -and $Outfile -eq $buildkitParams.DownloadPath }
-            # Should -Invoke Invoke-WebRequest -Exactly 2 -Scope It -ModuleName "CommonToolUtilities"
-            Should -Invoke Start-ThreadJob -Exactly 2 -Scope It -ModuleName "CommonToolUtilities"
-            Should -Invoke Receive-Job -Exactly 2 -Scope It -ModuleName "CommonToolUtilities"
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $true } -ParameterFilter { $Path -eq $Script:MockDownloadPath }
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $true } -ParameterFilter { $Path -eq $Script:MockCheckSumFile }
+        }
+
+        It "Should successfully download latest release assets" {
+            $testChecksumURI = "https://github.com/containerd/nerdctl/releases/download/v2.0.0-rc.1/SHA256SUMS"
+            $testChecksumFile = "TestDrive:\Download\SHA256SUMS"
+
+            # Call method
+            $result = Get-InstallationFile -FileParameters $Script:MockFiles
+
+            # Assert
+            $result | Should -Be $Script:MockDownloadPath
+            Should -Invoke Invoke-RestMethod -Exactly 1 -Scope It -ModuleName "CommonToolUtilities"
+            Should -Invoke Invoke-RestMethod -Exactly 1 -Scope It -ModuleName "CommonToolUtilities" `
+                -ParameterFilter { $Uri -eq "https://api.github.com/repos/containerd/nerdctl/releases/latest" }
+            Should -Invoke Invoke-WebRequest -Exactly 1 -Scope It -ModuleName "CommonToolUtilities" `
+                -ParameterFilter { $Uri -eq $Script:MockURL -and $Outfile -eq $Script:MockDownloadPath }
+            Should -Invoke Invoke-WebRequest -Exactly 1 -Scope It -ModuleName "CommonToolUtilities" `
+                -ParameterFilter { $Uri -eq $testChecksumURI -and $Outfile -eq $testChecksumFile }
+        }
+
+        It "Should successfully download release assets for specified version" {
+            Mock Invoke-RestMethod -ModuleName "CommonToolUtilities" {
+                return (Get-Content -Path "$PSScriptRoot\TestData\release-tags.json" -Raw | ConvertFrom-Json -Depth 10 )
+            } -ParameterFilter { $Uri -eq "https://api.github.com/repos/containerd/nerdctl/tags" }
+
+            $files = $Script:MockFiles
+            $files[0].Version = 'v2.0.0-rc.1'
+            $files[0].FileFilterRegEx = "(?:.tar.gz|SHA256SUMS)$"
+
+            # Call method
+            $result = Get-InstallationFile -FileParameters $files
+
+            # Assert
+            $result | Should -Be "$Script:MockDownloadPath"
+            # 1. tags, 2. releases for the specified version
+            Should -Invoke Invoke-RestMethod -Exactly 2 -Scope It -ModuleName "CommonToolUtilities"
+            Should -Invoke Invoke-RestMethod -Exactly 1 -Scope It -ModuleName "CommonToolUtilities" `
+                -ParameterFilter { $Uri -eq "https://api.github.com/repos/containerd/nerdctl/tags" }
+            Should -Invoke Invoke-RestMethod -Exactly 1 -Scope It -ModuleName "CommonToolUtilities" `
+                -ParameterFilter { $Uri -eq "https://api.github.com/repos/containerd/nerdctl/releases/tags/v2.0.0-rc.1" }
+            Should -Invoke Invoke-WebRequest -Exactly 1 -Scope It -ModuleName "CommonToolUtilities" `
+                -ParameterFilter { $Uri -eq $Script:MockURL -and $Outfile -eq $Script:MockDownloadPath }
+        }
+
+        It "Should throw an error if no release exists for the specified version" {
+            $files = @(
+                @{
+                    Feature      = "nerdctl"
+                    Repo         = "containerd/nerdctl"
+                    Version      = 'v8.i.0'
+                    DownloadPath = "TestDrive:\Download"
+                }
+            )
+
+            # Call method
+            { Get-InstallationFile -FileParameters $files } | Should -Throw "Couldn't find release tags for the provided version: 'v8.i.0'"
+        }
+
+        It "Should throw an error if no release exists for the specified architecture" {
+            $invalidArch = $Script:MockFiles
+            $invalidArch[0].OSArchitecture = "invalid"
+            { Get-InstallationFile -FileParameters $invalidArch } | Should -Throw "Couldn't find release assets for the provided architecture: 'invalid'"
+        }
+
+        It "Should throw an error if no checksum file is found" {
+            $invalidArch = $Script:MockFiles
+            $invalidArch[0].FileFilterRegEx = "(.tar.gz)$" # Change the filter to not include checksum file
+            { Get-InstallationFile -FileParameters $invalidArch } | Should -Throw "Some files were not downloaded. Failed to find checksum files for $Script:TestFileName."
+        }
+
+        It "Should throw an error if verification fails" {
+            Mock Test-Checksum -ModuleName "CommonToolUtilities" -MockWith { return $false }
+
+            { Get-InstallationFile -FileParameters $Script:MockFiles } | Should -Throw "Failed to download asset*"
+            $Error[1].Exception.Message | Should -BeLike 'Failed to download assets for "v2.0.0-rc.1". Checksum verification failed.*'
+        }
+
+        It "Should throw an error if GitHub API call fails" {
+            $errorMessage = "Response status code does not indicate success: 404 (Not Found)."
+            Mock Invoke-RestMethod { Throw $errorMessage } -ModuleName "CommonToolUtilities"
+
+            { Get-InstallationFile -FileParameters $Script:MockFiles } | Should -Throw "GitHub API error.*"
         }
 
         It "Should throw an error if download fails" {
-            $params = @{
-                Feature      = "Containerd"
-                Uri          = "https://github.com/v1.0.0/downloadedfile.tar.gz"
-                Version      = '1.0.0'
-                DownloadPath = "$DownloadPath\downloadedfile.tar.gz"
-            }
-            $files = @($params)
-
             $errorMessage = "Response status code does not indicate success: 404 (Not Found)."
             Mock Invoke-WebRequest { Throw $errorMessage } -ModuleName "CommonToolUtilities"
-            { Get-InstallationFile -Files $files } | Should -Throw "Containerd downlooad failed: https://github.com/v1.0.0/downloadedfile.tar.gz.`n$errorMessage"
+
+            { Get-InstallationFile -FileParameters $Script:MockFiles } | Should -Throw "Failed to download asset*"
+            $Error[1].Exception.Message | Should -BeLike "Failed to download assets for `"v2.0.0-rc.1`". Couldn`'t download `"v2.0.0-rc.1`" release assets.*"
         }
     }
 
@@ -240,16 +295,28 @@ Describe "CommonToolUtilities.psm1" {
     }
 
     Context "Test-FileCheckSum" -Tag "Test-FileCheckSum" {
-        BeforeAll {
-            Mock Invoke-WebRequest -ModuleName "CommonToolUtilities"
-            Mock Remove-Item -ModuleName "CommonToolUtilities"
+        BeforeEach {
             $Script:DownloadedFile = "TestDrive:\nerdctl-2.0.0-windows-amd64.tar.gz"
-            $Script:ChecksumUri = "https://test.com/SHA256SUMS"
             $Script:ChecksumFile = "TestDrive:\SHA256SUMS"
+
+            Mock Remove-Item -ModuleName "CommonToolUtilities"
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $true }
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $true } -ParameterFilter { $Path -eq $Script:DownloadedFile }
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $true } -ParameterFilter { $Path -eq $Script:ChecksumFile }
 
             # Create the test file
             New-Item -Path $Script:DownloadedFile -ItemType File -Force | Out-Null
             Set-Content -Path $Script:DownloadedFile -Value "This is a test file."
+        }
+
+        AfterEach {
+            Get-ChildItem "TestDrive:\" | Remove-Item -Recurse -Force
+        }
+
+        It "Should throw an error if the downloaded file does not exist" {
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $false } -ParameterFilter { $Path -eq $Script:DownloadedFile }
+
+            { Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumFile $Script:ChecksumFile } | Should -Throw "Couldn't find source file: `"$Script:DownloadedFile`"."
         }
 
         It "should verify checksum successfully" {
@@ -258,13 +325,9 @@ Describe "CommonToolUtilities.psm1" {
                 -ParameterFilter { $Path -eq $Script:ChecksumFile } `
                 -MockWith { return "SampleHash  nerdctl-2.0.0-windows-amd64.tar.gz" }
 
-            $result = Test-CheckSum -downloadedFile $Script:downloadedFile -checksumUri $Script:checksumUri
+            $result = Test-CheckSum -downloadedFile $Script:downloadedFile -ChecksumFile $Script:ChecksumFile
             $result | Should -Be $true
 
-            Should -Invoke Invoke-WebRequest -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {
-                $Uri -eq $Script:checksumUri -and
-                $Outfile -eq $Script:ChecksumFile
-            }
             Should -Invoke Get-FileHash -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {
                 $Path -eq $Script:downloadedFile -and
                 $Algorithm -eq 'SHA256'
@@ -272,27 +335,20 @@ Describe "CommonToolUtilities.psm1" {
             Should -Invoke Get-Content -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {
                 $Path -eq $Script:ChecksumFile
             }
-            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {
-                $Path -eq $Script:ChecksumFile
-            }
+            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "CommonToolUtilities" `
+                -ParameterFilter { $Path -eq $Script:ChecksumFile }
         }
 
         It "should return true when checksums match" {
-            Mock Invoke-WebRequest -ModuleName "CommonToolUtilities" -MockWith {
-                $downloadedFileHash = (Get-FileHash -Path $Script:DownloadedFile -Algorithm SHA256).Hash
-                # Create the checksum file
-                New-Item -Path $Script:ChecksumFile -ItemType File -Force | Out-Null
-                Set-Content -Path $Script:ChecksumFile -Value (
-                    $SampleSha256Sum -replace "__CHECKSUM__", $downloadedFileHash)
-            }
+            # Do an actual file hash
+            # Create the checksum file
+            $downloadedFileHash = (Get-FileHash -Path $Script:DownloadedFile -Algorithm SHA256).Hash
+            New-Item -Path $Script:ChecksumFile -ItemType File -Force | Out-Null
+            Set-Content -Path $Script:ChecksumFile -Value (
+                $SampleSha256Sum -replace "__CHECKSUM__", $downloadedFileHash)
 
-            $result = Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumUri $Script:ChecksumUri
+            $result = Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumFile $Script:ChecksumFile
             $result | Should -Be $true
-
-            Should -Invoke Invoke-WebRequest -Times 1 -Scope It -ModuleName "CommonToolUtilities" `
-                -ParameterFilter { $Uri -eq $Script:ChecksumUri -and $OutFile -eq $Script:ChecksumFile }
-            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "CommonToolUtilities" `
-                -ParameterFilter { $Path -eq $Script:ChecksumFile }
 
             # Test regex
             $filePath = "TestDrive:\nerdctl-2.0.0-linux-arm64.tar.gz"
@@ -300,66 +356,48 @@ Describe "CommonToolUtilities.psm1" {
             Mock Get-FileHash -ModuleName "CommonToolUtilities" -MockWith {
                 return @{ Hash = "0286780561d8eb915922b9SaMpLeSHA45abdfeef3e" }
             }
-            $result = Test-CheckSum -DownloadedFile $filePath -ChecksumUri $Script:ChecksumUri
+            $result = Test-CheckSum -DownloadedFile $filePath -ChecksumFile $Script:ChecksumFile
             $result | Should -Be $true
-        }
-
-        It "should throw an error when checksum file download fails" {
-            # Mock the Invoke-WebRequest cmdlet to throw an error
-            Mock -CommandName Invoke-WebRequest -ModuleName "CommonToolUtilities" -MockWith { Throw "Download failed" }
-
-            # Test the function
-            { Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumUri $Script:ChecksumUri } | `
-                Should -Throw "Checksum file download failed: $Script:ChecksumUri.*"
+            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "CommonToolUtilities" `
+                -ParameterFilter { $Path -eq $Script:ChecksumFile }
         }
 
         It "should throw and error if invalid hash function is used" {
-            $invalidChecksumUri = "https://test.com/SHA99SUMS"
-            { Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumUri $invalidChecksumUri } | `
+            $invalidChecksumFile = "TestDrive:\SHA99SUMS"
+            { Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumFile $invalidChecksumFile } | `
                 Should -Throw "Checksum verification failed for $Script:DownloadedFile. Invalid hash function.*"
-            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "CommonToolUtilities" `
-                -ParameterFilter { $Path -eq "TestDrive:\SHA99SUMS" }
         }
 
         It "should return false when checksums do not match" {
-            Mock Invoke-WebRequest -ModuleName "CommonToolUtilities" -MockWith {
-                New-Item -Path $Script:ChecksumFile -ItemType File -Force | Out-Null
-                Set-Content -Path $Script:ChecksumFile -Value (
-                    $SampleSha256Sum -replace "__CHECKSUM__", "InvalidHash")
-            }
-
-            $result = Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumUri $Script:ChecksumUri
+            New-Item -Path $Script:ChecksumFile -ItemType File -Force | Out-Null
+            Set-Content -Path $Script:ChecksumFile -Value (
+                $SampleSha256Sum -replace "__CHECKSUM__", "InvalidHash")
+            $result = Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumFile $Script:ChecksumFile
 
             $result | Should -Be $false
-            Should -Invoke Invoke-WebRequest -Times 1 -Scope It -ModuleName "CommonToolUtilities" `
-                -ParameterFilter { $Uri -eq $Script:ChecksumUri -and $OutFile -eq $Script:ChecksumFile }
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "CommonToolUtilities" `
                 -ParameterFilter { $Path -eq $Script:ChecksumFile }
         }
 
         It "should return false when downloaded file name does not match SHA256SUMS file names" {
-            Mock Invoke-WebRequest -ModuleName "CommonToolUtilities" -MockWith {
-                # Create the checksum file
-                New-Item -Path $Script:ChecksumFile -ItemType File -Force | Out-Null
-                Set-Content -Path $Script:ChecksumFile -Value "SampleHash  nerdctl-2.0.0-linux-amd64.tar.gz"
-            }
+            # Create the checksum file
+            New-Item -Path $Script:ChecksumFile -ItemType File -Force | Out-Null
+            Set-Content -Path $Script:ChecksumFile -Value "SampleHash  nerdctl-2.0.0-linux-amd64.tar.gz"
 
             $invalid_download_file = "TestDrive:\invalid-file-name.tar.gz"
             New-Item -Path $invalid_download_file -ItemType File -Force | Out-Null
 
-            { Test-CheckSum -DownloadedFile $invalid_download_file -ChecksumUri $Script:ChecksumUri } | `
+            { Test-CheckSum -DownloadedFile $invalid_download_file -ChecksumFile $Script:ChecksumFile } | `
                 Should -Throw "Checksum verification failed for $invalid_download_file. Checksum not found for `"invalid-file-name.tar.gz`" in $Script:ChecksumFile"
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "CommonToolUtilities" `
                 -ParameterFilter { $Path -eq $Script:ChecksumFile }
         }
 
         It "should throw an error for invalid file content format" {
-            Mock Invoke-WebRequest -ModuleName "CommonToolUtilities" -MockWith {
-                New-Item -Path $Script:ChecksumFile -ItemType File -Force | Out-Null
-                Set-Content -Path $Script:ChecksumFile -Value "sha256sum sample-tool.tar.gz invalid-format"
-            }
+            New-Item -Path $Script:ChecksumFile -ItemType File -Force | Out-Null
+            Set-Content -Path $Script:ChecksumFile -Value "sha256sum sample-tool.tar.gz invalid-format"
 
-            { Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumUri $Script:ChecksumUri } | `
+            { Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumFile $Script:ChecksumFile } | `
                 Should -Throw "Checksum verification failed for $Script:DownloadedFile. Invalid checksum file content format in $Script:ChecksumFile. Expected format: <checksum> <filename>."
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "CommonToolUtilities" `
                 -ParameterFilter { $Path -eq $Script:ChecksumFile }
@@ -368,23 +406,24 @@ Describe "CommonToolUtilities.psm1" {
         It "should catch error when commands fail" {
             Mock Get-FileHash -ModuleName "CommonToolUtilities" -MockWith { Throw "Error" }
 
-            { Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumUri $Script:ChecksumUri } | Should -Throw "Checksum verification failed for $Script:DownloadedFile. Error"
+            { Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumFile $Script:ChecksumFile } | Should -Throw "Checksum verification failed for $Script:DownloadedFile. Error"
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "CommonToolUtilities" `
                 -ParameterFilter { $Path -eq $Script:ChecksumFile }
         }
     }
 
     Context "Test-JSONChecksum" -Tag "Test-JSONChecksum" {
-        BeforeAll {
-            Mock Invoke-WebRequest -ModuleName "CommonToolUtilities"
-            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $true }
-            Mock Test-Json -ModuleName "CommonToolUtilities" -MockWith { return $true }
-            Mock Remove-Item -ModuleName "CommonToolUtilities"
-
+        BeforeEach {
             $Script:DownloadedFile = "TestDrive:\buildkit-v1.0.0.windows-amd64.tar.gz"
-            $Script:ChecksumUri = "https://test.com/sample-tool.provenance.json"
             $Script:ChecksumFile = "TestDrive:\sample-tool.provenance.json"
             $Script:SchemaFile = "$PSScriptRoot\TestData\test-schema.json"
+
+            Mock Remove-Item -ModuleName "CommonToolUtilities"
+            Mock Test-Json -ModuleName "CommonToolUtilities" -MockWith { return $true }
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $true }
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $true }
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $true } -ParameterFilter { $Path -eq $Script:DownloadedFile }
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $true } -ParameterFilter { $Path -eq $Script:ChecksumFile }
 
             # Create the test file
             New-Item -Path $Script:DownloadedFile -ItemType File -Force | Out-Null
@@ -395,12 +434,16 @@ Describe "CommonToolUtilities.psm1" {
                 "SHA256", (Get-FileHash -Path $Script:DownloadedFile -Algorithm SHA256).Hash)
             $Script:FunctionToCall = { Test-CheckSum `
                     -DownloadedFile $Script:DownloadedFile `
-                    -ChecksumUri $Script:ChecksumUri `
+                    -ChecksumFile $Script:ChecksumFile `
                     -JSON `
                     -SchemaFile $Script:SchemaFile `
                     -ExtractDigestScriptBlock { return $MockExtractedFileDigest } `
-                    -ExtractDigestArguments @($Script:DownloadedFile, $Script:ChecksumUri)
+                    -ExtractDigestArguments @($Script:DownloadedFile, $Script:ChecksumFile)
             }
+        }
+
+        AfterEach {
+            Get-ChildItem "TestDrive:\" | Remove-Item -Recurse -Force
         }
 
         It "should verify checksum successfully using in-toto SBOM format" {
@@ -411,16 +454,10 @@ Describe "CommonToolUtilities.psm1" {
 
             $result = Test-CheckSum -JSON `
                 -DownloadedFile $Script:DownloadedFile `
-                -ChecksumUri $Script:ChecksumUri `
+                -ChecksumFile $Script:ChecksumFile `
                 -SchemaFile $Script:SchemaFile
 
             $result | Should -Be $true
-
-            # Check file is downloaded
-            Should -Invoke Invoke-WebRequest -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {
-                $Uri -eq $Script:ChecksumUri -and
-                $Outfile -eq $Script:ChecksumFile
-            }
 
             # Validate Checksum file content
             Should -Invoke Get-Content -ModuleName "CommonToolUtilities" -ParameterFilter { $Path -eq $Script:ChecksumFile }
@@ -444,18 +481,12 @@ Describe "CommonToolUtilities.psm1" {
 
             $result = Test-CheckSum -JSON `
                 -DownloadedFile $Script:DownloadedFile `
-                -ChecksumUri $Script:ChecksumUri `
+                -ChecksumFile $Script:ChecksumFile `
                 -SchemaFile $Script:SchemaFile `
                 -ExtractDigestScriptBlock { return ([FileDigest]::new("SHA256", "SampleHash")) } `
-                -ExtractDigestArguments @($Script:DownloadedFile, $Script:ChecksumUri)
+                -ExtractDigestArguments @($Script:DownloadedFile, $Script:ChecksumFile)
 
             $result | Should -Be $true
-
-            # Check file is downloaded
-            Should -Invoke Invoke-WebRequest -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {
-                $Uri -eq $Script:ChecksumUri -and
-                $Outfile -eq $Script:ChecksumFile
-            }
 
             # Validate JSON file
             Should -Invoke Get-Content -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter {
@@ -482,7 +513,7 @@ Describe "CommonToolUtilities.psm1" {
 
             $ScriptNoArgs = { Test-CheckSum -JSON `
                     -DownloadedFile $Script:DownloadedFile `
-                    -ChecksumUri $Script:ChecksumUri `
+                    -ChecksumFile $Script:ChecksumFile `
                     -SchemaFile $Script:SchemaFile `
                     -ExtractDigestScriptBlock { return ([FileDigest]::new("SHA256", "SampleHash")) }
             }
@@ -491,71 +522,52 @@ Describe "CommonToolUtilities.psm1" {
         }
 
         It "should return true when checksums match" {
-            Mock Invoke-WebRequest -ModuleName "CommonToolUtilities" -MockWith {
-                $downloadedFileHash = (Get-FileHash -Path $Script:DownloadedFile -Algorithm SHA256).Hash
-
-                # Create the checksum file
-                New-Item -Path $Script:ChecksumFile -ItemType File -Force | Out-Null
-                Set-Content -Path $Script:ChecksumFile -Value (
-                    $SbomJson -replace "__CHECKSUM__", $downloadedFileHash)
-            }
+            # Create the checksum file
+            New-Item -Path $Script:ChecksumFile -ItemType File -Force | Out-Null
+            Set-Content -Path $Script:ChecksumFile -Value (
+                $SbomJson -replace "__CHECKSUM__", $downloadedFileHash)
 
             $result = & $Script:FunctionToCall
 
             $result | Should -Be $true
-            Should -Invoke Invoke-WebRequest -Times 1 -Scope It -ModuleName "CommonToolUtilities" `
-                -ParameterFilter { $Uri -eq $Script:ChecksumUri -and $OutFile -eq $Script:ChecksumFile }
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "CommonToolUtilities" `
                 -ParameterFilter { $Path -eq $Script:ChecksumFile }
         }
 
-        It "should throw an error when checksum file download fails" {
-            # Mock the Invoke-WebRequest cmdlet to throw an error
-            Mock -CommandName Invoke-WebRequest -ModuleName "CommonToolUtilities" -MockWith { Throw "Download failed" }
+        It "should throw an error if checksum file does not exist" {
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $false } -ParameterFilter { $Path -eq $Script:ChecksumFile }
 
-            # Test the function
-            { & $Script:FunctionToCall } | Should -Throw "Checksum file download failed: $checksumUri.*"
+            { & $Script:FunctionToCall } | Should -Throw "Couldn't find checksum file: `"$Script:ChecksumFile`"."
         }
 
         It "should throw an error when checksum file does not use in-toto SBOM format and script block is not provided" {
             $NonInTotoJson = "TestDrive:\non-in-toto.sbom.json"
-            $NonInTotoUri = "https://test.com/non-in-toto.sbom.json"
-
-            Mock -CommandName Invoke-WebRequest -ModuleName "CommonToolUtilities" `
-            -MockWith {
-                New-Item -Path $NonInTotoJson -ItemType File -Force | Out-Null
-                Set-Content -Path $NonInTotoJson -Value $OtherSbomFormatJson
-            } `
-            -ParameterFilter { $Uri -eq $NonInTotoUri }
+            New-Item -Path $NonInTotoJson -ItemType File -Force | Out-Null
+            Set-Content -Path $NonInTotoJson -Value $OtherSbomFormatJson
 
             $ToCall = { Test-CheckSum -JSON `
                     -DownloadedFile $Script:DownloadedFile `
-                    -ChecksumUri $NonInTotoUri `
+                    -ChecksumFile $NonInTotoJson `
                     -SchemaFile $Script:SchemaFile }
 
             { & $ToCall } | Should -Throw "Invalid checksum JSON format. Expected in-toto SBOM format*"
         }
 
         It "should throw an error when digest file name is not the same as the downloaded file name" {
-            # Mock the Invoke-WebRequest cmdlet to throw an error
-            Mock -CommandName Invoke-WebRequest -ModuleName "CommonToolUtilities" `
-            -MockWith {
-                New-Item -Path $Script:ChecksumFile -ItemType File -Force | Out-Null
-                Set-Content -Path $Script:ChecksumFile -Value $InvalidFileNameJson
-            } `
-            -ParameterFilter { $Uri -eq $Script:ChecksumUri }
+            New-Item -Path $Script:ChecksumFile -ItemType File -Force | Out-Null
+            Set-Content -Path $Script:ChecksumFile -Value $InvalidFileNameJson
 
             $ToCall = { Test-CheckSum -JSON `
-                            -DownloadedFile $Script:DownloadedFile `
-                            -ChecksumUri $Script:ChecksumUri `
-                            -SchemaFile $Script:SchemaFile }
+                    -DownloadedFile $Script:DownloadedFile `
+                    -ChecksumFile $Script:ChecksumFile `
+                    -SchemaFile $Script:SchemaFile }
             { & $ToCall } | Should -Throw "Downloaded file name does not match the subject name*"
         }
 
         It "should throw an error if the schema file does not exist" {
             Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $false } -ParameterFilter { $Path -eq $Script:SchemaFile }
 
-            { & $Script:FunctionToCall } | Should -Throw "Couldn't find the provided schema file: $Script:SchemaFile"
+            { & $Script:FunctionToCall } | Should -Throw "Couldn't find the JSON schema file: `"$Script:SchemaFile`"."
         }
 
         It "should throw an error if the schema file is empty" {
@@ -565,24 +577,29 @@ Describe "CommonToolUtilities.psm1" {
         }
 
         It "should throw an error if the JSON file is not valid" {
+            Mock Get-Content -ModuleName "CommonToolUtilities" -MockWith { return "Test data" }
+
+            # Test-Json returns true if the JSON is valid, otherwise it throws an error
             Mock Test-Json -ModuleName "CommonToolUtilities" -MockWith { Throw "Error" }
 
+            # Test the function
             { & $Script:FunctionToCall } | Should -Throw "Invalid JSON format in checksum file. Error"
         }
 
         It "should throw an error if script block throws an error" {
             # ParentContainsErrorRecordException: Exception calling "Invoke" with "1" argument(s): "Error message"
-            { Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumUri $Script:ChecksumUri -JSON -SchemaFile $Script:SchemaFile -ExtractDigestScriptBlock { (Throw "Error message") } | `
+            { Test-CheckSum -DownloadedFile $Script:DownloadedFile -ChecksumFile $Script:ChecksumFile -JSON -SchemaFile $Script:SchemaFile -ExtractDigestScriptBlock { (Throw "Error message") } | `
                     Should -Throw "Invalid script block output*"
             }
         }
 
         It "should throw an error if ExtractedFileDigest is not a FileDigest object" {
+            Mock Get-Content -ModuleName "CommonToolUtilities" -MockWith { return "Test data" }
             Mock Get-FileHash -ModuleName "CommonToolUtilities" -MockWith { return "SampleHash" }
 
             $InvalidOutputFunc = { Test-CheckSum -JSON `
                     -DownloadedFile $Script:DownloadedFile `
-                    -ChecksumUri $Script:ChecksumUri `
+                    -ChecksumFile $Script:ChecksumFile `
                     -SchemaFile $Script:SchemaFile `
                     -ExtractDigestScriptBlock { return } `
                     -ExtractDigestArguments @($Script:DownloadedFile, $Script:ChecksumUri)
@@ -591,9 +608,11 @@ Describe "CommonToolUtilities.psm1" {
         }
 
         It "should throw and error if invalid hash function is used" {
+            Mock Get-Content -ModuleName "CommonToolUtilities" -MockWith { return "Test data" }
+
             $InvalidAlgo = { Test-CheckSum `
                     -DownloadedFile $Script:DownloadedFile `
-                    -ChecksumUri $Script:ChecksumUri `
+                    -ChecksumFile $Script:ChecksumFile `
                     -JSON `
                     -SchemaFile $Script:SchemaFile `
                     -ExtractDigestScriptBlock { return ([FileDigest]::new("SHA99", "SampleHash") ) } `
@@ -607,10 +626,12 @@ Describe "CommonToolUtilities.psm1" {
         }
 
         It "should return false when checksums do not match" {
+            Mock Get-Content -ModuleName "CommonToolUtilities" -MockWith { return "Test data" }
+
             # Test the function
             $result = Test-CheckSum `
                 -DownloadedFile "TestDrive:\sample-tool.tar.gz" `
-                -ChecksumUri $Script:ChecksumUri `
+                -ChecksumFile $Script:ChecksumFile `
                 -JSON `
                 -SchemaFile $Script:SchemaFile `
                 -ExtractDigestScriptBlock { return ([FileDigest]::new("SHA256", "InvalidHash")) } `
@@ -622,6 +643,7 @@ Describe "CommonToolUtilities.psm1" {
         }
 
         It "should catch error when commands fail" {
+            Mock Get-Content -ModuleName "CommonToolUtilities" -MockWith { return "Test data" }
             Mock Get-FileHash -ModuleName "CommonToolUtilities" -MockWith { Throw "Error" }
 
             # Test the function
@@ -638,15 +660,18 @@ Describe "CommonToolUtilities.psm1" {
             Mock Add-FeatureToPath -ModuleName "CommonToolUtilities"
             Mock New-Item -ModuleName "CommonToolUtilities"
             Mock Remove-Item -ModuleName "CommonToolUtilities"
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $true }
         }
 
         It "Should successfully install tool" {
+            Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $false } -ParameterFilter { $Path -eq $params.InstallPath }
+
             $params = @{
-                Feature      = "containerd"
-                InstallPath  = "$ProgramFiles\Containerd"
-                DownloadPath = "$DownloadPath\containerd-binaries.tar.gz"
-                EnvPath      = "$ProgramFiles\Containerd\bin"
-                cleanup      = $true
+                Feature     = "containerd"
+                InstallPath = "$ProgramFiles\Containerd"
+                SourceFile  = "$DownloadPath\containerd-binaries.tar.gz"
+                EnvPath     = "$ProgramFiles\Containerd\bin"
+                cleanup     = $true
             }
 
             Install-RequiredFeature @params
@@ -655,22 +680,22 @@ Describe "CommonToolUtilities.psm1" {
             Should -Invoke New-Item -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter { ($Path -eq $params.InstallPath) }
 
             # Test that the file is untar-ed
-            Should -Invoke Invoke-ExecutableCommand -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter { ($Executable -eq 'tar.exe') -and ($Arguments -eq "-xf `"$($params.DownloadPath)`" -C `"$($params.InstallPath)`"") }
+            Should -Invoke Invoke-ExecutableCommand -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter { ($Executable -eq 'tar.exe') -and ($Arguments -eq "-xf `"$($params.SourceFile)`" -C `"$($params.InstallPath)`"") }
 
             # Test that method to add feature to path is called
             Should -Invoke Add-FeatureToPath -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter { ($Feature -eq $params.Feature) -and ($Path -eq $params.EnvPath) }
 
             # Check that clean up is done on completion
-            Should -Invoke Remove-Item  -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter { $Path -eq $params.DownloadPath }
+            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "CommonToolUtilities" -ParameterFilter { $Path -eq $params.SourceFile }
         }
 
         It "should not remove items if cleanup is false" {
             $params = @{
-                Feature      = "containerd"
-                InstallPath  = "$ProgramFiles\Containerd"
-                DownloadPath = "$DownloadPath\containerd-binaries.tar.gz"
-                EnvPath      = "$ProgramFiles\Containerd\bin"
-                cleanup      = $false
+                Feature     = "containerd"
+                InstallPath = "$ProgramFiles\Containerd"
+                SourceFile  = "$DownloadPath\containerd-binaries.tar.gz"
+                EnvPath     = "$ProgramFiles\Containerd\bin"
+                cleanup     = $false
             }
             Install-RequiredFeature @params
             Should -Invoke Remove-Item -ModuleName "CommonToolUtilities" -Times 0 -Scope It
@@ -685,14 +710,14 @@ Describe "CommonToolUtilities.psm1" {
             }
             Mock Invoke-ExecutableCommand -ModuleName "CommonToolUtilities" -MockWith { return $obj }
             $params = @{
-                Feature      = "containerd"
-                InstallPath  = "$ProgramFiles\Containerd"
-                DownloadPath = "$DownloadPath\containerd-binaries.tar.gz"
-                EnvPath      = "$ProgramFiles\Containerd\bin"
-                cleanup      = $false
+                Feature     = "containerd"
+                InstallPath = "$ProgramFiles\Containerd"
+                SourceFile  = "$DownloadPath\containerd-binaries.tar.gz"
+                EnvPath     = "$ProgramFiles\Containerd\bin"
+                cleanup     = $false
             }
 
-            { Install-RequiredFeature @params } | Should -Throw "Could not untar file $($params.DownloadPath) at $($params.InstallPath). Error message"
+            { Install-RequiredFeature @params } | Should -Throw "Couldn't expand archive file(s) $($params.SourceFile).*"
         }
     }
 

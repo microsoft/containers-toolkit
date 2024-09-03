@@ -6,6 +6,7 @@
 #                                                                         #
 ###########################################################################
 
+using module "..\containers-toolkit\Private\CommonToolUtilities.psm1"
 
 Describe "BuildkitTools.psm1" {
     BeforeAll {
@@ -39,9 +40,12 @@ Describe "BuildkitTools.psm1" {
     }
 
     Context "Install-Buildkit" -Tag "Install-Buildkit" {
-        BeforeAll {
+        BeforeEach {
+            $Script:BuildkitRepo = 'https://github.com/moby/buildkit/releases/download'
+            $Script:TestDownloadPath = "$HOME\Downloads\buildkit-v1.0.0.windows-amd64.tar.gz"
+
             Mock Get-BuildkitLatestVersion -ModuleName 'BuildkitTools' -MockWith { return '1.0.0' }
-            Mock Get-InstallationFile -ModuleName 'BuildkitTools'
+            Mock Get-InstallationFile -ModuleName 'BuildkitTools' -MockWith { return $Script:TestDownloadPath }
             Mock Install-RequiredFeature -ModuleName 'BuildkitTools'
             Mock Register-BuildkitdService -ModuleName 'BuildkitTools'
             Mock Start-BuildkitdService -ModuleName 'BuildkitTools'
@@ -50,11 +54,11 @@ Describe "BuildkitTools.psm1" {
             Mock Get-ChildItem -ModuleName 'BuildkitTools'
             Mock Test-EmptyDirectory  -ModuleName 'BuildkitTools' -MockWith { return $true }
             Mock Install-Buildkit -ModuleName 'BuildkitTools'
-            Mock Test-CheckSum -ModuleName 'BuildkitTools' -MockWith { return $true }
             Mock Remove-Item -ModuleName 'BuildkitTools'
+        }
 
-            $Script:BuildkitRepo = 'https://github.com/moby/buildkit/releases/download'
-            $Script:TestDownloadPath = "$HOME\Downloads\buildkit-v1.0.0.windows-amd64.tar.gz"
+        AfterEach {
+            Remove-Item -Path "TestDrive:\" -Force -ErrorAction Ignore
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -74,26 +78,19 @@ Describe "BuildkitTools.psm1" {
             Install-Buildkit -Force -Confirm:$false
 
             Should -Invoke Uninstall-Buildkit -ModuleName 'BuildkitTools' -Times 0 -Exactly -Scope It
-            Should -Invoke Get-InstallationFile -ModuleName 'BuildkitTools' -ParameterFilter {
-                $Files -like @(
-                    @{
-                        Feature      = "Buildkit"
-                        Uri          = "$Script:BuildkitRepo/v1.0.0/buildkit-v1.0.0.windows-amd64.tar.gz"
-                        Version      = '1.0.0'
-                        DownloadPath = "$Script:TestDownloadPath"
-                    }
-                )
-            }
-
-            Should -Invoke Test-CheckSum -ModuleName 'BuildkitTools' -Times 1 -ParameterFilter {
-                $DownloadedFile -eq "$Script:TestDownloadPath" -and
-                $ChecksumUri -eq "$Script:BuildkitRepo/v1.0.0/buildkit-v1.0.0.windows-amd64.sbom.json"
+            Should -Invoke Get-InstallationFile -ModuleName 'BuildkitTools'  -ParameterFilter {
+                $fileParameters[0].Feature -eq "Buildkit" -and
+                $fileParameters[0].Repo -eq "moby/buildkit" -and
+                $fileParameters[0].Version -eq 'latest' -and
+                $fileParameters[0].DownloadPath -eq "$HOME\Downloads"
+                $fileParameters[0].ChecksumSchemaFile -eq "$ModuleParentPath\Private\schemas\in-toto.sbom.schema.json" -and
+                [string]::IsNullOrWhiteSpace($fileParameters.FileFilterRegEx)
             }
 
             Should -Invoke Install-RequiredFeature -ModuleName 'BuildkitTools' -ParameterFilter {
                 $Feature -eq "Buildkit" -and
                 $InstallPath -eq "$Env:ProgramFiles\Buildkit" -and
-                $DownloadPath -eq "$Script:TestDownloadPath" -and
+                $SourceFile -eq "$Script:TestDownloadPath" -and
                 $EnvPath -eq "$Env:ProgramFiles\Buildkit\bin" -and
                 $cleanup -eq $true
             }
@@ -102,34 +99,22 @@ Describe "BuildkitTools.psm1" {
         }
 
         It "Should call function with user-specified values" {
-            Install-Buildkit -Version '0.2.3' -InstallPath 'TestDrive:\BuildKit' -DownloadPath 'TestDrive:\Downloads' -Force -Confirm:$false
+            $customPath = "TestDrive:\Downloads\buildkit-v0.2.3.windows-amd64.tar.gz"
+            Mock Get-InstallationFile -ModuleName 'BuildkitTools' -MockWith { return $customPath }
+
+            Install-Buildkit -Version '0.2.3' -InstallPath 'TestDrive:\BuildKit' -DownloadPath 'TestDrive:\Downloads' -OSArchitecture "arm64" -Force -Confirm:$false
 
             Should -Invoke Uninstall-Buildkit -ModuleName 'BuildkitTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFile -ModuleName 'BuildkitTools' -ParameterFilter {
-                $Files -like @(
-                    @{
-                        Feature      = "Buildkit"
-                        Uri          = "$Script:BuildkitRepo/v0.2.3/buildkit-v0.2.3.windows-amd64.tar.gz"
-                        Version      = '0.2.3'
-                        DownloadPath = "$HOME\Downloads"
-                    }
-                )
+                $fileParameters[0].Version -eq '0.2.3'
+                $fileParameters[0].OSArchitecture -eq 'arm64'
             }
             Should -Invoke Install-RequiredFeature -ModuleName 'BuildkitTools' -ParameterFilter {
                 $Feature -eq "Buildkit" -and
                 $InstallPath -eq 'TestDrive:\BuildKit' -and
-                $DownloadPath -eq 'TestDrive:\Downloads\buildkit-v0.2.3.windows-amd64.tar.gz' -and
+                $SourceFile -eq "$customPath" -and
                 $EnvPath -eq 'TestDrive:\Buildkit\bin' -and
                 $cleanup -eq $true
-            }
-        }
-
-        It "should throw an error when checksum verification fails" {
-            Mock Test-CheckSum -ModuleName 'BuildkitTools' -MockWith { return $false }
-
-            { Install-Buildkit -Force -Confirm:$false } | Should -Throw "Checksum verification failed for $Script:TestDownloadPath"
-            Should -Invoke Remove-Item -ModuleName 'BuildkitTools' -ParameterFilter {
-                $Path -eq "$Script:TestDownloadPath"
             }
         }
 

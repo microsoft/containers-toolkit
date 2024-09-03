@@ -1,6 +1,6 @@
 ﻿---
 external help file: containers-toolkit-help.xml
-Module Name: containers-toolkit
+Module Name: Containers-Toolkit
 online version:
 schema: 2.0.0
 ---
@@ -16,14 +16,14 @@ Downloads and installs BuildKit.
 ### Install (Default)
 
 ```
-Install-Buildkit [-Version <String>] [-InstallPath <String>] [-DownloadPath <String>] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+Install-Buildkit [-Version <String>] [-InstallPath <String>] [-DownloadPath <String>] [-OSArchitecture <string>] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ### Setup
 
 ```
 Install-Buildkit [-Version <String>] [-InstallPath <String>] [-DownloadPath <String>] [-Setup]
- [-WinCNIPath <String>] [-Force] [-Confirm] [-WhatIf] [<CommonParameters>]
+ [-WinCNIPath <String>] [-OSArchitecture <string>]  [-Force] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -121,6 +121,23 @@ Aliases:
 Required: False
 Position: Named
 Default value: $Env:ProgramFiles\Buildkit
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -OSArchitecture
+
+OS architecture to download files for.
+Default is `$env:PROCESSOR_ARCHITECTURE`
+
+```yaml
+Type: String
+Parameter Sets: Setup
+Aliases:
+
+Required: False
+Position: Named
+Default value:  $env:PROCESSOR_ARCHITECTURE
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

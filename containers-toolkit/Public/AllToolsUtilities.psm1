@@ -1,10 +1,11 @@
-﻿###########################################################################
+###########################################################################
 #                                                                         #
 #   Copyright (c) Microsoft Corporation. All rights reserved.             #
 #                                                                         #
 #   This code is licensed under the MIT License (MIT).                    #
 #                                                                         #
 ###########################################################################
+
 
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
@@ -38,17 +39,17 @@ function Install-ContainerTools {
         [string]
         [ValidateNotNullOrEmpty()]
         [parameter(HelpMessage = "ContainerD version to use")]
-        $ContainerDVersion = (Get-ContainerdLatestVersion),
+        $ContainerDVersion = "latest",
 
         [string]
         [ValidateNotNullOrEmpty()]
         [parameter(HelpMessage = "Buildkit version to use")]
-        $BuildKitVersion = (Get-BuildkitLatestVersion),
+        $BuildKitVersion = "latest",
 
         [string]
         [ValidateNotNullOrEmpty()]
         [parameter(HelpMessage = "nerdctl version to use")]
-        $NerdCTLVersion = (Get-NerdctlLatestVersion),
+        $NerdCTLVersion = "latest",
 
         [String]
         [parameter(HelpMessage = "Path to Install files. Defaults to Program Files")]

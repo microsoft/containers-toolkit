@@ -7,6 +7,8 @@
 ###########################################################################
 
 
+using module "..\Private\CommonToolUtilities.psm1"
+
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
@@ -21,11 +23,19 @@ function Install-WinCNIPlugin {
         ConfirmImpact = 'High'
     )]
     param(
-        [parameter(HelpMessage = "Windows CNI plugin version to use. Defaults to latest version")]
-        [string]$WinCNIVersion,
+        [parameter(HelpMessage = "Windows CNI plugin version to use. Defaults to 'latest'")]
+        [string]$WinCNIVersion = "latest",
 
         [parameter(HelpMessage = "Path to cni folder ~\cni . Not ~\cni\bin")]
         [String]$WinCNIPath,
+
+        [parameter(HelpMessage = "Source of the Windows CNI plugins. Defaults to 'microsoft/windows-container-networking'")]
+        [ValidateSet("microsoft/windows-container-networking", "containernetworking/plugins")]
+        [string]$SourceRepo = "microsoft/windows-container-networking",
+
+        [Parameter(HelpMessage = 'OS architecture to download files for. Default is $env:PROCESSOR_ARCHITECTURE')]
+        [ValidateSet('amd64', '386', "arm", "arm64")]
+        [string]$OSArchitecture = $env:PROCESSOR_ARCHITECTURE,
 
         [Switch]
         [parameter(HelpMessage = "Installs Windows CNI plugins even if the tool already exists at the specified path")]
@@ -80,40 +90,60 @@ function Install-WinCNIPlugin {
             # instead of  https://github.com/containernetworking/plugins/releases.
             # The latter causes an error in nerdctl: "networking setup error has occurred. incompatible CNI versions"
 
-            # Download file from repo
-            $cniZipFile = "windows-container-networking-cni-amd64-v${WinCNIVersion}.zip"
-            $DownloadPath = "$HOME\Downloads\$cniZipFile"
-            $Uri = "https://github.com/microsoft/windows-container-networking/releases/download/v$WinCNIVersion/$cniZipFile"
-            $DownloadParams = @(
-                @{
-                    Feature      = "WinCNIPlugin"
-                    Uri          = $Uri
-                    Version      = $WinCNIVersion
-                    DownloadPath = $DownloadPath
-                }
-            )
-            Get-InstallationFile -Files $DownloadParams
+            Write-Debug ("Downloading Windows CNI plugins from {0}" -f $SourceRepo)
 
-            # Verify downloaded file checksum
-            Write-OutPut "Verifying checksum for $DownloadPath"
-            $checksumUri = "$Uri.sha512"
-            if (-not (Test-CheckSum -DownloadedFile $DownloadPath -ChecksumUri $checksumUri)) {
-                $errMsg = "Checksum verification failed for $DownloadPath"
-                Write-Error $errMsg
+            # File filter for Windows CNI plugins
+            $fileFilterRegEx = $null
 
-                # Clean up downloaded file
-                Write-Warning "Removing downloaded file $DownloadPath"
-                Remove-Item -Path $DownloadPath -Force
-
-                Throw $errMsg
+            if ($SourceRepo -eq "containernetworking/plugins") {
+                # File filter for containernetworking/plugins
+                # Contains files with .tgz extension and the checksum files with .SHA512 and .SHA256 extensions
+                # We use .SHA512 files to verify the integrity of the downloaded files
+                $fileFilterRegEx = ".*tgz(.SHA512)?$"
             }
 
-            # Expand zip file and install Win CNI plugin
-            $WinCNIBin = "$WinCNIPath\bin"
-            Expand-Archive -Path $DownloadPath -DestinationPath $WinCNIBin -Force
-            Remove-Item -Path $DownloadPath -Force -ErrorAction Ignore
+            # Download file from repo
+            $downloadParams = @{
+                ToolName = "WinCNIPlugin"
+                Repository = $SourceRepo
+                Version = $WinCNIVersion
+                OSArchitecture = $OSArchitecture
+                DownloadPath = "$HOME\Downloads\"
+                ChecksumSchemaFile = $null
+                FileFilterRegEx = $fileFilterRegEx
+            }
+            $downloadParamsProperties = [FileDownloadParameters]::new(
+                $downloadParams.ToolName,
+                $downloadParams.Repository,
+                $downloadParams.Version,
+                $downloadParams.OSArchitecture,
+                $downloadParams.DownloadPath,
+                $downloadParams.ChecksumSchemaFile,
+                $downloadParams.FileFilterRegEx
+            )
+            $sourceFile = Get-InstallationFile -FileParameters $downloadParamsProperties
 
-            Write-Output "Windows CNI plugin version $WinCNIVersion successfully installed at $WinCNIPath"
+            if (-not (Test-Path -Path $sourceFile)) {
+                Throw "Couldn't find the downloaded file $sourceFile"
+            }
+
+            $WinCNIBin = "$WinCNIPath\bin"
+            if (-not (Test-Path -Path $WinCNIBin)) {
+                New-Item -Path $WinCNIBin -ItemType Directory -Force -ErrorAction Ignore | Out-Null
+            }
+
+            # Expand archive file
+            $cmdOutput = Invoke-ExecutableCommand -executable "tar.exe" -arguments "-xf `"$sourceFile`" -C `"$WinCNIBin`"" -timeout (60 * 2)
+            if ($cmdOutput.ExitCode -ne 0) {
+                Throw "Failed to expand archive `"$sourceFile`" at `"$WinCNIBin`". Exit code: $($cmdOutput.ExitCode). $($cmdOutput.StandardError.ReadToEnd())"
+            }
+
+            if (Test-Path -Path $sourceFile) {
+                # Remove the downloaded file
+                Remove-Item -Path "$sourceFile" -Force -ErrorAction SilentlyContinue
+            }
+
+            Write-Output "CNI plugin version $WinCNIVersion ($sourceRepo) successfully installed at $WinCNIPath"
         }
         else {
             # Code that should be processed if doing a WhatIf operation
@@ -393,9 +423,9 @@ function Set-DefaultCNIConfig {
 
     process {
         if ($PSCmdlet.ShouldProcess('', "Sets Default CNI config")) {
-            # CurrentEndpointCount   : 1
-            # MaxConcurrentEndpoints : 1
-            # TotalEndpoints
+            # TODO: Default CNI config for containernetworking/plugins
+            # https://www.cni.dev/plugins/current/main/win-bridge/
+            # https://www.cni.dev/plugins/current/main/win-overlay/
             $CNIConfig = @"
 {
 "cniVersion": "$WinCNIVersion",

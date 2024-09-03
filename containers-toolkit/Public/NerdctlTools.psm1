@@ -6,6 +6,7 @@
 #                                                                         #
 ###########################################################################
 
+using module "..\Private\CommonToolUtilities.psm1"
 
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
@@ -37,13 +38,14 @@ function Get-NerdctlDependencies($dependencies) {
 function Install-NerdctlDependencies {
     param(
         [String[]]$Dependencies,
+        [string]$OsArch,
         [Switch]$Force
     )
 
     foreach ($dependency in $Dependencies) {
         $InstallCommand = "Install-$dependency"
         try {
-            & $InstallCommand -Force:$Force -Confirm:$false
+            & $InstallCommand -OSArchitecture $OsArch -Force:$Force -Confirm:$false
         }
         catch {
             Write-Error "Installation failed for $dependency. $_"
@@ -58,8 +60,8 @@ function Install-Nerdctl {
     )]
     param(
         [string]
-        [parameter(HelpMessage = "nerdctl version to use. Defaults to latest version")]
-        $Version,
+        [parameter(HelpMessage = "nerdctl version to use. Defaults to 'latest'")]
+        $Version = "latest",
 
         [String]
         [parameter(HelpMessage = "Path to install nerdctl. Defaults to ~\program files\nerdctl")]
@@ -72,6 +74,11 @@ function Install-Nerdctl {
         [String[]]
         [parameter(HelpMessage = "Specify nerdctl dependencies (All, Containerd, Buildkit, WinCNIPlugin) to install")]
         $Dependencies,
+
+        [string]
+        [Parameter(HelpMessage = 'OS architecture to download files for. Default is $env:PROCESSOR_ARCHITECTURE')]
+        [ValidateSet('amd64', '386', "arm", "arm64")]
+        $OSArchitecture = $env:PROCESSOR_ARCHITECTURE,
 
         [Switch]
         [parameter(HelpMessage = "Installs nerdctl (and its dependecies if specified) even if the tool already exists at the specified path")]
@@ -123,43 +130,34 @@ function Install-Nerdctl {
 
             Write-Output "Downloading and installing nerdctl v$version at $InstallPath"
 
-            # Download file from repo
-            $nerdctlTarFile = "nerdctl-$version-windows-amd64.tar.gz"
-            $DownloadPath = "$DownloadPath\$nerdctlTarFile"
-
             # Download files
-            $baseUri = "https://github.com/containerd/nerdctl/releases/download/v${version}"
-            $DownloadParams = @(
-                @{
-                    Feature      = "nerdctl"
-                    Uri          = "$baseUri/$nerdctlTarFile"
-                    Version      = $version
-                    DownloadPath = $DownloadPath
-                }
-            )
-            Get-InstallationFile -Files $DownloadParams
-
-            # Verify downloaded file checksum
-            Write-OutPut "Verifying checksum for $DownloadPath"
-            $checksumUri = "$baseUri/SHA256SUMS"
-            if (-not (Test-CheckSum -DownloadedFile $DownloadPath -ChecksumUri $checksumUri)) {
-                $errMsg = "Checksum verification failed for $DownloadPath"
-                Write-Error $errMsg
-
-                # Clean up downloaded file
-                Write-Warning "Removing downloaded file $DownloadPath"
-                Remove-Item -Path $DownloadPath -Force
-
-                Throw $errMsg
+            $downloadParams = @{
+                ToolName = "nerdctl"
+                Repository = "containerd/nerdctl"
+                Version = $version
+                OSArchitecture = $OSArchitecture
+                DownloadPath = $DownloadPath
+                ChecksumSchemaFile = $null
+                FileFilterRegEx = $null
             }
+            $downloadParamsProperties = [FileDownloadParameters]::new(
+                $downloadParams.ToolName,
+                $downloadParams.Repository,
+                $downloadParams.Version,
+                $downloadParams.OSArchitecture,
+                $downloadParams.DownloadPath,
+                $downloadParams.ChecksumSchemaFile,
+                $downloadParams.FileFilterRegEx
+            )
+            $sourceFile = Get-InstallationFile -FileParameters $downloadParamsProperties
 
             # Untar and install tool
             $params = @{
-                Feature      = "nerdctl"
-                InstallPath  = $InstallPath
-                DownloadPath = $DownloadPath
-                EnvPath      = $InstallPath
-                cleanup      = $true
+                Feature     = "nerdctl"
+                InstallPath = $InstallPath
+                SourceFile  = $sourceFile
+                EnvPath     = $InstallPath
+                cleanup     = $true
             }
             Install-RequiredFeature @params
 
@@ -167,7 +165,8 @@ function Install-Nerdctl {
             Write-Output "For nerdctl usage: run 'nerdctl -h'`n"
 
             # Install dependencies
-            Install-NerdctlDependencies -Dependencies $dependencies -Force:$true
+            Write-Output "Installing nerdctl dependencies: $toinstall"
+            Install-NerdctlDependencies -Dependencies $dependencies -OsArch $OSArchitecture -Force:$true
         }
         else {
             # Code that should be processed if doing a WhatIf operation

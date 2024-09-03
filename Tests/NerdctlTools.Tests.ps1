@@ -7,6 +7,8 @@
 ###########################################################################
 
 
+using module "..\containers-toolkit\Private\CommonToolUtilities.psm1"
+
 Describe "NerdctlTools.psm1" {
     BeforeAll {
         $RootPath = Split-Path -Parent $PSScriptRoot
@@ -32,9 +34,12 @@ Describe "NerdctlTools.psm1" {
 
     Context "Install-Nerdctl" -Tag "Install-Nerdctl" {
         BeforeAll {
+            $Script:nerdctlRepo = 'https://github.com/containerd/nerdctl/releases/download'
+            $Script:TestDownloadPath = "$HOME\Downloads\nerdctl-7.9.8-windows-amd64.tar.gz"
+
             Mock Get-NerdctlLatestVersion { return '7.9.8' } -ModuleName 'NerdctlTools'
             Mock Uninstall-Nerdctl -ModuleName "NerdctlTools"
-            Mock Get-InstallationFile -ModuleName 'NerdctlTools'
+            Mock Get-InstallationFile -ModuleName 'NerdctlTools' -MockWith { return $Script:TestDownloadPath }
             Mock Install-RequiredFeature -ModuleName 'NerdctlTools'
             Mock Get-Command -ModuleName 'NerdctlTools'
             Mock Get-ChildItem -ModuleName 'NerdctlTools'
@@ -43,11 +48,7 @@ Describe "NerdctlTools.psm1" {
             Mock Install-Buildkit -ModuleName 'NerdctlTools'
             Mock Install-WinCNIPlugin -ModuleName 'NerdctlTools'
             Mock Install-Nerdctl -ModuleName 'NerdctlTools'
-            Mock Test-CheckSum -ModuleName 'NerdctlTools' -MockWith { return $true }
             Mock Remove-Item -ModuleName 'NerdctlTools'
-
-            $Script:nerdctlRepo = 'https://github.com/containerd/nerdctl/releases/download'
-            $Script:TestDownloadPath = "$HOME\Downloads\nerdctl-7.9.8-windows-amd64.tar.gz"
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -68,25 +69,18 @@ Describe "NerdctlTools.psm1" {
 
             Should -Invoke Uninstall-Nerdctl -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFile -ModuleName 'NerdctlTools' -ParameterFilter {
-                $Files -like @(
-                    @{
-                        Feature      = "nerdctl"
-                        Uri          = "$Script:nerdctlRepo/v7.9.8/nerdctl-7.9.8-windows-amd64.tar.gz"
-                        Version      = '7.9.8'
-                        DownloadPath = "$Script:TestDownloadPath"
-                    }
-                )
-            }
-
-            Should -Invoke Test-CheckSum -ModuleName 'NerdctlTools' -Times 1 -ParameterFilter {
-                $DownloadedFile -eq "$Script:TestDownloadPath" -and
-                $ChecksumUri -eq "$Script:nerdctlRepo/v7.9.8/SHA256SUMS"
+                $fileParameters[0].Feature -eq "nerdctl" -and
+                $fileParameters[0].Repo -eq "containerd/nerdctl" -and
+                $fileParameters[0].Version -eq 'latest' -and
+                $fileParameters[0].DownloadPath -eq "$HOME\Downloads"
+                [string]::IsNullOrWhiteSpace($fileParameters.ChecksumSchemaFile) -and
+                $fileParameters[0].FileFilterRegEx -eq $null
             }
 
             Should -Invoke Install-RequiredFeature -ModuleName 'NerdctlTools' -ParameterFilter {
                 $Feature -eq "nerdctl" -and
                 $InstallPath -eq "$Env:ProgramFiles\nerdctl" -and
-                $DownloadPath -eq "$HOME\Downloads\nerdctl-7.9.8-windows-amd64.tar.gz" -and
+                $SourceFile -eq "$Script:TestDownloadPath" -and
                 $EnvPath -eq "$Env:ProgramFiles\nerdctl" -and
                 $cleanup -eq $true
             }
@@ -97,23 +91,23 @@ Describe "NerdctlTools.psm1" {
         }
 
         It "Should call function with user-specified values" {
-            Install-Nerdctl -Version '1.2.3' -InstallPath 'TestDrive:\nerdctl' -DownloadPath 'TestDrive:\Downloads' -Dependencies 'containerd' -Force -Confirm:$false
+            # Mocks
+            $MockDownloadPath = 'TestDrive:\Downloads\nerdctl-1.2.3-windows-amd64.tar.gz'
+            Mock Get-InstallationFile -ModuleName 'NerdctlTools' -MockWith { return $MockDownloadPath }
 
+            # Test
+            Install-Nerdctl -Version '1.2.3' -InstallPath 'TestDrive:\nerdctl' -DownloadPath 'TestDrive:\Downloads' -Dependencies 'containerd' -OSArchitecture "arm64" -Force -Confirm:$false
+
+            # Assertions
             Should -Invoke Uninstall-Nerdctl -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFile -ModuleName 'NerdctlTools' -ParameterFilter {
-                $Files -like @(
-                    @{
-                        Feature      = "nerdctl"
-                        Uri          = "$Script:nerdctlRepo/v1.2.3/nerdctl-1.2.3-windows-amd64.tar.gz"
-                        Version      = '1.2.3'
-                        DownloadPath = "$HOME\Downloads"
-                    }
-                )
+                $fileParameters[0].Version -eq '1.2.3'
+                $fileParameters[0].OSArchitecture -eq 'arm64'
             }
             Should -Invoke Install-RequiredFeature -ModuleName 'NerdctlTools' -ParameterFilter {
                 $Feature -eq "nerdctl"
                 $InstallPath -eq 'TestDrive:\nerdctl'
-                $DownloadPath -eq 'TestDrive:\Downloads\nerdctl-1.2.3-windows-amd64.tar.gz'
+                $SourceFile -eq $MockDownloadPath
                 $EnvPath -eq 'TestDrive:\nerdctl\bin'
                 $cleanup -eq $true
             }
@@ -121,15 +115,6 @@ Describe "NerdctlTools.psm1" {
             Should -Invoke Install-Containerd -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It
             Should -Invoke Install-Buildkit -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
             Should -Invoke Install-WinCNIPlugin -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
-        }
-
-        It "should throw an error when checksum verification fails" {
-            Mock Test-CheckSum -ModuleName 'NerdctlTools' -MockWith { return $false }
-
-            { Install-Nerdctl -Force -Confirm:$false } | Should -Throw "Checksum verification failed for $Script:TestDownloadPath"
-            Should -Invoke Remove-Item -ModuleName 'NerdctlTools' -ParameterFilter {
-                $Path -eq "$Script:TestDownloadPath"
-            }
         }
 
         It "Should uninstall tool if it is already installed" {
