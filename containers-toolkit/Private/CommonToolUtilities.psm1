@@ -72,6 +72,8 @@ $HASH_FUNCTIONS_STR = $HASH_FUNCTIONS -join '|' # SHA1|SHA256|SHA384|SHA512|MD5
 $NERDCTL_CHECKSUM_FILE_PATTERN = "(?<hashfunction>(?:^({0})))" -f ($HASH_FUNCTIONS -join '|')
 $NERDCTL_FILTER_SCRIPTBLOCK_STR = { (("{0}" -match "$NERDCTL_CHECKSUM_FILE_PATTERN") -and "{0}" -notmatch ".*.asc$") }.ToString()
 
+
+
 function Get-LatestToolVersion($repository) {
     try {
         $uri = "https://api.github.com/repos/$repository/releases/latest"
