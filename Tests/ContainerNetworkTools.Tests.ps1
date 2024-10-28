@@ -33,6 +33,7 @@ Describe "ContainerNetworkTools.psm1" {
 
     Context "Install-WinCNIPlugin" -Tag "Install-WinCNIPlugin" {
         BeforeAll {
+            $Script:ToolName = 'WinCNIPlugin'
             $Script:WinCNIRepo = 'https://github.com/microsoft/windows-container-networking/releases/download'
             $Script:MockZipFileName = "windows-container-networking-cni-amd64-v1.0.0.zip"
             $Script:TestDownloadPath = "$HOME\Downloads\$Script:MockZipFileName"
@@ -47,8 +48,7 @@ Describe "ContainerNetworkTools.psm1" {
             Mock Test-EmptyDirectory  -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
             Mock Install-WinCNIPlugin -ModuleName 'ContainerNetworkTools'
             Mock Test-Path -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
-            Mock Invoke-ExecutableCommand -ModuleName 'ContainerNetworkTools' -MockWith {
-                return New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ ExitCode = 0 } }
+            Mock Install-RequiredFeature -ModuleName 'ContainerNetworkTools'
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -69,16 +69,20 @@ Describe "ContainerNetworkTools.psm1" {
 
             Should -Invoke Uninstall-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFile -ModuleName 'ContainerNetworkTools' -ParameterFilter {
-                $fileParameters[0].Feature -eq "WinCNIPlugin" -and
+                $fileParameters[0].Feature -eq "$Script:ToolName" -and
                 $fileParameters[0].Repo -eq "microsoft/windows-container-networking" -and
                 $fileParameters[0].Version -eq 'latest' -and
                 $fileParameters[0].DownloadPath -eq "$HOME\Downloads"
                 [string]::IsNullOrWhiteSpace($fileParameters.ChecksumSchemaFile) -and
                 $fileParameters[0].FileFilterRegEx -eq $null
             }
-            Should -Invoke Invoke-ExecutableCommand -ModuleName 'ContainerNetworkTools' -ParameterFilter {
-                $executable -eq "tar.exe" -and
-                $arguments -eq "-xf `"$Script:TestDownloadPath`" -C `"C:\Program Files\Containerd\cni\bin`""
+            Should -Invoke Install-RequiredFeature -ModuleName 'ContainerNetworkTools' -ParameterFilter {
+                $Feature -eq "$Script:ToolName" -and
+                $InstallPath -eq "$Env:ProgramFiles\Containerd\cni\bin" -and
+                $SourceFile -eq "$Script:TestDownloadPath" -and
+                $EnvPath -eq $null -and
+                $cleanup -eq $true -and
+                $UpdateEnvPath -eq $false
             }
         }
 
@@ -99,9 +103,12 @@ Describe "ContainerNetworkTools.psm1" {
                 $fileParameters[0].OSArchitecture -eq '386' -and
                 $fileParameters[0].FileFilterRegEx -eq ".*tgz(.SHA512)?$"
             }
-            Should -Invoke Invoke-ExecutableCommand -ModuleName 'ContainerNetworkTools' -ParameterFilter {
-                $executable -eq "tar.exe" -and
-                $arguments -eq "-xf `"$HOME\Downloads\$MockZipFileName`" -C `"TestDrive:\WinCNI\bin`""
+            Should -Invoke Install-RequiredFeature -ModuleName 'ContainerNetworkTools' -ParameterFilter {
+                $Feature -eq "$Script:ToolName" -and
+                $InstallPath -eq 'TestDrive:\WinCNI\bin' -and
+                $SourceFile -eq $MockDownloadFilePath -and
+                $cleanup -eq $true -and
+                $UpdateEnvPath -eq $false
             }
         }
 
