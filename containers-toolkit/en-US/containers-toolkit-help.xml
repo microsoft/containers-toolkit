@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <helpItems schema="maml" xmlns="http://msh">
 
   <!-- Get-BuildkitLatestVersion -->
@@ -526,6 +526,18 @@
           <dev:defaultValue>$Env:ProgramFiles\Buildkit</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>OSArchitecture</maml:name>
+          <maml:description>
+            <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>Setup</maml:name>
           <maml:description>
             <maml:para>Register and start buildkitd Service once BuildKit installation is done.</maml:para>
@@ -629,6 +641,18 @@
           <maml:uri />
         </dev:type>
         <dev:defaultValue>$Env:ProgramFiles\Buildkit</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>OSArchitecture</maml:name>
+        <maml:description>
+          <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>Setup</maml:name>
@@ -809,6 +833,18 @@
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>OSArchitecture</maml:name>
+          <maml:description>
+            <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>Setup</maml:name>
           <maml:description>
             <maml:para>Register and start Containerd Service once Containerd installation is done</maml:para>
@@ -888,6 +924,18 @@
           <maml:uri />
         </dev:type>
         <dev:defaultValue>$ENV:ProramFiles\containerd</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>OSArchitecture</maml:name>
+        <maml:description>
+          <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>Setup</maml:name>
@@ -1086,6 +1134,18 @@
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>OSArchitecture</maml:name>
+          <maml:description>
+            <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -1202,6 +1262,18 @@
           <maml:uri />
         </dev:type>
         <dev:defaultValue>Latest version</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>OSArchitecture</maml:name>
+        <maml:description>
+          <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>WhatIf</maml:name>
@@ -1353,6 +1425,18 @@
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>OSArchitecture</maml:name>
+          <maml:description>
+            <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -1434,6 +1518,18 @@
         </dev:type>
         <dev:defaultValue>$ENV:ProramFiles\nerdctl`</dev:defaultValue>
       </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>OSArchitecture</maml:name>
+        <maml:description>
+          <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
+      </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="0" aliases="none">
         <maml:name>Version</maml:name>
         <maml:description>
@@ -1506,6 +1602,31 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Install-WinCNIPlugin</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>OSArchitecture</maml:name>
+          <maml:description>
+            <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>SourceRepo</maml:name>
+          <maml:description>
+            <maml:para>Source of the Windows CNI plugins. Defaults to
+              'microsoft/windows-container-networking'</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>"microsoft/windows-container-networking"</dev:defaultValue>
+        </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="0" aliases="none">
           <maml:name>WinCNIVersion</maml:name>
           <maml:description>
@@ -1606,7 +1727,33 @@
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>OSArchitecture</maml:name>
+        <maml:description>
+          <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>SourceRepo</maml:name>
+        <maml:description>
+          <maml:para>Source of the Windows CNI plugins. Defaults to
+            'microsoft/windows-container-networking'</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>"microsoft/windows-container-networking"</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="1" aliases="none">
         <maml:name>WinCNIPath</maml:name>
         <maml:description>
           <maml:para>Location to install Windows CNI.</maml:para>

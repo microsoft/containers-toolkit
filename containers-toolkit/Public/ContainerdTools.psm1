@@ -6,9 +6,11 @@
 #                                                                         #
 ###########################################################################
 
+using module "..\Private\CommonToolUtilities.psm1"
 
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
+
 
 function Get-ContainerdLatestVersion {
     $latestVersion = Get-LatestToolVersion -Repository "containerd/containerd"
@@ -21,8 +23,8 @@ function Install-Containerd {
         ConfirmImpact = 'High'
     )]
     param(
-        [parameter(HelpMessage = "ContainerD version to use. Defaults to latest version")]
-        [string]$Version,
+        [parameter(HelpMessage = "ContainerD version to use. Defaults to 'latest'")]
+        [string]$Version = "latest",
 
         [parameter(HelpMessage = "Path to install containerd. Defaults to ~\program files\containerd")]
         [string]$InstallPath = "$Env:ProgramFiles\Containerd",
@@ -31,7 +33,11 @@ function Install-Containerd {
         [string]$DownloadPath = "$HOME\Downloads",
 
         [Parameter(HelpMessage = "Register and start Containerd Service")]
-        [switch] $Setup,
+        [switch]$Setup,
+
+        [Parameter(HelpMessage = 'OS architecture to download files for. Default is $env:PROCESSOR_ARCHITECTURE')]
+        [ValidateSet('amd64', '386', "arm", "arm64")]
+        [string]$OSArchitecture = $env:PROCESSOR_ARCHITECTURE,
 
         [Switch]
         [parameter(HelpMessage = "Installs Containerd even if the tool already exists at the specified path")]
@@ -76,43 +82,37 @@ function Install-Containerd {
             $Version = $Version.TrimStart('v')
             Write-Output "Downloading and installing Containerd v$version at $InstallPath"
 
-            $containerdTarFile = "containerd-${version}-windows-amd64.tar.gz"
-            $DownloadPath = "$DownloadPath\$($containerdTarFile)"
-
-            # TODO: Use downloaded file if it exists
             # Download files
-            $Uri = "https://github.com/containerd/containerd/releases/download/v$version/$($containerdTarFile)"
-            $DownloadParams = @(
-                @{
-                    Feature      = "Containerd"
-                    Uri          = $Uri
-                    Version      = $version
-                    DownloadPath = $DownloadPath
-                }
-            )
-            Get-InstallationFile -Files $DownloadParams
+            $downloadParams = @{
+                ToolName           = "Containerd"
+                Repository         = "containerd/containerd"
+                Version            = $version
+                OSArchitecture     = $OSArchitecture
+                DownloadPath       = $DownloadPath
+                ChecksumSchemaFile = $null
 
-            # Verify downloaded file checksum
-            Write-OutPut "Verifying checksum for $DownloadPath"
-            $checksumUri = "$Uri.sha256sum"
-            if (-not (Test-CheckSum -DownloadedFile $DownloadPath -ChecksumUri $checksumUri)) {
-                $errMsg = "Checksum verification failed for $DownloadPath"
-                Write-Error $errMsg
-
-                # Clean up downloaded file
-                Write-Warning "Removing downloaded file $DownloadPath"
-                Remove-Item -Path $DownloadPath -Force
-
-                Throw $errMsg
+                # QUESTION: Do we need them all? Containerd release contains multiple files. containerd, cri-containerd, cri-containerd-cni
+                # Matches eg: containerd-1.7.21-windows-amd64.tar.gz and containerd-1.7.21-windows-amd64.tar.gz.sha256sum
+                FileFilterRegEx    = "(?:^containerd-<__VERSION__>-windows-$OSArchitecture.*.tar.gz(.*)?)$"
             }
+            $downloadParamsProperties = [FileDownloadParameters]::new(
+                $downloadParams.ToolName,
+                $downloadParams.Repository,
+                $downloadParams.Version,
+                $downloadParams.OSArchitecture,
+                $downloadParams.DownloadPath,
+                $downloadParams.ChecksumSchemaFile,
+                $downloadParams.FileFilterRegEx
+            )
+            $sourceFile = Get-InstallationFile -FileParameters $downloadParamsProperties
 
             # Untar and install tool
             $params = @{
-                Feature      = "containerd"
-                InstallPath  = $InstallPath
-                DownloadPath = $DownloadPath
-                EnvPath      = "$InstallPath\bin"
-                cleanup      = $true
+                Feature     = "containerd"
+                InstallPath = $InstallPath
+                SourceFile  = $sourceFile
+                EnvPath     = "$InstallPath\bin"
+                cleanup     = $true
             }
             Install-RequiredFeature @params
 
@@ -222,10 +222,10 @@ function Register-ContainerdService {
 
             # Check containerd service is already registered
             if (Test-ServiceRegistered -Service 'containerd') {
-                Write-Warning (-join @("Containerd service already registered. To re-register the service, "
-                "stop the service by running 'Stop-Service containerd' or 'Stop-ContainerdService', then "
-                "run 'containerd --unregister-service'. Wait for containerd service to be deregistered, "
-                "then re-reun this command."))
+                Write-Warning ( -join @("Containerd service already registered. To re-register the service, "
+                        "stop the service by running 'Stop-Service containerd' or 'Stop-ContainerdService', then "
+                        "run 'containerd --unregister-service'. Wait for containerd service to be deregistered, "
+                        "then re-reun this command."))
                 return
             }
 

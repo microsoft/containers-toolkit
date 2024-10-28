@@ -60,8 +60,9 @@ Downloads container tool (Containerd, BuildKit, nerdctl) asynchronously and inst
 | nerdctlVersion | String | nerdctl version to install | Latest version |
 | InstallPath | String | Path to install container tools | `$Env:ProgramFiles` |
 | DownloadPath | String | Path to download container tools  | `$HOME\Downloads` |
-| Force | Switch | Force install the tools even if they already exists at the specified path |  |
 | RegisterServices | Switch | Register and Start Containerd and Buildkitd services and set up NAT network |  |
+| OSArchitecture | String | OS architecture. Accepts: 'amd64', '386', 'arm', 'arm64'  | $env:PROCESSOR_ARCHITECTURE |
+| Force | Switch | Force install the tools even if they already exists at the specified path |  |
 | Confirm | Switch | Prompts for confirmation before running the cmdlet. For more information, see the following articles: [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference) and [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact) |  |
 | WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
@@ -103,6 +104,7 @@ Once Containerd is installed and added to the environment path, we can get the p
 | InstallPath | String | Path to install Containerd | `$Env:ProgramFiles\containerd` |
 | DownloadPath | String | Path to download Containerd  | `$HOME\Downloads` |
 | Setup | Switch | Register and start Containerd Service once Containerd installation is done  |  |
+| OSArchitecture | String | OS architecture. Accepts: 'amd64', '386', 'arm', 'arm64'  | $env:PROCESSOR_ARCHITECTURE |
 | Force | Switch | Installs Containerd even if the tool already exists at the specified path |  |
 | Confirm | Switch | Prompts for confirmation before running the cmdlet. For more information, see the following articles: [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference) and [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact) |  |
 | WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
@@ -206,6 +208,7 @@ Once BuildKit is installed and added to the environment path, we can get the pat
 |InstallPath | String | Path to install BuildKit | `$Env:ProgramFiles\BuildKit` |
 |DownloadPath | String | Path to download BuildKit | $HOME\Downloads |
 | Setup | Switch | Register and start buildkitd Service once Containerd installation is done  |  |
+| OSArchitecture | String | OS architecture. Accepts: 'amd64', '386', 'arm', 'arm64'  | $env:PROCESSOR_ARCHITECTURE |
 | Force | Switch | Installs Buildkit even if the tool already exists at the specified path |  |
 | Confirm | Switch | Prompts for confirmation before running the cmdlet. For more information, see the following articles: [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference) and [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact) |  |
 | WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
@@ -301,6 +304,7 @@ Downloads Containerd files from [nerdctl releases](https://github.com/containerd
 | InstallPath | String | Path to install nerdctl | $Env:ProgramFiles\nerdctl |
 | DownloadPath | String | Path to download nerdctl  | $HOME\Downloads |
 | Dependencies | String[] | Specify the nerdctl dependencies (All, Containerd, Buildkit, WinCNIPlugin) to install. |  |
+| OSArchitecture | String | OS architecture. Accepts: 'amd64', '386', 'arm', 'arm64'  | $env:PROCESSOR_ARCHITECTURE |
 | Force | Switch | Installs nerdctl even if the tool already exists at the specified path |  |
 | Confirm | Switch | Prompts for confirmation before running the cmdlet. For more information, see the following articles: [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference) and [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact) |  |
 | WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
@@ -349,6 +353,8 @@ Downloads Windows CNI plugin from [windows-container-networking](https://github.
 | -------- | ------- | ------- | ------- |
 | WinCNIVersion | String | Windows CNI version to install | Latest version |
 | WinCNIPath | String | Location to install Windows CNI | Path where Containerd is installed or `$Env:ProgramFiles\Containerd`|
+| OSArchitecture | String | OS architecture. Accepts: 'amd64', '386', 'arm', 'arm64'  | $env:PROCESSOR_ARCHITECTURE |
+| SourceRepo | String | OS architecture. Accepts: "microsoft/windows-container-networking", "containernetworking/plugins"  | "microsoft/windows-container-networking" |
 | Force | Switch | Installs Windows CNI plugins even if the tool already exists at the specified path |  |
 | Confirm | Switch | Prompts for confirmation before running the cmdlet. For more information, see the following articles: [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference) and [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact) |  |
 | WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |

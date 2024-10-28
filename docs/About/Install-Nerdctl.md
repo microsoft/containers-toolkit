@@ -15,7 +15,7 @@ Downloads and installs nerdctl.
 
 ```
 Install-Nerdctl [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>]
- [[-Dependencies] <String[]>] [-Force] [-Confirm] [-WhatIf] [<CommonParameters>]
+ [[-Dependencies] <String[]>] [-OSArchitecture <string>] [-Force] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -121,6 +121,23 @@ Aliases:
 Required: False
 Position: 1
 Default value: $ENV:ProramFiles\nerdctl`
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -OSArchitecture
+
+OS architecture to download files for.
+Default is `$env:PROCESSOR_ARCHITECTURE`
+
+```yaml
+Type: String
+Parameter Sets: Setup
+Aliases:
+
+Required: False
+Position: Named
+Default value:  $env:PROCESSOR_ARCHITECTURE
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

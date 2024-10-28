@@ -14,7 +14,7 @@ Downloads and installs Windows CNI plugin.
 ## SYNTAX
 
 ```
-Install-WinCNIPlugin [[-WinCNIVersion] <String>] [[-WinCNIPath] <String>] [-Force] [-Confirm] [-WhatIf]
+Install-WinCNIPlugin [[-WinCNIVersion] <String>] [[-WinCNIPath] <String>] [-OSArchitecture <string>] [-SourceRepo <string>] [-Force] [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 
@@ -73,6 +73,40 @@ Aliases:
 Required: False
 Position: Named
 Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -OSArchitecture
+
+OS architecture to download files for.
+Default is `$env:PROCESSOR_ARCHITECTURE`
+
+```yaml
+Type: String
+Parameter Sets: Setup
+Aliases:
+
+Required: False
+Position: Named
+Default value:  $env:PROCESSOR_ARCHITECTURE
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -SourceRepo
+
+Source of the Windows CNI plugins.
+Defaults to 'microsoft/windows-container-networking'
+
+```yaml
+Type: String
+Parameter Sets: "microsoft/windows-container-networking", "containernetworking/plugins"
+Aliases:
+
+Required: False
+Position: Named
+Default value: "microsoft/windows-container-networking"
 Accept pipeline input: False
 Accept wildcard characters: False
 ```

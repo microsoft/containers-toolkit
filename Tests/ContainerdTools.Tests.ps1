@@ -41,8 +41,11 @@ Describe "ContainerdTools.psm1" {
 
     Context "Install-Containerd" -Tag "Install-Containerd" {
         BeforeAll {
+            $Script:ContainerdRepo = 'https://github.com/containerd/containerd/releases/download'
+            $Script:TestDownloadPath = "$HOME\Downloads\containerd-1.0.0-windows-amd64.tar.gz"
+
             Mock Get-ContainerdLatestVersion { return '1.0.0' } -ModuleName 'ContainerdTools'
-            Mock Get-InstallationFile -ModuleName 'ContainerdTools'
+            Mock Get-InstallationFile -ModuleName 'ContainerdTools' -MockWith { return $Script:TestDownloadPath }
             Mock Install-RequiredFeature -ModuleName 'ContainerdTools'
             Mock Uninstall-Containerd -ModuleName "ContainerdTools"
             Mock Register-ContainerdService -ModuleName 'ContainerdTools'
@@ -51,11 +54,7 @@ Describe "ContainerdTools.psm1" {
             Mock Get-ChildItem -ModuleName 'ContainerdTools'
             Mock Test-EmptyDirectory  -ModuleName 'ContainerdTools' -MockWith { return $true }
             Mock Install-Containerd -ModuleName 'ContainerdTools'
-            Mock Test-CheckSum -ModuleName 'ContainerdTools' -MockWith { return $true }
             Mock Remove-Item -ModuleName 'ContainerdTools'
-
-            $Script:ContainerdRepo = 'https://github.com/containerd/containerd/releases/download'
-            $Script:TestDownloadPath = "$HOME\Downloads\containerd-1.0.0-windows-amd64.tar.gz"
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -76,23 +75,17 @@ Describe "ContainerdTools.psm1" {
 
             Should -Invoke Uninstall-Containerd -ModuleName 'ContainerdTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFile -ModuleName 'ContainerdTools' -ParameterFilter {
-                $Files -like @(
-                    @{
-                        Feature      = "Containerd"
-                        Uri          = "$Script:ContainerdRepo/v1.0.0/containerd-1.0.0-windows-amd64.tar.gz"
-                        Version      = '1.0.0'
-                        DownloadPath = "$Script:TestDownloadPath"
-                    }
-                )
-            }
-            Should -Invoke Test-CheckSum -ModuleName 'ContainerdTools' -ParameterFilter {
-                $DownloadedFile -eq "$Script:TestDownloadPath" -and
-                $ChecksumUri -eq "$Script:ContainerdRepo/v1.0.0/containerd-1.0.0-windows-amd64.tar.gz.sha256sum"
+                ($fileParameters[0].Feature -eq "Containerd") -and
+                ($fileParameters[0].Repo -eq "containerd/containerd") -and
+                ($fileParameters[0].Version -eq 'latest') -and
+                ($fileParameters[0].DownloadPath -eq "$HOME\Downloads") -and
+                [string]::IsNullOrWhiteSpace($fileParameters.ChecksumSchemaFile) -and
+                ($fileParameters[0].FileFilterRegEx -eq "(?:^containerd-<__VERSION__>-windows-amd64.*.tar.gz(.*)?)$")
             }
             Should -Invoke Install-RequiredFeature -ModuleName 'ContainerdTools' -ParameterFilter {
                 $Feature -eq "Containerd" -and
                 $InstallPath -eq "$Env:ProgramFiles\Containerd" -and
-                $DownloadPath -eq "$Script:TestDownloadPath" -and
+                $SourceFile -eq "$Script:TestDownloadPath" -and
                 $EnvPath -eq "$Env:ProgramFiles\Containerd\bin" -and
                 $cleanup -eq $true
             }
@@ -102,34 +95,20 @@ Describe "ContainerdTools.psm1" {
         }
 
         It "Should call function with user-specified values" {
-            Install-Containerd -Version '1.2.3' -InstallPath 'TestDrive:\Containerd' -DownloadPath 'TestDrive:\Downloads' -Force -Confirm:$false
+            Install-Containerd -Version '1.2.3' -InstallPath 'TestDrive:\Containerd' -DownloadPath 'TestDrive:\Downloads' -OSArchitecture "arm64" -Force -Confirm:$false
 
             Should -Invoke Uninstall-Containerd -ModuleName 'ContainerdTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFile -ModuleName 'ContainerdTools' -ParameterFilter {
-                $Files -like @(
-                    @{
-                        Feature      = "Containerd"
-                        Uri          = "$Script:ContainerdRepo/v1.2.3/containerd-1.2.3-windows-amd64.tar.gz"
-                        Version      = '1.2.3'
-                        DownloadPath = "$HOME\Downloads"
-                    }
-                )
+                $fileParameters[0].Version -eq '1.2.3' -and
+                $fileParameters[0].OSArchitecture -eq 'arm64' -and
+                $fileParameters[0].FileFilterRegEx -eq "(?:^containerd-<__VERSION__>-windows-arm64.*.tar.gz(.*)?)$"
             }
             Should -Invoke Install-RequiredFeature -ModuleName 'ContainerdTools' -ParameterFilter {
                 $Feature -eq "Containerd"
                 $InstallPath -eq 'TestDrive:\Containerd' -and
-                $DownloadPath -eq 'TestDrive:\Downloads\containerd-1.2.3-windows-amd64.tar.gz'
+                $SourceFile -eq 'TestDrive:\Downloads\containerd-1.2.3-windows-arm64.tar.gz' -and
                 $EnvPath -eq 'TestDrive:\Containerd\bin'
                 $cleanup -eq $true
-            }
-        }
-
-        It "should throw an error when checksum verification fails" {
-            Mock Test-CheckSum -ModuleName 'ContainerdTools' -MockWith { return $false }
-
-            { Install-Containerd -Force -Confirm:$false } | Should -Throw "Checksum verification failed for $Script:TestDownloadPath"
-            Should -Invoke Remove-Item -ModuleName 'ContainerdTools' -ParameterFilter {
-                $Path -eq "$Script:TestDownloadPath"
             }
         }
 

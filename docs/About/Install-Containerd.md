@@ -1,4 +1,4 @@
----
+﻿---
 external help file: Containers-Toolkit-help.xml
 Module Name: Containers-Toolkit
 online version:
@@ -14,8 +14,8 @@ Downloads and installs Containerd.
 ## SYNTAX
 
 ```
-Install-Containerd [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-Setup] [-Force]
- [-Confirm] [-WhatIf] [<CommonParameters>]
+Install-Containerd [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-Setup] [-OSArchitecture <string>] [-Force]
+ [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -113,6 +113,23 @@ Aliases:
 Required: False
 Position: 1
 Default value:  $ENV:ProramFiles\containerd
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -OSArchitecture
+
+OS architecture to download files for.
+Default is `$env:PROCESSOR_ARCHITECTURE`
+
+```yaml
+Type: String
+Parameter Sets: Setup
+Aliases:
+
+Required: False
+Position: Named
+Default value:  $env:PROCESSOR_ARCHITECTURE
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
