@@ -15,9 +15,15 @@ The script is a PowerShell script that takes two parameters:
 The path to the module manifest file.
 Defaults to the first containers-toolkit.psd1 file found in the repository.
 
-.PARAMETER ReleaseType
-The type of release to perform.
-Defaults to 'patch'.
+.PARAMETER Version
+The new version number to update the module manifest file to.
+
+.PARAMETER Prerelease
+Pre-release version string. Defaults to empty string.
+Examples of supported Prerelease string are: -alpha, -alpha1, -BETA, -update20171020
+
+.PARAMETER ReleaseNotes
+Release notes for the new version. Defaults to empty string.
 #>
 
 [CmdletBinding()]
@@ -26,45 +32,21 @@ param (
     [ValidateScript({ Test-Path $_ -PathType Leaf })]
     [String]$ManifestPath = (Get-ChildItem -Recurse -Filter "containers-toolkit.psd1").FullName,
 
+    [Parameter(Mandatory = $true)]
+    [String]$Version,
+
     [Parameter(Mandatory = $false)]
-    [ValidateSet('major', 'minor', 'patch')]
-    [String]$ReleaseType = 'patch'
+    [String]$Prerelease,
+
+    [Parameter(Mandatory = $false)]
+    [String]$ReleaseNotes
 )
 
 $Script:ManifestPath = $ManifestPath
-$Script:ReleaseType = $ReleaseType
+$Script:Version = $Version
+$Script:ReleaseNotes = $ReleaseNotes
+$Script:Prerelease = $Prerelease
 
-function Get-NewVersion {
-    [version]$currentVersion = (Get-Module -ListAvailable -Name $Script:ManifestPath).Version
-
-    $Major = $currentVersion.Major
-    $Minor = $currentVersion.Minor
-    $Build = $currentVersion.Build
-
-    switch ($Script:ReleaseType) {
-        # MAJOR version is increased for incompatible API changes.
-        'major' {
-            $Major++
-            $Minor = 0
-            $Build = 0
-        }
-        # MINOR version is increased for backward-compatible feature additions.
-        'minor' {
-            $Minor++
-            $Build = 0
-        }
-        # PATCH version is increased for backward-compatible bug fixes.
-        'patch' {
-            $Build++
-        }
-        Default {
-            Write-Error "Invalid release type specified: '$Script:ReleaseType'"
-            exit 1
-        }
-    }
-
-    return (New-Object Version -ArgumentList $major, $minor, $build).ToString()
-}
 
 function Update-CTKModuleManifest {
     [CmdletBinding(
@@ -74,23 +56,23 @@ function Update-CTKModuleManifest {
     param()
 
     begin {
-        $NewSemVer = Get-NewVersion
-        $WhatIfMessage = "Module version will be updated to version $NewSemVer"
+        $WhatIfMessage = "Module version will be updated to version $Script:Version"
     }
 
     process {
         if ($PSCmdlet.ShouldProcess($Script:ManifestPath, $WhatIfMessage)) {
             $Params = @{
                 Path          = $manifestPath
-                ModuleVersion = $NewSemVer
-                LicenseUri    = "https://github.com/microsoft/containers-toolkit/blob/v$NewSemVer/LICENSE"
+                ModuleVersion = $Script:Version
+                LicenseUri    = "https://github.com/microsoft/containers-toolkit/blob/v$Script:Version/LICENSE"
+                ReleaseNotes  = $Script:ReleaseNotes
+                Prerelease    = $Script:Prerelease
             }
+
             Update-ModuleManifest @Params
 
             # Test the manifest script is valid
             Test-ModuleManifest -Path $manifestPath | Out-Null
-
-            return $NewSemVer
         }
         else {
             # Code that should be processed if doing a WhatIf operation

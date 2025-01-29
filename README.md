@@ -62,6 +62,12 @@ To use the module, fork/clone the repository to your local machine and [setup yo
 
 ## Usage
 
+> [!IMPORTANT] 
+> All the Containers-Toolkit files, including \*.ps1, \*.psd1, \*.psm1, and \*.ps1xml, have been
+> code signed. This means that you will be able to run the module in a PowerShell session
+> where the execution policy is set to `AllSigned` or `RemoteSigned`.
+> To learn more about PowerShell execution policies, see [about_Execution_Policies](https://go.microsoft.com/fwlink/?LinkID=135170).
+
 ### Get the module details
 
 ```PowerShell

@@ -21,6 +21,14 @@ on:
           - minor
           - patch
 
+      # https://learn.microsoft.com/en-us/powershell/gallery/concepts/module-prerelease-support?view=powershellget-3.x#identifying-a-module-version-as-a-prerelease
+      prerelease:
+        description: "Pre-release version string. Examples of supported Prerelease string are: -alpha, -alpha1, -BETA, -update20171020"
+        required: false
+        default: ""
+        type: string
+
+
 env:
   MODULE_DIR: .\containers-toolkit
   ROOT_DIR: .\
@@ -55,13 +63,40 @@ jobs:
             Install-Module $missingModules -ErrorAction Stop -AllowClobber -SkipPublisherCheck -Force
           }
 
-      - name: Update module version
-        id: update-version
+      # Get the module version
+      - name: Get new version
+        id: get-version
         shell: pwsh
         run: |
-          $NewSemVer = .\build\scripts\update-ctkmanifest.ps1 -ReleaseType ${{ inputs.release-type }}
+          $NewSemVer = .\build\scripts\get-newversion.ps1 -ReleaseType ${{ inputs.release-type }}
           echo "NEW_VERSION=$NewSemVer" >> $env:GITHUB_OUTPUT
 
+      # Generate release notes
+      - name: Generate release note from template
+        id: generate-release-notes
+        shell: pwsh
+        run: |
+          $NewSemVer = "${{ steps.get-version.outputs.NEW_VERSION }}"
+          $releaseNotes = [IO.File]::ReadAllText(".\build\hacks\release-notes-template.md")
+
+          if ([string]::IsNullOrWhiteSpace("${{ inputs.prerelease }}")) {
+              $releaseNotes = $releaseNotes -replace "__NEW_VERSION__", $NewSemVer
+          } else {
+              $releaseNotes = $releaseNotes -replace '"__NEW_VERSION__"', "'$NewSemVer' -AllowPrerelease"
+          }
+
+          $releaseNotes | Out-File -FilePath ./release-note.txt -Encoding utf8 -Force
+
+      # Update the manifest: version, release notes, prerelease (if any)
+      - name: Update CTK module manifest
+        id: update-manifest
+        shell: pwsh
+        run: |
+          $NewSemVer = "${{ steps.get-version.outputs.NEW_VERSION }}"
+          $ReleaseNotes = Get-Content -Path .\release-note.txt -Raw
+          $NewSemVer = .\build\scripts\update-ctkmanifest.ps1 -Version $NewSemVer -Prerelease "${{ inputs.prerelease }}" -ReleaseNotes ''
+
+      # TODO: Use ESRP to sign the scripts
       - name: Sign and archive signed module scripts
         uses: ./.github/actions/sign-scripts
         with:
@@ -77,14 +112,7 @@ jobs:
           AKVTenantId: ${{ secrets.AzureKeyVaultTenantId }}
           AKVCertificate: ${{ secrets.AzureKeyVaultCertificate }}
 
-      - name: Generate release note from template
-        shell: pwsh
-        run: |
-          $NewSemVer="${{ steps.update-version.outputs.NEW_VERSION }}"
-          $releaseNotes = [IO.File]::ReadAllText(".\build\hacks\release-notes-template.md")
-          $releaseNotes = $releaseNotes -replace "__NEW_VERSTION__", $NewSemVer
-          $releaseNotes | Out-File -FilePath ./release-note.txt -Encoding utf8 -Force
-
+      # Create GitHub release
       - name: Create release
         shell: pwsh
         env:
@@ -95,12 +123,13 @@ jobs:
           Compress-Archive -Path @(".\containers-toolkit\","LICENSE") -DestinationPath "$outputDir" -Update
 
           # Get new version tag
-          $tag="${{ steps.update-version.outputs.NEW_VERSION }}"
+          $tag="${{ steps.get-version.outputs.NEW_VERSION }}"
           $vtag = "v${tag}"
 
           # Create release
           gh release create -F ./release-note.txt --draft --title "${vtag}" "${vtag}" "$outputDir"
 
+      # Publish the module to PSGallery
       - name: Publish containers-toolkit to PS Gallery
         shell: pwsh
         run: |
@@ -109,5 +138,5 @@ jobs:
       - name: Post results
         shell: pwsh
         run: |
-          $tag="${{ steps.update-version.outputs.NEW_VERSION }}"
+          $tag="${{ steps.get-version.outputs.NEW_VERSION }}"
           echo ":rocket: Successfully released Containers.Toolkit v$tag" >> $env:GITHUB_STEP_SUMMARY
