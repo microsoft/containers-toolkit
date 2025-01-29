@@ -26,6 +26,7 @@
 Containers-Toolkit is a Windows PowerShell module for downloading, installing, and configuring Containerd, Buildkit, nerdctl, and Windows CNI plugins for container networks. It also allows you to get a list of the container tools and their installation statuses.
 
 Configurations done with these functions are default configurations that allow you to get started with interacting with the tools. Further configurations may be necessary.
+
 You can find documentation for these functions here: [Containers-Toolkit Documentation](https://github.com/microsoft/containers-toolkit/tree/main/docs/command-reference.md)
 
 ## Prerequisites
@@ -48,13 +49,47 @@ You can find documentation for these functions here: [Containers-Toolkit Documen
 
 ### Download signed source files
 
-> Coming soon
+1. Download source files
+
+    ```PowerShell
+    Invoke-WebRequest -Uri "https://github.com/microsoft/containers-toolkit/releases/download/__NEW_VERSION__/containers-toolkit-__NEW_VERSION__.tar.gz" -OutFile "containers-toolkit.tar.gz"
+    ```
+
+1. Verify the signature
+
+    ```PowerShell
+    $HASH_VALUE = "__HASH_VALUE__"
+    (Get-FileHash -Algorithm SHA256 containers-toolkit.tar.gz).Hash -eq $HASH_VALUE
+    ```
+
+1. Expand the tar file
+
+    ```PowerShell
+    $ModulePath = "$env:USERPROFILE\Documents\WindowsPowerShell\Modules"
+    if (!(Test-Path -Path $ModulePath)) {
+        New-Item -ItemType Directory -Path $ModulePath | Out-Null
+    }
+    tar.exe -xvf containers-toolkit.tar.gz -C $ModulePath
+    Remove-Item -Path containers-toolkit.tar.gz -Force
+    ```
+
+1. Unblock the files
+
+    ```PowerShell
+    Get-ChildItem -Path $ModulePath -Recurse | Unblock-File
+    ```
 
 ### Downloading the source code from Containers-Toolkit repository
 
 To use the module, fork/clone the repository to your local machine and [setup your development environment](./CONTRIBUTING.md#setup-development-environment)
 
 ## Usage
+
+> [!IMPORTANT]  
+> All the Containers-Toolkit files, including \*.ps1, \*.psd1, \*.psm1, and \*.ps1xml, have been
+> code signed. This means that you will be able to run the module in a PowerShell session
+> where the execution policy is set to `AllSigned` or `RemoteSigned`.  
+> To learn more about PowerShell execution policies, see [about_Execution_Policies](https://go.microsoft.com/fwlink/?LinkID=135170).
 
 ### Get the module details
 
@@ -85,13 +120,13 @@ Get-Command -Module containers-toolkit
     Get-Help Install-Containerd
     ```
 
-2. List container tools (Containerd, BuildKit, and nerdctl) install status
+1. List container tools (Containerd, BuildKit, and nerdctl) install status
 
     ```PowerShell
     Show-ContainerTools
     ```
 
-3. Installs Containerd version 1.7.7 at 'C:\Test\Path\containerd' and adds 'C:\Test\Path\containerd' in the environment path.
+1. Installs Containerd version 1.7.7 at 'C:\Test\Path\containerd' and adds 'C:\Test\Path\containerd' in the environment path.
 
     ```powershell
     Install-Containerd -Version "1.7.7" -InstallPath 'C:\Test\Path\Containerd'
