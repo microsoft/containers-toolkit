@@ -20,6 +20,7 @@
         "/-\\w+\\b/g", // FIXME: PowerShell Cmdlets/function parameter names
         "/\\b\\w+[./]\\w+\\b/g", // paths //  FIXME: (Note: Does not work for \ in paths)
         "about_CommonParameters",
+        "about_Execution_Policies",
         "about_Preference_Variables",
         "CIDR",
         "Containers[\\s\\.\\-]ToolKit/gi",

@@ -136,13 +136,13 @@ Note that the HostNetworkingService module is available only when the Hyper-V Wi
     PrivateData       = @{
         PSData = @{
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags                       = 'Containerd', 'Buildkit', 'nerdctl', 'Windows Containers', 'Container Tools'
+            Tags                       = 'Containerd', 'Buildkit', 'nerdctl', 'CNI', 'WindowsContainers', 'ContainerTools'
 
             # A URL to the license for this module.
-            LicenseUri                 = 'https://raw.githubusercontent.com/microsoft/containers-toolkit/main/LICENSE'
+            LicenseUri                 = 'https://raw.githubusercontent.com/microsoft/containers-toolkit/refs/heads/main/LICENSE'
 
             # A URL to the main website for this project.
-            ProjectUri                 = 'https://github.com/microsoft/containers-toolkit'
+            ProjectUri                 = 'https://github.com/microsoft/containers-toolkit.git'
 
             # A URL to an icon representing this module.
             # IconUri = ''
@@ -164,7 +164,7 @@ Note that the HostNetworkingService module is available only when the Hyper-V Wi
     } # End of PrivateData hashtable
 
     # HelpInfo URI of this module
-    # HelpInfoURI = ''
+    HelpInfoURI = 'https://github.com/microsoft/containers-toolkit/blob/main/README.md'
 
     # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
     # DefaultCommandPrefix = ''
