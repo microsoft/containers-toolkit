@@ -94,11 +94,6 @@ Write-Output "Importing modules"
 Import-Module PowerShellGet # Needed to avoid error: "CommandNotFoundException: Could not find Command Install-Module"
 Import-Module Pester -Force
 
-if (!(Get-Module -ListAvailable -Name ThreadJob)) {
-    Install-Module -Name ThreadJob -Force
-}
-Import-Module -Name ThreadJob -Force
-
 #######################################################
 ################### DISCONVER TESTS ###################
 #######################################################

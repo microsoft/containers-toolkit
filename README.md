@@ -32,12 +32,6 @@ You can find documentation for these functions here: [Containers-Toolkit Documen
 
 1. PowerShell: Minimum Version 7
 
-1. `ThreadJob` module
-
-    ```powershell
-    Install-Module -Name ThreadJob -Force
-    ```
-
 1. `HNS` module
 
     To install the HNS module, follow the [instructions here](./docs/FAQs.md#2-new-hnsnetwork-command-does-not-exist)
@@ -123,7 +117,7 @@ Get-Command -Module containers-toolkit
     Enable-WindowsOptionalFeature -Online -FeatureName '<Feature-Name-Here>' -All -NoRestart
     ```
 
-1. Requires PowerShell modules [HNS](https://raw.githubusercontent.com/microsoft/SDN/master/Kubernetes/windows/hns.v2.psm1) and [ThreadJob](https://www.powershellgallery.com/packages/ThreadJob)
+1. Requires PowerShell modules [HNS](https://raw.githubusercontent.com/microsoft/SDN/master/Kubernetes/windows/hns.v2.psm1)
 
 ## FAQs
 
