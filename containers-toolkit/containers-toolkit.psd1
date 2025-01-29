@@ -136,7 +136,7 @@ Note that the HostNetworkingService module is available only when the Hyper-V Wi
     PrivateData       = @{
         PSData = @{
             # Tags applied to this module. These help with module discovery in online galleries.
-            Tags                       = 'Containerd', 'Buildkit', 'nerdctl', 'Windows Containers', 'Container Tools'
+            Tags                       = 'Containerd', 'Buildkit', 'nerdctl', 'CNI', 'Windows Containers', 'Container Tools'
 
             # A URL to the license for this module.
             LicenseUri                 = 'https://raw.githubusercontent.com/microsoft/containers-toolkit/main/LICENSE'

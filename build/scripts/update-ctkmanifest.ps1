@@ -15,9 +15,15 @@ The script is a PowerShell script that takes two parameters:
 The path to the module manifest file.
 Defaults to the first containers-toolkit.psd1 file found in the repository.
 
-.PARAMETER ReleaseType
-The type of release to perform.
-Defaults to 'patch'.
+.PARAMETER Version
+The new version number to update the module manifest file to.
+
+.PARAMETER Prerelease
+Pre-release version string. Defaults to empty string.
+Examples of supported Prerelease string are: -alpha, -alpha1, -BETA, -update20171020
+
+.PARAMETER ReleaseNotesPath
+Path to the release notes. Defaults to empty string.
 #>
 
 [CmdletBinding()]
@@ -26,45 +32,21 @@ param (
     [ValidateScript({ Test-Path $_ -PathType Leaf })]
     [String]$ManifestPath = (Get-ChildItem -Recurse -Filter "containers-toolkit.psd1").FullName,
 
+    [Parameter(Mandatory = $true)]
+    [String]$Version,
+
     [Parameter(Mandatory = $false)]
-    [ValidateSet('major', 'minor', 'patch')]
-    [String]$ReleaseType = 'patch'
+    [String]$Prerelease,
+
+    [Parameter(Mandatory = $false)]
+    [String]$ReleaseNotesPath
 )
 
-$Script:ManifestPath = $ManifestPath
-$Script:ReleaseType = $ReleaseType
+Set-Variable -Name ManifestPath -Value $ManifestPath -Scope Script -Force
+Set-Variable -Name Version -Value $Version -Scope Script -Force
+Set-Variable -Name ReleaseNotesPath -Value $ReleaseNotesPath -Scope Script -Force
+Set-Variable -Name Prerelease -Value $Prerelease -Scope Script -Force
 
-function Get-NewVersion {
-    [version]$currentVersion = (Get-Module -ListAvailable -Name $Script:ManifestPath).Version
-
-    $Major = $currentVersion.Major
-    $Minor = $currentVersion.Minor
-    $Build = $currentVersion.Build
-
-    switch ($Script:ReleaseType) {
-        # MAJOR version is increased for incompatible API changes.
-        'major' {
-            $Major++
-            $Minor = 0
-            $Build = 0
-        }
-        # MINOR version is increased for backward-compatible feature additions.
-        'minor' {
-            $Minor++
-            $Build = 0
-        }
-        # PATCH version is increased for backward-compatible bug fixes.
-        'patch' {
-            $Build++
-        }
-        Default {
-            Write-Error "Invalid release type specified: '$Script:ReleaseType'"
-            exit 1
-        }
-    }
-
-    return (New-Object Version -ArgumentList $major, $minor, $build).ToString()
-}
 
 function Update-CTKModuleManifest {
     [CmdletBinding(
@@ -74,23 +56,33 @@ function Update-CTKModuleManifest {
     param()
 
     begin {
-        $NewSemVer = Get-NewVersion
-        $WhatIfMessage = "Module version will be updated to version $NewSemVer"
+        $moduleVersion = "$Version-$Prerelease"
+        $WhatIfMessage = "Module version will be updated to version $Version"
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess($Script:ManifestPath, $WhatIfMessage)) {
-            $Params = @{
+        if ($PSCmdlet.ShouldProcess($ManifestPath, $WhatIfMessage)) {
+            Write-Information -MessageData "Updating module version to '$moduleVersion' in manifest file '$ManifestPath'" -InformationAction Continue
+
+            # Get release notes
+            $ReleaseNotes = if ($ReleaseNotesPath) { Get-Content -Path $ReleaseNotesPath -Raw } else { '' }
+            $ReleaseNotes = if ($ReleaseNotesPath) { Get-Content -Path $ReleaseNotesPath -Raw } else { '' }
+
+            $ModuleTags = @("Windows Containers", "Containers-Toolkit", "containerd", "buildkit", "nerdctl", "cni")
+            $params = @{
                 Path          = $manifestPath
-                ModuleVersion = $NewSemVer
-                LicenseUri    = "https://github.com/microsoft/containers-toolkit/blob/v$NewSemVer/LICENSE"
+                ModuleVersion = $Version
+                LicenseUri    = "https://github.com/microsoft/containers-toolkit/blob/v$moduleVersion/LICENSE"
+                ReleaseNotes  = $ReleaseNotes
+                Prerelease    = $Prerelease
+                Tags          = $ModuleTags
             }
-            Update-ModuleManifest @Params
+            Update-ModuleManifest @params
 
             # Test the manifest script is valid
             Test-ModuleManifest -Path $manifestPath | Out-Null
 
-            return $NewSemVer
+            return $moduleVersion
         }
         else {
             # Code that should be processed if doing a WhatIf operation

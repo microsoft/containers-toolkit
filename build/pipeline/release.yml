@@ -1,0 +1,23 @@
+trigger:
+  branches:
+    include:
+      - "release/*" # Only trigger on release branches like release/1.0, release/2.0, etc.
+
+stages:
+  - stage: Build
+    displayName: "Build Artifacts"
+    jobs:
+      - job: BuildJob
+        displayName: "Build the Application"
+        pool:
+          vmImage: "ubuntu-latest"
+        steps:
+          - task: Checkout@1
+            displayName: "Checkout code from GitHub"
+
+          - task: PublishBuildArtifacts@1
+            displayName: "Publish Artifacts"
+            inputs:
+              pathToPublish: "$(Build.ArtifactStagingDirectory)/_microsoft_containers-toolkit"
+              artifactName: "release-artifact"
+              publishLocation: "Container"
