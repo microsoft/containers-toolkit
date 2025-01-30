@@ -354,6 +354,13 @@ function Uninstall-Buildkit {
             $Path = Get-DefaultInstallPath -Tool $tool
         }
 
+        # If we are not purging, we are uninstalling from the bin directory
+        # that contains the buildkit binaries, buildkit/bin
+        $path = $path.TrimEnd("\")
+        if (-not $Purge -and (-not $path.EndsWith("\bin"))) {
+            $path = $path.Trim() + "\bin"
+        }
+
         $WhatIfMessage = "Buildkit will be uninstalled from '$path' and buildkitd service will be stopped and unregistered."
         if ($Purge) {
             $WhatIfMessage += " Buildkit program data will also be removed."
@@ -376,7 +383,8 @@ function Uninstall-Buildkit {
             }
 
             if (!$consent) {
-                Throw "$tool uninstallation cancelled."
+                Write-Warning "$tool uninstallation cancelled."
+                return
             }
 
             Write-Warning "Uninstalling preinstalled $tool at the path '$path'.`n$WhatIfMessage"
