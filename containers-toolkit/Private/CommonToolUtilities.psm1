@@ -252,10 +252,10 @@ function Get-InstallationFile {
             }
 
             # Verify that both the archive and checksum files were downloaded
-            if (-not (Test-Path $archiveFile -ErrorAction SilentlyContinue)) {
+            if (-not (Test-Path $archiveFile)) {
                 Throw "Archive file not found in the release assets: `'$archiveFile`""
             }
-            if (-not (Test-Path $checksumFile -ErrorAction SilentlyContinue)) {
+            if (-not (Test-Path $checksumFile)) {
                 Throw "Checksum file not found in the release assets: `'$checksumFile`""
             }
 
@@ -274,7 +274,7 @@ function Get-InstallationFile {
             }
 
             # Remove the checksum file after verification
-            if (Test-Path -Path $checksumFile -ErrorAction SilentlyContinue) {
+            if (Test-Path -Path $checksumFile) {
                 Remove-Item -Path $checksumFile -Force -ErrorAction SilentlyContinue
             }
 
@@ -282,7 +282,7 @@ function Get-InstallationFile {
                 Write-Error "Checksum verification failed for $archiveFile. The file will be deleted."
 
                 # Remove the checksum file after verification
-                if (Test-Path -Path $archiveFile -ErrorAction SilentlyContinue) {
+                if (Test-Path -Path $archiveFile) {
                     Remove-Item -Path $archiveFile -Force -ErrorAction SilentlyContinue
                 }
                 Throw "Checksum verification failed. One or more files are corrupted."
@@ -428,11 +428,11 @@ function Test-CheckSum {
 
     Write-Debug "Checksum verification...`n`tSource file: $DownloadedFile`n`tChecksum file: $ChecksumFile"
 
-    if (-not (Test-Path -Path $downloadedFile -ErrorAction Continue)) {
+    if (-not (Test-Path -Path $downloadedFile)) {
         Throw "Couldn't find source file: `"$downloadedFile`"."
     }
 
-    if (-not (Test-Path -Path $ChecksumFile -ErrorAction Continue)) {
+    if (-not (Test-Path -Path $ChecksumFile)) {
         Throw "Couldn't find checksum file: `"$ChecksumFile`"."
     }
 
