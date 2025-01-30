@@ -110,8 +110,7 @@ function Install-Nerdctl {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
-                $errMsg = "nerdctl already exists at '$InstallPath' or the directory is not empty" + `
-                    "`nProgram data won't be removed. To remove program data, run 'Uninstall-Nerdctl' command with -Purge flag."
+                $errMsg = "nerdctl already exists at '$InstallPath' or the directory is not empty."
                 Write-Warning $errMsg
 
                 # Uninstall if tool exists at specified location. Requires user consent
@@ -240,7 +239,7 @@ function Uninstall-Nerdctl {
                 Throw "$tool uninstallation cancelled."
             }
 
-            Write-Warning "Uninstalling preinstalled $tool at the path '$path'"
+            Write-Warning "Uninstalling preinstalled $tool at the path '$path'.`n$WhatIfMessage"
             try {
                 Uninstall-NerdctlHelper -Path "$path" -Purge:$Purge
             }

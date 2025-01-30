@@ -64,7 +64,7 @@ function Install-WinCNIPlugin {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
-                $errMsg = "Windows CNI plugins already exists at '$WinCNIPath' or the directory is not empty"
+                $errMsg = "Windows CNI plugins already exists at '$WinCNIPath' or the directory is not empty."
                 Write-Warning $errMsg
 
                 # Uninstall if tool exists at specified location. Requires user consent
