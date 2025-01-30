@@ -14,8 +14,8 @@ Describe "NerdctlTools.psm1" {
         $RootPath = Split-Path -Parent $PSScriptRoot
         $ModuleParentPath = Join-Path -Path $RootPath -ChildPath 'Containers-Toolkit'
         Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
-        Import-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1"
         Import-Module -Name "$ModuleParentPath\Public\ContainerdTools.psm1"
+        Import-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1"
         Import-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1"
         Import-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1" -Force
     }
@@ -26,8 +26,8 @@ Describe "NerdctlTools.psm1" {
 
     AfterAll {
         Remove-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force -ErrorAction Ignore
-        Remove-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force -ErrorAction Ignore
         Remove-Module -Name "$ModuleParentPath\Public\ContainerdTools.psm1" -Force -ErrorAction Ignore
+        Remove-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force -ErrorAction Ignore
         Remove-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1" -Force -ErrorAction Ignore
         Remove-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1" -Force -ErrorAction Ignore
     }
@@ -49,6 +49,17 @@ Describe "NerdctlTools.psm1" {
             Mock Install-WinCNIPlugin -ModuleName 'NerdctlTools'
             Mock Install-Nerdctl -ModuleName 'NerdctlTools'
             Mock Remove-Item -ModuleName 'NerdctlTools'
+
+            # Mock for Invoke-ExecutableCommand- "nerdctl --version"
+            $mockExecutablePath = "$TestDrive\Program Files\nerdctl\nerdctl.exe"
+            $mockConfigStdOut = New-MockObject -Type 'System.IO.StreamReader' -Methods @{ ReadToEnd = { return "nerdctl version v7.9.8" } }
+            $mockProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{
+                StandardOutput = $mockConfigStdOut
+                ExitCode       = 0
+            }
+            Mock Invoke-ExecutableCommand -ModuleName "NerdctlTools" -MockWith { return $mockProcess } -ParameterFilter {
+                $Executable -eq "$mockExecutablePath" -and
+                $Arguments -eq "--version" }
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -67,6 +78,7 @@ Describe "NerdctlTools.psm1" {
         It "Should use defaults" {
             Install-Nerdctl -Force -Confirm:$false
 
+            Should -Invoke Get-NerdctlLatestVersion -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It
             Should -Invoke Uninstall-Nerdctl -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFile -ModuleName 'NerdctlTools' -ParameterFilter {
                 $fileParameters[0].Feature -eq "nerdctl" -and
@@ -117,11 +129,35 @@ Describe "NerdctlTools.psm1" {
             Should -Invoke Install-WinCNIPlugin -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It
         }
 
+        It "Should not reinstall tool if version already exists and force is not specified" {
+            Mock Test-EmptyDirectory -ModuleName 'ContainerdTools' -MockWith { return $false }
+
+            # Mock for Get-ChildItem - "nerdctl.exe"
+            Mock Get-ChildItem -ModuleName 'NerdctlTools' -ParameterFilter {
+                $Path -eq "$Env:ProgramFiles\nerdctl" -and
+                $Recurse -eq $true
+                $Filter -eq "nerdctl.exe"
+            } -MockWith { return @{FullName = "$mockExecutablePath" } }
+
+            Install-Nerdctl -Confirm:$false
+            Should -Invoke Uninstall-Nerdctl -ModuleName 'NerdctlTools' -Times 0
+            Should -Invoke Install-RequiredFeature -ModuleName 'NerdctlTools' -Times 0
+        }
+
         It "Should uninstall tool if it is already installed" {
             Mock Test-EmptyDirectory -ModuleName 'NerdctlTools' -MockWith { return $false }
 
+            # Mock for Get-ChildItem - "nerdctl.exe"
+            Mock Get-ChildItem -ModuleName 'NerdctlTools' -ParameterFilter {
+                $Path -eq "$Env:ProgramFiles\nerdctl" -and
+                $Recurse -eq $true
+                $Filter -eq "nerdctl.exe"
+            } -MockWith { return @{FullName = "$mockExecutablePath" } }
+
             Install-Nerdctl -Force -Confirm:$false
 
+            Should -Invoke Invoke-ExecutableCommand -ModuleName "NerdctlTools" `
+                -ParameterFilter { ($Executable -eq $mockExecutablePath ) -and ($Arguments -eq "--version") }
             Should -Invoke Uninstall-Nerdctl -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It `
                 -ParameterFilter { $Path -eq "$Env:ProgramFiles\nerdctl" }
         }
@@ -130,11 +166,18 @@ Describe "NerdctlTools.psm1" {
             Mock Test-EmptyDirectory -ModuleName 'NerdctlTools' -MockWith { return $false }
             Mock Uninstall-Nerdctl -ModuleName 'NerdctlTools' -MockWith { throw 'Error' }
 
-            { Install-Nerdctl -Confirm:$false } | Should -Throw "nerdctl installation failed. Error"
+            # Mock for Get-ChildItem - "nerdctl.exe"
+            Mock Get-ChildItem -ModuleName 'NerdctlTools' -ParameterFilter {
+                $Path -eq "$Env:ProgramFiles\nerdctl" -and
+                $Recurse -eq $true
+                $Filter -eq "nerdctl.exe"
+            } -MockWith { return @{FullName = "$mockExecutablePath" } }
+
+            { Install-Nerdctl -Confirm:$false -Force } | Should -Throw "nerdctl installation failed. Error"
         }
 
         It "Should install all dependencies if 'All' is specified" {
-            Install-Nerdctl -Dependencies 'All' -Confirm:$false
+            Install-Nerdctl -Dependencies 'All' -Confirm:$false -Force
 
             Should -Invoke Install-Containerd -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It
             Should -Invoke Install-Buildkit -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It
@@ -142,7 +185,7 @@ Describe "NerdctlTools.psm1" {
         }
 
         It "Should install specified dependencies" {
-            Install-Nerdctl -Dependencies 'containerd' -Confirm:$false
+            Install-Nerdctl -Dependencies 'containerd' -Confirm:$false -Force
 
             Should -Invoke Install-Containerd -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It
             Should -Invoke Install-Buildkit -ModuleName 'NerdctlTools' -Times 0 -Exactly -Scope It

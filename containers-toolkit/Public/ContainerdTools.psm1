@@ -45,8 +45,11 @@ function Install-Containerd {
     )
 
     begin {
+        $tool = 'Containerd'
+
         # Check if Containerd is alread installed
-        $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
+        $ctrexe = (Get-ChildItem -Path $InstallPath -Recurse -Filter "containerd.exe" | Select-Object -First 1).FullName
+        $isInstalled = ($null -ne $ctrexe)
 
         $WhatIfMessage = "Containerd will be installed at $InstallPath"
         if ($isInstalled) {
@@ -60,26 +63,35 @@ function Install-Containerd {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            # Check if tool already exists at specified location
-            if ($isInstalled) {
-                $errMsg = "Containerd already exists at $InstallPath or the directory is not empty"
+            $latestVersion = Get-ContainerdLatestVersion
+
+            # Get Containerd version to install
+            if (!$Version) {
+                # Get default version
+                $Version = $latestVersion
+            }
+            $Version = $Version.TrimStart('v')
+
+            # Check if we need to reinstall
+            $reinstall = Test-ToolReinstall $tool $Version $ctrexe
+            if ($reinstall) {
+                $errMsg = "$tool already exists at $InstallPath."
                 Write-Warning $errMsg
+
+                if (!$Force) {
+                    Write-Warning "Installation cancelled. $errMsg Please uninstall the existing version using 'Uninstall-Containerd' or use -Force to reinstall."
+                    return
+                }
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
                     Uninstall-Containerd -Path "$InstallPath" -Confirm:$false -Force:$Force | Out-Null
                 }
                 catch {
-                    Throw "Containerd installation failed. $_"
+                    Throw "nerdctl installation failed. $_"
                 }
             }
 
-            # Get Containerd version to install
-            if (!$Version) {
-                # Get default version
-                $Version = Get-ContainerdLatestVersion
-            }
-            $Version = $Version.TrimStart('v')
             Write-Output "Downloading and installing Containerd v$version at $InstallPath"
 
             # Download files
