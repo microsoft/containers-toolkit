@@ -57,7 +57,8 @@ function Install-Buildkit {
 
     begin {
         # Check if Buildkit is alread installed
-        $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
+        $blktdexe = (Get-ChildItem -Path $InstallPath -Recurse -Filter "buildkitd.exe" | Select-Object -First 1).FullName
+        $isInstalled = ($null -ne $blktdexe)
 
         $WhatIfMessage = "Buildkit will be installed at $InstallPath"
         if ($isInstalled) {
@@ -71,10 +72,46 @@ function Install-Buildkit {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
+            $latestVersion = Get-BuildkitLatestVersion
+
+            # Get Buildkit version to install
+            if (!$Version) {
+                # Get default version
+                $Version = $latestVersion
+            }
+            $Version = $Version.TrimStart('v')
+
+            # Check if a newer version is available
+            $userVersion = $Version
+            if ($Version -ne 'latest') {
+                Test-IsLatestVersion -Tool 'Buildkit' -Version $Version -LatestVersion $latestVersion | Out-Null
+            }
+            else {
+                $userVersion = $latestVersion
+            }
+
             # Check if tool already exists at specified location
             if ($isInstalled) {
                 $errMsg = "Buildkit already exists at $InstallPath or the directory is not empty"
                 Write-Warning $errMsg
+
+                # Check if user wants to install an already installed version
+                Write-Debug "Buildkit executable: $blktdexe"
+                $cmdOutput = Invoke-ExecutableCommand -Executable "$blktdexe" -Arguments "--version"
+                if ($cmdOutput.ExitCode -eq 0) {
+                    # buildkitd github.com/moby/buildkit v0.19.0 3637d1b15a13fc3cdd0c16fcf3be0845ae68f53d
+                    $blktVersion = $cmdOutput.StandardOutput.ReadToEnd().Trim()
+
+                    # Extract version from the output
+                    $blktVersion = ($blktVersion.Split(' ')[2]).TrimStart('v')
+                    Write-Debug "{ User Version: $userVersion, Current Version: $blktVersion }"
+                    if ($userVersion -eq $blktVersion) {
+                        Write-Warning "Installed Buildkit version is the same as the requested version. Please uninstall the existing version using 'Uninstall-Containerd' or use -Force to reinstall."
+                        if (!$Force) {
+                            return
+                        }
+                    }
+                }
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
@@ -85,23 +122,17 @@ function Install-Buildkit {
                 }
             }
 
-            # Get Buildkit version to install
-            if (!$Version) {
-                $Version = Get-BuildkitLatestVersion
-            }
-            $Version = $Version.TrimStart('v')
-
             Write-Output "Downloading and installing Buildkit v$Version at $InstallPath"
 
             # Download files
             $downloadParams = @{
-                ToolName = "Buildkit"
-                Repository = "moby/buildkit"
-                Version = $Version
-                OSArchitecture = $OSArchitecture
-                DownloadPath = $DownloadPath
+                ToolName           = "Buildkit"
+                Repository         = "moby/buildkit"
+                Version            = $Version
+                OSArchitecture     = $OSArchitecture
+                DownloadPath       = $DownloadPath
                 ChecksumSchemaFile = "$ModuleParentPath\Private\schemas\in-toto.sbom.schema.json"
-                FileFilterRegEx = $null
+                FileFilterRegEx    = $null
             }
             $downloadParamsProperties = [FileDownloadParameters]::new(
                 $downloadParams.ToolName,

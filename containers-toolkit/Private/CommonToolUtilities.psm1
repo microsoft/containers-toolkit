@@ -85,6 +85,17 @@ function Get-LatestToolVersion($repository) {
     }
 }
 
+function Test-IsLatestVersion($Tool, $Version, $LatestVersion) {
+    $currentVersion = [System.Version]$Version
+    $latestVersion = [System.Version]$latestVersion
+
+    $isLatest = ($currentVersion -eq $latestVersion)
+    if (-not $isLatest) {
+        Write-Warning "A newer version of $tool is available. { Version: $currentVersion, Latest version: $latestVersion }"
+    }
+    return $isLatest
+}
+
 function Test-EmptyDirectory($path) {
     if (-not (Test-Path -Path $path)) {
         return $true
@@ -513,6 +524,8 @@ function Test-FileChecksum {
                 $isValid = $downloadedChecksum.Hash -eq $checksum
                 $found = $true
                 return
+            } else {
+                Write-Debug "File name does not match. {checksum file: $filename, downloaded file: $downloadedFileName}"
             }
         }
 
@@ -891,6 +904,7 @@ function Invoke-ExecutableCommand {
 
 
 Export-ModuleMember -Function Get-LatestToolVersion
+Export-ModuleMember -Function Test-IsLatestVersion
 Export-ModuleMember -Function Get-DefaultInstallPath
 Export-ModuleMember -Function Test-EmptyDirectory
 Export-ModuleMember -Function Get-InstallationFile

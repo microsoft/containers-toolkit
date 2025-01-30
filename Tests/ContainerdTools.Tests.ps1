@@ -55,6 +55,17 @@ Describe "ContainerdTools.psm1" {
             Mock Test-EmptyDirectory  -ModuleName 'ContainerdTools' -MockWith { return $true }
             Mock Install-Containerd -ModuleName 'ContainerdTools'
             Mock Remove-Item -ModuleName 'ContainerdTools'
+
+            # Mock for Invoke-ExecutableCommand- "nerdctl --version"
+            $mockExecutablePath = "$TestDrive\Program Files\Containerd\bin\containerd.exe"
+            $mockConfigStdOut = New-MockObject -Type 'System.IO.StreamReader' -Methods @{ ReadToEnd = { return "containerd github.com/containerd/containerd/v1 v1.0.0 c949t3ti0484" } }
+            $mockProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{
+                StandardOutput = $mockConfigStdOut
+                ExitCode       = 0
+            }
+            Mock Invoke-ExecutableCommand -ModuleName "ContainerdTools" -MockWith { return $mockProcess } -ParameterFilter {
+                $Executable -eq "$mockExecutablePath" -and
+                $Arguments -eq "--version" }
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -73,6 +84,7 @@ Describe "ContainerdTools.psm1" {
         It "Should use defaults" {
             Install-Containerd -Force -Confirm:$false
 
+            Should -Invoke Get-ContainerdLatestVersion -ModuleName 'ContainerdTools' -Times 1 -Exactly -Scope It
             Should -Invoke Uninstall-Containerd -ModuleName 'ContainerdTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFile -ModuleName 'ContainerdTools' -ParameterFilter {
                 ($fileParameters[0].Feature -eq "Containerd") -and
@@ -119,11 +131,35 @@ Describe "ContainerdTools.psm1" {
                 -ParameterFilter { $ContainerdPath -eq "$Env:ProgramFiles\Containerd" }
         }
 
+        It "Should not reinstall tool if version already exists and force is not specified" {
+            Mock Test-EmptyDirectory -ModuleName 'ContainerdTools' -MockWith { return $false }
+
+            # Mock for Get-ChildItem - "containerd.exe"
+            Mock Get-ChildItem -ModuleName 'ContainerdTools' -ParameterFilter {
+                $Path -eq "$Env:ProgramFiles\Containerd" -and
+                $Recurse -eq $true
+                $Filter -eq "containerd.exe"
+            } -MockWith { return @{FullName = "$mockExecutablePath" } }
+
+            Install-Containerd -Confirm:$false
+            Should -Invoke Uninstall-Containerd -ModuleName 'ContainerdTools' -Times 0
+            Should -Invoke Install-RequiredFeature -ModuleName 'ContainerdTools' -Times 0
+        }
+
         It "Should uninstall tool if it is already installed" {
             Mock Test-EmptyDirectory -ModuleName 'ContainerdTools' -MockWith { return $false }
 
+            # Mock for Get-ChildItem - "containerd.exe"
+            Mock Get-ChildItem -ModuleName 'ContainerdTools' -ParameterFilter {
+                $Path -eq "$Env:ProgramFiles\Containerd" -and
+                $Recurse -eq $true
+                $Filter -eq "containerd.exe"
+            } -MockWith { return @{FullName = "$mockExecutablePath" } }
+
             Install-Containerd -Force -Confirm:$false
 
+            Should -Invoke Invoke-ExecutableCommand -ModuleName "ContainerdTools" `
+                -ParameterFilter { ($Executable -eq $mockExecutablePath ) -and ($Arguments -eq "--version") }
             Should -Invoke Uninstall-Containerd -ModuleName 'ContainerdTools' -Times 1 -Exactly -Scope It `
                 -ParameterFilter { $Path -eq "$Env:ProgramFiles\Containerd" -and $force -eq $true }
         }
@@ -132,7 +168,14 @@ Describe "ContainerdTools.psm1" {
             Mock Test-EmptyDirectory -ModuleName 'ContainerdTools' -MockWith { return $false }
             Mock Uninstall-Containerd -ModuleName 'ContainerdTools' -MockWith { throw 'Error' }
 
-            { Install-Containerd -Confirm:$false } | Should -Throw "Containerd installation failed. Error"
+            # Mock for Get-ChildItem - "containerd.exe"
+            Mock Get-ChildItem -ModuleName 'ContainerdTools' -ParameterFilter {
+                $Path -eq "$Env:ProgramFiles\Containerd" -and
+                $Recurse -eq $true
+                $Filter -eq "containerd.exe"
+            } -MockWith { return @{FullName = "$mockExecutablePath" } }
+
+            { Install-Containerd -Confirm:$false -Force } | Should -Throw "Containerd installation failed. Error"
         }
     }
 

@@ -87,7 +87,8 @@ function Install-Nerdctl {
 
     begin {
         # Check if Containerd is alread installed
-        $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
+        $nerdctlexe = (Get-ChildItem -Path $InstallPath -Recurse -Filter "nerdctl.exe" | Select-Object -First 1).FullName
+        $isInstalled = ($null -ne $nerdctlexe)
 
         $toInstall = @("nerdctl")
 
@@ -108,10 +109,46 @@ function Install-Nerdctl {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
+            $latestVersion = Get-NerdctlLatestVersion
+
+            # Get nerdctl version to install
+            if (!$Version) {
+                # Get default version
+                $Version = $latestVersion
+            }
+            $Version = $Version.TrimStart('v')
+
+            # Check if a newer version is available
+            $userVersion = $Version
+            if ($Version -ne 'latest') {
+                Test-IsLatestVersion -Tool 'nerdctl' -Version $Version -LatestVersion $latestVersion | Out-Null
+            }
+            else {
+                $userVersion = $latestVersion
+            }
+
             # Check if tool already exists at specified location
             if ($isInstalled) {
                 $errMsg = "nerdctl already exists at $InstallPath or the directory is not empty"
                 Write-Warning $errMsg
+
+                Write-Debug "nerdctl executable: $nerdctlexe"
+                $cmdOutput = Invoke-ExecutableCommand -Executable "$nerdctlexe" -Arguments "--version"
+                if ($cmdOutput.ExitCode -eq 0) {
+                    # Sample: nerdctl version v7.9.8
+                    $nerdctlVersion = $cmdOutput.StandardOutput.ReadToEnd().Trim()
+
+                    # Extract version from the output
+                    $nerdctlVersion = ($nerdctlVersion.Split(' ')[2]).TrimStart('v')
+                    Write-Debug "{ User Version: $userVersion, Current Version: $nerdctlVersion }"
+
+                    if ($userVersion -eq $nerdctlVersion) {
+                        Write-Warning "Installed nerdctl version is the same as the requested version. Please uninstall the existing version using 'Uninstall-Containerd' or use -Force to reinstall."
+                        if (!$Force) {
+                            return
+                        }
+                    }
+                }
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
@@ -122,23 +159,17 @@ function Install-Nerdctl {
                 }
             }
 
-            # Get nerdctl version to install
-            if (!$Version) {
-                $Version = Get-NerdctlLatestVersion
-            }
-            $Version = $Version.TrimStart('v')
-
             Write-Output "Downloading and installing nerdctl v$version at $InstallPath"
 
             # Download files
             $downloadParams = @{
-                ToolName = "nerdctl"
-                Repository = "containerd/nerdctl"
-                Version = $version
-                OSArchitecture = $OSArchitecture
-                DownloadPath = $DownloadPath
+                ToolName           = "nerdctl"
+                Repository         = "containerd/nerdctl"
+                Version            = $version
+                OSArchitecture     = $OSArchitecture
+                DownloadPath       = $DownloadPath
                 ChecksumSchemaFile = $null
-                FileFilterRegEx = $null
+                FileFilterRegEx    = $null
             }
             $downloadParamsProperties = [FileDownloadParameters]::new(
                 $downloadParams.ToolName,

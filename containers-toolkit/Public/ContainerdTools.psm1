@@ -46,7 +46,8 @@ function Install-Containerd {
 
     begin {
         # Check if Containerd is alread installed
-        $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
+        $ctrexe = (Get-ChildItem -Path $InstallPath -Recurse -Filter "containerd.exe" | Select-Object -First 1).FullName
+        $isInstalled = ($null -ne $ctrexe)
 
         $WhatIfMessage = "Containerd will be installed at $InstallPath"
         if ($isInstalled) {
@@ -60,10 +61,47 @@ function Install-Containerd {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
+            $latestVersion = Get-ContainerdLatestVersion
+
+            # Get Containerd version to install
+            if (!$Version) {
+                # Get default version
+                $Version = $latestVersion
+            }
+            $Version = $Version.TrimStart('v')
+
+            # Check if a newer version is available
+            $userVersion = $Version
+            if ($Version -ne 'latest') {
+                Test-IsLatestVersion -Tool 'Containerd' -Version $Version -LatestVersion $latestVersion | Out-Null
+            }
+            else {
+                $userVersion = $latestVersion
+            }
+
             # Check if tool already exists at specified location
             if ($isInstalled) {
                 $errMsg = "Containerd already exists at $InstallPath or the directory is not empty"
                 Write-Warning $errMsg
+
+                # Check if user wants to install an already installed version
+                Write-Debug "Containerd executable: $ctrexe"
+                $cmdOutput = Invoke-ExecutableCommand -Executable "$ctrexe" -Arguments "--version"
+                if ($cmdOutput.ExitCode -eq 0) {
+                    # Sample: containerd github.com/containerd/containerd/v2 v2.0.2 c507a0257ea6462fbd6f5ba4f5c74facb04021f4
+                    $ctrexeVersion = $cmdOutput.StandardOutput.ReadToEnd().Trim()
+
+                    # Extract version from the output
+                    $ctrexeVersion = ($ctrexeVersion.Split(' ')[2]).TrimStart('v')
+                    Write-Debug "{ User Version: $userVersion, Current Version: $ctrexeVersion }"
+
+                    if ($userVersion -eq $ctrexeVersion) {
+                        Write-Warning "Installed Containerd version is the same as the requested version. Please uninstall the existing version using 'Uninstall-Containerd' or use -Force to reinstall."
+                        if (!$Force) {
+                            return
+                        }
+                    }
+                }
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
@@ -73,13 +111,6 @@ function Install-Containerd {
                     Throw "Containerd installation failed. $_"
                 }
             }
-
-            # Get Containerd version to install
-            if (!$Version) {
-                # Get default version
-                $Version = Get-ContainerdLatestVersion
-            }
-            $Version = $Version.TrimStart('v')
             Write-Output "Downloading and installing Containerd v$version at $InstallPath"
 
             # Download files
