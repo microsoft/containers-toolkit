@@ -289,7 +289,7 @@ function Uninstall-WinCNIPlugin {
     )]
     param(
         [parameter(HelpMessage = "Windows CNI plugin path")]
-        [String]$Path,
+        [String]$Path="$ENV:ProgramFiles\Containerd\cni",
 
         [parameter(HelpMessage = "Bypass confirmation to uninstall Windows CNI plugins")]
         [Switch] $Force
@@ -327,7 +327,7 @@ function Uninstall-WinCNIPlugin {
 
             Write-Warning "Uninstalling preinstalled Windows CNI plugin at the path $path"
             try {
-                Uninstall-WinCNIPluginHelper -Path $path
+                Uninstall-WinCNIPluginHelper -Path $path | Out-Null
             }
             catch {
                 Throw "Could not uninstall $tool. $_"
@@ -345,7 +345,7 @@ function Uninstall-WinCNIPluginHelper {
     param(
         [ValidateNotNullOrEmpty()]
         [parameter(HelpMessage = "Windows CNI plugin path")]
-        [String]$Path
+        [String]$Path="$ENV:ProgramFiles\Containerd\cni"
     )
 
     Write-Output "Uninstalling Windows CNI plugin"

@@ -46,7 +46,7 @@ function Install-Containerd {
 
     begin {
         # Check if Containerd is alread installed
-        $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
+        $isInstalled = -not (Test-EmptyDirectory -Path "$InstallPath\bin")
 
         $WhatIfMessage = "Containerd will be installed at $InstallPath"
         if ($isInstalled) {
@@ -62,7 +62,8 @@ function Install-Containerd {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
-                $errMsg = "Containerd already exists at $InstallPath or the directory is not empty"
+                $errMsg = "Containerd already exists at $InstallPath or the directory is not empty. " + `
+                    "`nProgram data won't be removed. To remove program data, run 'Uninstall-Containerd' command with -Purge flag."
                 Write-Warning $errMsg
 
                 # Uninstall if tool exists at specified location. Requires user consent
@@ -297,7 +298,10 @@ function Uninstall-Containerd {
     )]
     param(
         [parameter(HelpMessage = "Containerd path")]
-        [String]$Path,
+        [String]$Path = "$ENV:ProgramFiles\Containerd",
+
+        [parameter(HelpMessage = "Remove all program data for Containerd")]
+        [Switch] $Purge,
 
         [parameter(HelpMessage = "Bypass confirmation to uninstall Containerd")]
         [Switch] $Force
@@ -309,7 +313,19 @@ function Uninstall-Containerd {
             $Path = Get-DefaultInstallPath -Tool $tool
         }
 
-        $WhatIfMessage = "Containerd will be uninstalled from $path and containerd service will be stopped and unregistered"
+        # If we are not purging, we are uninstalling from the bin directory
+        # that contains the containerd executables
+        if (-not $Purge -and (-not $path.EndsWith("\bin"))) {
+            $path = $path.TrimEnd("\").Trim() + "\bin"
+        }
+
+        $WhatIfMessage = "Containerd will be uninstalled from $path and containerd service will be stopped and unregistered."
+        if ($Purge) {
+            $WhatIfMessage += " Containerd program data will also be removed."
+        }
+        else {
+            $WhatIfMessage += " Containerd program data won't be removed. To remove program data, run 'Uninstall-Containerd' command without -Purge flag."
+        }
     }
 
     process {
@@ -330,7 +346,7 @@ function Uninstall-Containerd {
 
             Write-Warning "Uninstalling preinstalled $tool at the path $path"
             try {
-                Uninstall-ContainerdHelper -Path $path
+                Uninstall-ContainerdHelper -Path $path -Purge:$Purge | Out-Null
             }
             catch {
                 Throw "Could not uninstall $tool. $_"
@@ -348,7 +364,10 @@ function Uninstall-ContainerdHelper {
     param(
         [ValidateNotNullOrEmpty()]
         [parameter(Mandatory = $true, HelpMessage = "Containerd path")]
-        [String]$Path
+        [String]$Path,
+
+        [parameter(HelpMessage = "Remove all program data for Containerd")]
+        [Switch] $Purge
     )
 
     if (Test-EmptyDirectory -Path $Path) {
@@ -366,17 +385,24 @@ function Uninstall-ContainerdHelper {
         Throw "Could not stop or unregister containerd service. $_"
     }
 
-    # Delete the containerd key
-    Remove-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\containerd" -Recurse -Force -ErrorAction Ignore
-
     # Remove the folder where containerd is installed and related folders
     Remove-Item -Path $Path -Recurse -Force
 
-    # Delete containerd programdata
-    Uninstall-ProgramFiles "$ENV:ProgramData\Containerd"
+    if ($Purge) {
+        Write-Output "Purging Containerd program data"
 
-    # Remove from env path
-    Remove-FeatureFromPath -Feature "containerd"
+        # Delete the containerd key
+        Write-Warning "Removing Containerd registry key"
+        Remove-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\containerd" -Recurse -Force -ErrorAction Ignore
+
+        # Delete containerd programdata
+        Write-Warning "Removing Containerd program data"
+        Uninstall-ProgramFiles "$ENV:ProgramData\Containerd"
+
+        # Remove from env path
+        Write-Warning "Removing Containerd from env path"
+        Remove-FeatureFromPath -Feature "containerd"
+    }
 
     Write-Output "Successfully uninstalled Containerd."
 }

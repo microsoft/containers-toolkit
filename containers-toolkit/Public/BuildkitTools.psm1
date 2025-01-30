@@ -73,7 +73,8 @@ function Install-Buildkit {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
-                $errMsg = "Buildkit already exists at $InstallPath or the directory is not empty"
+                $errMsg = "Buildkit already exists at $InstallPath or the directory is not empty" + `
+                "`nProgram data won't be removed. To remove program data, run 'Uninstall-Buildkit' command with -Purge flag."
                 Write-Warning $errMsg
 
                 # Uninstall if tool exists at specified location. Requires user consent
@@ -95,13 +96,13 @@ function Install-Buildkit {
 
             # Download files
             $downloadParams = @{
-                ToolName = "Buildkit"
-                Repository = "moby/buildkit"
-                Version = $Version
-                OSArchitecture = $OSArchitecture
-                DownloadPath = $DownloadPath
+                ToolName           = "Buildkit"
+                Repository         = "moby/buildkit"
+                Version            = $Version
+                OSArchitecture     = $OSArchitecture
+                DownloadPath       = $DownloadPath
                 ChecksumSchemaFile = "$ModuleParentPath\Private\schemas\in-toto.sbom.schema.json"
-                FileFilterRegEx = $null
+                FileFilterRegEx    = $null
             }
             $downloadParamsProperties = [FileDownloadParameters]::new(
                 $downloadParams.ToolName,
@@ -145,7 +146,7 @@ function Install-Buildkit {
             }
 
             # Show buildkit binaries help
-            Get-ChildItem -Path "C:\Program Files\buildkit\bin" | ForEach-Object {
+            (Get-command -Name "buildctl","buildkitd" -ErrorAction SilentlyContinue) | ForEach-Object {
                 $executable = $_.Name
                 # Remove extension from executable
                 $commandName = $executable -replace ".exe", ""
@@ -339,7 +340,10 @@ function Uninstall-Buildkit {
     )]
     param(
         [parameter(HelpMessage = "BuildKit path")]
-        [String]$Path,
+        [String]$Path = "$ENV:ProgramFiles\Buildkit",
+
+        [parameter(HelpMessage = "Remove all program data for Buildkit")]
+        [Switch] $Purge,
 
         [parameter(HelpMessage = "Bypass confirmation to uninstall BuildKit")]
         [Switch] $Force
@@ -351,7 +355,13 @@ function Uninstall-Buildkit {
             $Path = Get-DefaultInstallPath -Tool $tool
         }
 
-        $WhatIfMessage = "Buildkit will be uninstalled from $path and buildkitd service will be stopped and unregistered"
+        $WhatIfMessage = "Buildkit will be uninstalled from $path and buildkitd service will be stopped and unregistered."
+        if ($Purge) {
+            $WhatIfMessage += " Buildkit program data will also be removed."
+        }
+        else {
+            $WhatIfMessage += " Buildkit program data won't be removed. To remove program data, run 'Uninstall-Buildkit' command without -Purge flag."
+        }
     }
 
     process {
@@ -372,7 +382,7 @@ function Uninstall-Buildkit {
 
             Write-Warning "Uninstalling preinstalled $tool at the path $path"
             try {
-                Uninstall-BuildkitHelper -Path $path
+                Uninstall-BuildkitHelper -Path $path -Purge:$Purge | Out-Null
             }
             catch {
                 Throw "Could not uninstall $tool. $_"
@@ -389,7 +399,10 @@ function Uninstall-Buildkit {
 function Uninstall-BuildkitHelper {
     param(
         [parameter(Mandatory = $true, HelpMessage = "Buildkit path")]
-        [String]$Path
+        [String]$Path,
+
+        [parameter(HelpMessage = "Remove all program data for Buildkit")]
+        [Switch] $Purge
     )
 
     if (Test-EmptyDirectory -Path $Path) {
@@ -407,17 +420,24 @@ function Uninstall-BuildkitHelper {
         Throw "Could not stop or unregister buildkitd service. $_"
     }
 
-    # Delete the buildkit key
-    Remove-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\buildkit" -Recurse -Force -ErrorAction Ignore
-
     # Remove the folder where buildkit is installed and related folders
     Remove-Item -Path $Path -Recurse -Force
 
-    # Delete Buildkit programdata
-    Uninstall-ProgramFiles "$ENV:ProgramData\Buildkit"
+    if ($Purge) {
+        Write-Output "Purging Buildkit program data"
 
-    # Remove from env path
-    Remove-FeatureFromPath -Feature "buildkit"
+        # Delete the buildkit key
+        Write-Warning "Removing Buildkit registry key"
+        Remove-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\buildkit" -Recurse -Force -ErrorAction Ignore
+
+        # Delete Buildkit programdata
+        Write-Warning "Removing Buildkit program data"
+        Uninstall-ProgramFiles "$ENV:ProgramData\Buildkit"
+
+        # Remove from env path
+        Write-Warning "Removing Buildkit from env path"
+        Remove-FeatureFromPath -Feature "buildkit"
+    }
 
     Write-Output "Successfully uninstalled buildkit."
 }
