@@ -59,13 +59,13 @@ function Install-Buildkit {
         # Check if Buildkit is alread installed
         $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
 
-        $WhatIfMessage = "Buildkit will be installed at $InstallPath"
+        $WhatIfMessage = "Buildkit will be installed at '$InstallPath'"
         if ($isInstalled) {
-            $WhatIfMessage = "Buildkit will be uninstalled from and reinstalled at $InstallPath"
+            $WhatIfMessage = "Buildkit will be uninstalled from and reinstalled at '$InstallPath'"
         }
         if ($Setup) {
             <# Action when this condition is true #>
-            $WhatIfMessage = "Buildkit will be installed at $InstallPath and buildkitd service will be registered and started"
+            $WhatIfMessage = "Buildkit will be installed at '$InstallPath' and buildkitd service will be registered and started"
         }
     }
 
@@ -73,7 +73,7 @@ function Install-Buildkit {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
-                $errMsg = "Buildkit already exists at $InstallPath or the directory is not empty" + `
+                $errMsg = "Buildkit already exists at '$InstallPath' or the directory is not empty" + `
                 "`nProgram data won't be removed. To remove program data, run 'Uninstall-Buildkit' command with -Purge flag."
                 Write-Warning $errMsg
 
@@ -355,7 +355,7 @@ function Uninstall-Buildkit {
             $Path = Get-DefaultInstallPath -Tool $tool
         }
 
-        $WhatIfMessage = "Buildkit will be uninstalled from $path and buildkitd service will be stopped and unregistered."
+        $WhatIfMessage = "Buildkit will be uninstalled from '$path' and buildkitd service will be stopped and unregistered."
         if ($Purge) {
             $WhatIfMessage += " Buildkit program data will also be removed."
         }
@@ -366,23 +366,23 @@ function Uninstall-Buildkit {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            if (Test-EmptyDirectory -Path $path) {
-                Write-Output "$tool does not exist at $Path or the directory is empty"
+            if (Test-EmptyDirectory -Path "$path") {
+                Write-Output "$tool does not exist at '$Path' or the directory is empty"
                 return
             }
 
             $consent = $force
             if (!$ENV:PESTER) {
-                $consent = $force -or $PSCmdlet.ShouldContinue($env:COMPUTERNAME, "Are you sure you want to uninstall Buildkit from $path?")
+                $consent = $force -or $PSCmdlet.ShouldContinue($env:COMPUTERNAME, "Are you sure you want to uninstall Buildkit from '$path'?")
             }
 
             if (!$consent) {
                 Throw "$tool uninstallation cancelled."
             }
 
-            Write-Warning "Uninstalling preinstalled $tool at the path $path"
+            Write-Warning "Uninstalling preinstalled $tool at the path '$path'"
             try {
-                Uninstall-BuildkitHelper -Path $path -Purge:$Purge | Out-Null
+                Uninstall-BuildkitHelper -Path "$path" -Purge:$Purge
             }
             catch {
                 Throw "Could not uninstall $tool. $_"
@@ -405,15 +405,15 @@ function Uninstall-BuildkitHelper {
         [Switch] $Purge
     )
 
-    if (Test-EmptyDirectory -Path $Path) {
-        Write-Error "Buildkit does not exist at $Path or the directory is empty."
+    if (Test-EmptyDirectory -Path "$Path") {
+        Write-Error "Buildkit does not exist at '$Path' or the directory is empty."
         return
     }
 
     try {
         if (Test-ServiceRegistered -Service 'Buildkitd') {
             Stop-BuildkitdService
-            Unregister-Buildkitd -BuildkitPath $Path
+            Unregister-Buildkitd -BuildkitPath "$Path"
         }
     }
     catch {
@@ -421,7 +421,7 @@ function Uninstall-BuildkitHelper {
     }
 
     # Remove the folder where buildkit is installed and related folders
-    Remove-Item -Path $Path -Recurse -Force
+    Remove-Item -Path "$Path" -Recurse -Force
 
     if ($Purge) {
         Write-Output "Purging Buildkit program data"

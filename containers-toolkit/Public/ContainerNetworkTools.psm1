@@ -47,16 +47,16 @@ function Install-WinCNIPlugin {
             $containerdPath = Get-DefaultInstallPath -Tool "containerd"
             $WinCNIPath = "$containerdPath\cni"
         }
-        $WinCNIPath = $WinCNIPath -replace '(\\bin)$', ''
+        $WinCNIPath = "$WinCNIPath" -replace '(\\bin)$', ''
 
         # Check if Containerd is alread installed
-        $isInstalled = -not (Test-EmptyDirectory -Path $WinCNIPath)
+        $isInstalled = -not (Test-EmptyDirectory -Path "$WinCNIPath")
 
         $plugin = "Windows CNI plugins"
 
-        $WhatIfMessage = "$plugin will be installed at $WINCNIPath"
+        $WhatIfMessage = "$plugin will be installed at '$WINCNIPath'"
         if ($isInstalled) {
-            $WhatIfMessage = "$plugin will be uninstalled from and reinstalled at $WINCNIPath"
+            $WhatIfMessage = "$plugin will be uninstalled from and reinstalled at '$WINCNIPath'"
         }
     }
 
@@ -64,7 +64,7 @@ function Install-WinCNIPlugin {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
-                $errMsg = "Windows CNI plugins already exists at $WinCNIPath or the directory is not empty"
+                $errMsg = "Windows CNI plugins already exists at '$WinCNIPath' or the directory is not empty"
                 Write-Warning $errMsg
 
                 # Uninstall if tool exists at specified location. Requires user consent
@@ -327,7 +327,7 @@ function Uninstall-WinCNIPlugin {
 
             Write-Warning "Uninstalling preinstalled Windows CNI plugin at the path $path"
             try {
-                Uninstall-WinCNIPluginHelper -Path $path | Out-Null
+                Uninstall-WinCNIPluginHelper -Path $path
             }
             catch {
                 Throw "Could not uninstall $tool. $_"
