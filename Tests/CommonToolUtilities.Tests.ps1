@@ -144,19 +144,10 @@ Describe "CommonToolUtilities.psm1" {
 
     Context "Get-InstallationFile" -Tag "Get-InstallationFile" {
         BeforeEach {
-            Mock Get-Module -ParameterFilter { $Name -eq 'ThreadJob' } { }
-            Mock Import-Module -ParameterFilter { $Name -eq 'ThreadJob' } { }
             Mock Invoke-WebRequest -ModuleName "CommonToolUtilities" { }
             Mock Invoke-RestMethod -ModuleName "CommonToolUtilities" {
                 return (Get-Content -Path "$PSScriptRoot\TestData\release-assets.json" -Raw | ConvertFrom-Json -Depth 3 )
             }
-            # -ParameterFilter { $Uri -match "https://api.github.com/repos/containerd/nerdctl/releases" }
-
-            $sampleJob = New-MockObject -Type 'ThreadJob.ThreadJob' -Properties @{ JobStateInfo = 'Completed' }
-            Mock Start-ThreadJob -ModuleName "CommonToolUtilities" -MockWith { return $sampleJob }
-            Mock Wait-Job -ModuleName "CommonToolUtilities"
-            Mock Receive-Job -ModuleName "CommonToolUtilities"
-            Mock Remove-Job -ModuleName "CommonToolUtilities"
             Mock Test-Checksum -ModuleName "CommonToolUtilities" -MockWith { return $true }
 
             $Script:TestFileName = "nerdctl-2.0.0-rc.1-windows-amd64.tar.gz"
