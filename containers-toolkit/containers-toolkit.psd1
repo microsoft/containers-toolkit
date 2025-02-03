@@ -27,7 +27,7 @@ The Containers-Toolkit module contains PowerShell functions for downloading, ins
 Configurations done with these functions are default configurations that allow you to get started with interacting with the tools. Further configurations may be necessary.
 You can find documentation for these functions here: [Containers-Toolkit Documentation](https://github.com/microsoft/containers-toolkit/tree/main/docs/command-reference.md)
 
-This module requires the ThreadJob module. Additionally, it requires the HNS module to execute the "Initialize-NatNetwork" command. The Host Networking Service (HNS) and the Host Compute Service (HCS) work together to create containers and attach endpoints to a network. The HNS module is necessary because the HostNetworkingService module does not include the "New-HNSNetwork" cmdlet.
+This module requires the HNS module to execute the "Initialize-NatNetwork" command. The Host Networking Service (HNS) and the Host Compute Service (HCS) work together to create containers and attach endpoints to a network. The HNS module is necessary because the HostNetworkingService module does not include the "New-HNSNetwork" cmdlet.
 
 Note that the HostNetworkingService module is available only when the Hyper-V Windows feature is enabled.
 "@
@@ -51,7 +51,7 @@ Note that the HostNetworkingService module is available only when the Hyper-V Wi
     # ProcessorArchitecture = ''
 
     # Modules that must be imported into the global environment prior to importing this module
-    RequiredModules   = @( 'ThreadJob' )
+    # RequiredModules   = @()
 
     # Assemblies that must be loaded prior to importing this module
     # RequiredAssemblies = @()
@@ -157,7 +157,7 @@ Note that the HostNetworkingService module is available only when the Hyper-V Wi
             RequireLicenseAcceptance   = $true
 
             # External dependent modules of this module
-            ExternalModuleDependencies = @('ThreadJob')
+            # ExternalModuleDependencies = @()
 
         } # End of PSData hashtable
 

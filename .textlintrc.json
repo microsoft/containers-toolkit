@@ -36,7 +36,6 @@
         "PowerShell",
         "/PSCustomObject/gi",
         "subnet",
-        "ThreadJob",
         "/unregisters/gi",
         "WinCNIPlugin",
         // Parameter names
