@@ -205,12 +205,26 @@ function Get-InstallationFile {
     begin {
         function Receive-File {
             param($params)
-            try {
-                Invoke-WebRequest -Uri $params.Uri -OutFile $params.DownloadPath -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 60
-            }
-            catch {
-                Throw "Couldn't download `"$($params.Feature)`" release assets. `"$($params.Uri)`".`n$($_.Exception.Message)"
-            }
+
+            $MaximumRetryCount = 3
+            $RetryIntervalSec = 60
+            $lastError = $null  # Store the last exception
+
+            do {
+                try {
+                    Invoke-WebRequest -Uri $params.Uri -OutFile $params.DownloadPath -UseBasicParsing
+                    return
+                }
+                catch {
+                    $lastError = $_  # Store the last error for proper exception handling
+                    Write-Warning "Failed to download `"$($params.Feature)`" release assets. Retrying... ($MaximumRetryCount retries left)"
+                    Start-Sleep -Seconds $RetryIntervalSec
+                    $MaximumRetryCount -= 1
+                }
+            } until ($MaximumRetryCount -eq 0)
+
+            # Throw the last encountered error after all retries fail
+            Throw "Couldn't download `"$($params.Feature)`" release assets from `"$($params.Uri)`".`n$($lastError.Exception.Message)"
         }
 
         function DownloadAssets {

@@ -253,9 +253,11 @@ Describe "CommonToolUtilities.psm1" {
         It "Should throw an error if download fails" {
             $errorMessage = "Response status code does not indicate success: 404 (Not Found)."
             Mock Invoke-WebRequest { Throw $errorMessage } -ModuleName "CommonToolUtilities"
+            Mock Start-Sleep -ModuleName "CommonToolUtilities"
 
             { Get-InstallationFile -FileParameters $Script:MockFiles } | Should -Throw "Failed to download asset*"
-            $Error[1].Exception.Message | Should -BeLike "Failed to download assets for `"v2.0.0-rc.1`". Couldn`'t download `"v2.0.0-rc.1`" release assets.*"
+            Should -Invoke Invoke-WebRequest -Times 3 -Scope It -ModuleName "CommonToolUtilities"
+            $Error[1].Exception.Message | Should -BeLike "Failed to download assets for `"v2.0.0-rc.1`". Couldn`'t download `"v2.0.0-rc.1`" release assets*"
         }
     }
 
