@@ -13,7 +13,7 @@ $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 function Get-BuildkitLatestVersion {
-    $latestVersion = Get-LatestToolVersion -Repository "moby/buildkit"
+    $latestVersion = Get-LatestToolVersion -Tool "buildkit"
     return $latestVersion
 }
 
@@ -96,7 +96,7 @@ function Install-Buildkit {
             # Download files
             $downloadParams = @{
                 ToolName = "Buildkit"
-                Repository = "moby/buildkit"
+                Repository = "$BUILDKIT_REPO"
                 Version = $Version
                 OSArchitecture = $OSArchitecture
                 DownloadPath = $DownloadPath

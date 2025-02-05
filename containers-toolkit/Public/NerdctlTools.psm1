@@ -12,7 +12,7 @@ $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 function Get-NerdctlLatestVersion {
-    $latestVersion = Get-LatestToolVersion -Repository "containerd/nerdctl"
+    $latestVersion = Get-LatestToolVersion -Tool "nerdctl"
     return $latestVersion
 }
 
@@ -133,7 +133,7 @@ function Install-Nerdctl {
             # Download files
             $downloadParams = @{
                 ToolName = "nerdctl"
-                Repository = "containerd/nerdctl"
+                Repository = "$NERDCTL_REPO"
                 Version = $version
                 OSArchitecture = $OSArchitecture
                 DownloadPath = $DownloadPath
