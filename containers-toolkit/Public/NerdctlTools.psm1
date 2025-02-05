@@ -86,8 +86,9 @@ function Install-Nerdctl {
     )
 
     begin {
-        # Check if nerdctl is already installed
-        $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
+        # Check if Containerd is alread installed
+        $isInstalled = -not (Test-EmptyDirectory -Path "$InstallPath")
+
         $toInstall = @("nerdctl")
 
         $dependencies = Get-NerdctlDependencies -Dependencies $dependencies
@@ -95,9 +96,9 @@ function Install-Nerdctl {
             $toInstall += $dependencies
         }
 
-        $WhatIfMessage = "nerdctl will be installed at $installPath"
+        $WhatIfMessage = "nerdctl will be installed at '$installPath'"
         if ($isInstalled) {
-            $WhatIfMessage = "nerdctl will be uninstalled and reinstalled at $InstallPath"
+            $WhatIfMessage = "nerdctl will be uninstalled and reinstalled at '$InstallPath'"
         }
         if ($dependencies) {
             $WhatIfMessage = "nerdctl and its dependencies (Containerd, Buildkit, WinCNIPlugin) will be installed"
@@ -108,7 +109,7 @@ function Install-Nerdctl {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if nerdctl already exists at specified location
             if ($isInstalled) {
-                $errMsg = "nerdctl already exists at $InstallPath or the directory is not empty"
+                $errMsg = "nerdctl already exists at '$InstallPath' or the directory is not empty."
                 Write-Warning $errMsg
 
                 # Uninstall if tool exists at specified location. Requires user consent
@@ -197,7 +198,10 @@ function Uninstall-Nerdctl {
     )]
     param(
         [parameter(HelpMessage = "nerdctl path")]
-        [String]$Path,
+        [String]$Path = "$Env:ProgramFiles\nerdctl",
+
+        [parameter(HelpMessage = "Remove all program data for nerdctl")]
+        [Switch] $Purge,
 
         [parameter(HelpMessage = "Bypass confirmation to uninstall nerdctl")]
         [Switch] $Force
@@ -209,13 +213,19 @@ function Uninstall-Nerdctl {
             $Path = Get-DefaultInstallPath -Tool "nerdctl"
         }
 
-        $WhatIfMessage = "nerdctl will be uninstalled from $Path"
+        $WhatIfMessage = "nerdctl will be uninstalled from '$Path'."
+        if ($Purge) {
+            $WhatIfMessage += " nerdctl program data will also be removed."
+        }
+        else {
+            $WhatIfMessage += " nerdctl program data won't be removed. To remove program data, run 'Uninstall-Nerdctl' command without -Purge flag."
+        }
     }
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            if (Test-EmptyDirectory -Path $path) {
-                Write-Output "$tool does not exist at $Path or the directory is empty"
+            if (Test-EmptyDirectory -Path "$path") {
+                Write-Output "$tool does not exist at '$Path' or the directory is empty"
                 return
             }
 
@@ -225,12 +235,22 @@ function Uninstall-Nerdctl {
             }
 
             if (!$consent) {
-                Throw "$tool uninstallation cancelled."
+                Write-Warning "$tool uninstallation cancelled."
+                return
             }
 
-            Write-Warning "Uninstalling preinstalled $tool at the path $path"
+            Write-Warning "Uninstalling preinstalled $tool at the path '$path'.`n$WhatIfMessage"
             try {
-                Uninstall-NerdctlHelper -Path $path
+                if ($Purge) {
+                    # Remove all unused images, not just dangling ones
+                    $cmdOutput = Invoke-ExecutableCommand -Executable "$path\nerdctl.exe" -Arguments "system prune --all"
+                    if ($cmdOutput.ExitCode -ne 0) {
+                        Write-Warning "Couldn't prune images. $($cmdOutput.StandardError.ReadToEnd())"
+                    }
+                }
+
+                # Uninstall nerdctl
+                Uninstall-NerdctlHelper -Path "$path" -Purge:$Purge
             }
             catch {
                 Throw "Could not uninstall $tool. $_"
@@ -248,22 +268,31 @@ function Uninstall-NerdctlHelper {
     param(
         [ValidateNotNullOrEmpty()]
         [parameter(Mandatory = $true, HelpMessage = "nerdctl path")]
-        [String]$Path
+        [String]$Path,
+
+        [parameter(HelpMessage = "Remove all program data for Containerd")]
+        [Switch] $Purge
     )
 
-    if (Test-EmptyDirectory -Path $Path) {
-        Write-Error "nerdctl does not exist at $Path or the directory is empty."
+    if (Test-EmptyDirectory -Path "$Path") {
+        Write-Error "nerdctl does not exist at '$Path' or the directory is empty."
         return
     }
 
     # Remove the folder where nerdctl is installed and related folders
-    Remove-Item -Path $Path -Recurse -Force
+    Remove-Item -Path "$Path" -Recurse -Force
 
-    # Remove ProgramData files
-    Uninstall-ProgramFiles "$ENV:ProgramData\nerdctl"
+    if ($Purge) {
+        Write-Output "Purging nerdctl program data"
 
-    # Remove from env path
-    Remove-FeatureFromPath -Feature "nerdctl"
+        # Remove ProgramData files
+        Write-Warning "Removing nerdctl program data"
+        Uninstall-ProgramFiles "$ENV:ProgramData\nerdctl"
+
+        # Remove from env path
+        Write-Warning "Removing nerdctl from env path"
+        Remove-FeatureFromPath -Feature "nerdctl"
+    }
 
     Write-Output "Successfully uninstalled nerdctl."
 }
