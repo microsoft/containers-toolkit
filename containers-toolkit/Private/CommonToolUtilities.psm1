@@ -164,10 +164,10 @@ function Get-ReleaseAssets {
                     # Filter assets by OS (windows) and architecture
                     # In the "zip|tar.gz" regex, we do not add the "$" at the end to allow for checksum files to be included
                     # The checksum files end with eg: ".tar.gz.sha256sum"
-            ($_.name -match "(windows(.+)$OSArch)") -or
+                    ($_.name -match "(windows(.+)$OSArch)") -or
 
                     # nerdctl checksum files are named "SHA256SUMS".
-            (& ([ScriptBlock]::Create($NERDCTL_FILTER_SCRIPTBLOCK_STR -f $_.name)))
+                    (& ([ScriptBlock]::Create($NERDCTL_FILTER_SCRIPTBLOCK_STR -f $_.name)))
                 )
             } |
             ForEach-Object {
@@ -320,7 +320,7 @@ function Get-InstallationFile {
 
                 # Buildkit checksum files are named ending with ".provenance.json" or ".sbom.json"
                 # We only need the ".sbom.json" file
-                ($_.asset_name -match ".*sbom.json$") -or
+                ($_.asset_name -match ".sbom.json$") -or
 
                 # nerdctl checksum files are named "SHA256SUMS". Check file names that have such a format.
                 (& ([ScriptBlock]::Create($NERDCTL_FILTER_SCRIPTBLOCK_STR -f $_.asset_name)))
@@ -702,7 +702,10 @@ function Install-RequiredFeature {
         [string] $InstallPath,
         [string[]] $SourceFile,
         [string] $EnvPath,
-        [boolean] $cleanup
+        [boolean] $cleanup,
+
+        # Use by WinCNI plugin to avoid updating the environment path
+        [boolean] $UpdateEnvPath = $true
     )
     # Create the directory to untar to
     Write-Information -InformationAction Continue -MessageData "Extracting $Feature to $InstallPath"
@@ -730,12 +733,14 @@ function Install-RequiredFeature {
     }
 
     # Add to env path
-    Add-FeatureToPath -Feature $Feature -Path $EnvPath
+    if ($UpdateEnvPath -and -not [string]::IsNullOrWhiteSpace($envPath)) {
+        Add-FeatureToPath -Feature $feature -Path $envPath
+    }
 
     # Clean up
     if ($CleanUp) {
         Write-Output "Cleanup to remove downloaded files"
-        if (Test-Path -Path $SourceFile) {
+        if (Test-Path -Path $SourceFile -ErrorAction SilentlyContinue) {
             Remove-Item -Path $SourceFile -Force -ErrorAction Ignore
         }
     }
