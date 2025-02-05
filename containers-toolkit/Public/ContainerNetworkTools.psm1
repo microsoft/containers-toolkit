@@ -14,6 +14,9 @@ Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 function Get-WinCNILatestVersion {
     param (
+        [parameter(HelpMessage = "Source of the Windows CNI plugins. Accepted values are 'microsoft/windows-container-networking' and 'containernetworking/plugins'. Defaults to 'microsoft/windows-container-networking'")]
+        [ValidateSet("microsoft/windows-container-networking", "containernetworking/plugins")]
+        [Alias("SourceRepo", "Repository")]
         [String]$repo = "microsoft/windows-container-networking"
     )
     $tool = switch ($repo.ToLower()) {

@@ -200,7 +200,7 @@ function Uninstall-Nerdctl {
         [parameter(HelpMessage = "nerdctl path")]
         [String]$Path = "$Env:ProgramFiles\nerdctl",
 
-        [parameter(HelpMessage = "Remove all program data for nerdctl")]
+        [parameter(HelpMessage = "Delete all nerdctl program files and program data")]
         [Switch] $Purge,
 
         [parameter(HelpMessage = "Bypass confirmation to uninstall nerdctl")]

@@ -40,11 +40,16 @@ function Install-Buildkit {
         [string]$DownloadPath = "$HOME\Downloads",
 
         [Parameter(ParameterSetName = 'Setup')]
-        [switch]$Setup,
+        [Parameter(HelpMessage = "Register the buildkitd service.")]
+        [Alias("Setup")]
+        [switch]$RegisterService,
 
         [Parameter(ParameterSetName = 'Setup')]
+        [Parameter(HelpMessage = "Path to Windows CNI plugin. Defaults to `$ENV:ProgramFiles\Containerd\cni")]
         [string]$WinCNIPath,
 
+        [Parameter(ParameterSetName = 'Install')]
+        [Parameter(ParameterSetName = 'Setup')]
         [Parameter(HelpMessage = 'OS architecture to download files for. Default is $env:PROCESSOR_ARCHITECTURE')]
         [ValidateSet('amd64', '386', "arm", "arm64")]
         [string]$OSArchitecture = $env:PROCESSOR_ARCHITECTURE,
@@ -350,7 +355,7 @@ function Uninstall-Buildkit {
         [parameter(HelpMessage = "BuildKit path")]
         [String]$Path = "$ENV:ProgramFiles\Buildkit",
 
-        [parameter(HelpMessage = "Remove all program data for Buildkit")]
+        [parameter(HelpMessage = "Delete all Buildkit program files and program data")]
         [Switch] $Purge,
 
         [parameter(HelpMessage = "Bypass confirmation to uninstall BuildKit")]

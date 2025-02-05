@@ -14,8 +14,8 @@ Initializes a NAT network.
 ## SYNTAX
 
 ```
-Initialize-NatNetwork [[-NetworkName] <String>] [[-Gateway] <String>] [[-CIDR] <Int32>] [-WhatIf]
- [[-WinCNIVersion] <String>] [[-WinCNIPath] <String>] [<CommonParameters>]
+Initialize-NatNetwork [[-NetworkName] <String>] [[-Gateway] <String>] [[-CIDR] <Int32>]
+ [[-WinCNIVersion] <String>] [[-WinCNIPath] <String>] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -58,6 +58,22 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
+### -Force
+
+Bypass confirmation to install any missing dependencies (Windows CNI plugins and HNS module)
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
 ### -Gateway
 
 Gateway IP address. Defaults to default gateway address.
@@ -69,14 +85,14 @@ Aliases:
 
 Required: False
 Position: 1
-Default value: Default gateway address
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -NetworkName
 
-Name of the new network. Defaults to 'nat'
+Name of the new network. Defaults to 'nat'.
 
 ```yaml
 Type: String
@@ -85,14 +101,14 @@ Aliases:
 
 Required: False
 Position: 0
-Default value: 'nat'
+Default value: nat
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -WinCNIPath
 
-Absolute path to cni folder.
+Absolute path to cni folder, e.g. ~\cni (not ~\cni\bin).
 
 ```yaml
 Type: String
@@ -101,15 +117,14 @@ Aliases:
 
 Required: False
 Position: 4
-Default value: Path where containerd is installed or $Env:ProgramFiles\Containerd\cni
+Default value: $env:ProgramFiles\containerd\cni
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -WinCNIVersion
 
-Windows CNI plugin version to use.
-Defaults to latest version.
+Windows CNI plugins version to use. Defaults to latest version.
 
 ```yaml
 Type: String
@@ -118,19 +133,19 @@ Aliases:
 
 Required: False
 Position: 3
-Default value: Latest version
+Default value: latest
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -WhatIf
+### -Confirm
 
-Shows what would happen if the cmdlet runs. The cmdlet isn't run.
+Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: Setup
-Aliases:
+Parameter Sets: (All)
+Aliases: cf
 
 Required: False
 Position: Named
@@ -139,20 +154,34 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-## NOTES
+### -WhatIf
 
-The version provided needs to match the installed version. To avoid any issues, it is safer to install the latest version.
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
 
-If Windows CNI plugins are not installed at the default or provided path, the user is prompted to install the missing plugins.
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
 
-```Output
-Windows CNI plugins have not been installed.
-Do you want to install the Windows CNI plugins?
-[Y] Yes  [N] No  [?] Help (default is "N"):
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
 ```
 
-- If a user enters `Y`, the user to consents to the download and installation of the missing plugins.
-- If a user enters `N` (default), execution terminates with an error.
+### CommonParameters
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
+
+## NOTES
+
+The specified version must match the installed version. To avoid compatibility issues, it is recommended to install the latest version.  
+
+If the CNI plugins are not found at the default or specified path, the user will be prompted to install them —unless `-Confirm`
+is explicitly set to `$false`, in which case the plugins will be installed automatically without prompting.  
+
+If the user declines the installation, the NAT network setup operation will be terminated with a warning.
 
 ## RELATED LINKS
 
