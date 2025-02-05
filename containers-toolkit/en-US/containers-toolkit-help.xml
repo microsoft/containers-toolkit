@@ -200,8 +200,35 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Get-WinCNILatestVersion</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>repo</maml:name>
+          <maml:description>
+            <maml:para>Source of the Windows CNI plugins. Accepted values are 'microsoft/windows-container-networking' and 'containernetworking/plugins'. Defaults to 'microsoft/windows-container-networking'</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>microsoft/windows-container-networking</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>repo</maml:name>
+        <maml:description>
+          <maml:para>Source of the Windows CNI plugins. Accepted values are 'microsoft/windows-container-networking' and 'containernetworking/plugins'. Defaults to 'microsoft/windows-container-networking'</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>microsoft/windows-container-networking</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
+    <command:inputTypes />
     <command:returnValues>
       <command:returnValue>
         <dev:type>
@@ -317,6 +344,28 @@
           <dev:defaultValue>Path where containerd is installed or $Env:ProgramFiles\Containerd\cni</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Force</maml:name>
+          <maml:description>
+            <maml:para>Bypass confirmation to install any missing dependencies (Windows CNI plugins and HNS module)</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -341,6 +390,18 @@
           <maml:uri />
         </dev:type>
         <dev:defaultValue>16</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Force</maml:name>
+        <maml:description>
+          <maml:para>Bypass confirmation to install any missing dependencies (Windows CNI plugins and HNS module)</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>Gateway</maml:name>
@@ -390,7 +451,19 @@
         </dev:type>
         <dev:defaultValue>Latest version</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
         <maml:description>
           <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -405,14 +478,10 @@
     </command:parameters>
     <maml:alertSet>
       <maml:alert>
-        <maml:para>The version provided needs to match the installed version. To avoid any issues, it is safer to install the latest version.</maml:para>
-        <maml:para>If Windows CNI plugins are not installed at the default or provided path, the user is prompted to install the missing plugins.</maml:para>
-        <maml:para></maml:para>
-        <maml:para>Windows CNI plugins have not been installed. Do you want to install the Windows CNI plugins? [Y] Yes [N] No [?] Help (default is "N"):
-        </maml:para>
-        <maml:para></maml:para>
-        <maml:para>- If a user enters `Y`, the user to consents to the download and installation of the missing plugins.</maml:para>
-        <maml:para>- If a user enters `N` (default), execution terminates with an error.</maml:para>
+        <maml:para>The specified version must match the installed version. To avoid compatibility issues, it is recommended to install the latest version.  </maml:para>
+        <maml:para>If the CNI plugins are not found at the default or specified path, the user will be prompted to install them —unless `-Confirm`</maml:para>
+        <maml:para>is explicitly set to `$false`, in which case the plugins will be installed automatically without prompting.</maml:para>
+        <maml:para>If the user declines the installation, the NAT network setup operation will be terminated with a warning.</maml:para>
       </maml:alert>
     </maml:alertSet>
     <command:examples>
@@ -447,7 +516,7 @@
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
-
+  
   <!-- Install-Buildkit -->
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
     xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
@@ -462,34 +531,14 @@
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>Downloads BuildKit files from Containerd releases (https://github.com/moby/buildkit/releases)and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.</maml:para>
-      <maml:para>Once Buildkit is installed and added to the environment path, we can get the path where it is installed using:
-
-          ((Get-Command -Name "build*.exe" | Where-Object {$_.Source -like " buildkit*"} | Select-Object -Unique).Source | Split-Path -Parent).TrimEnd("\bin")
-      </maml:para>
+      <maml:para>Downloads BuildKit files from Containerd releases (https://github.com/moby/buildkit/releases) and installs it the provided path.</maml:para>
+      <maml:para>After installation is complete, the downloaded files are deleted to save on disk space.</maml:para>
+      <maml:para>We can get the path where Buildkit is installed using:</maml:para>
+      <maml:para>          ((Get-Command -Name "buildkitd.exe").Source | Split-Path -Parent).TrimEnd("\bin")</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
-        <maml:name>Install-BuildKit</maml:name>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-          <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
-            <maml:navigationLink>
-              <maml:linkText>about_Preference_Variables</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference</maml:uri>
-            </maml:navigationLink>
-            <maml:navigationLink>
-              <maml:linkText>about_Functions_CmdletBindingAttribute</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact</maml:uri>
-            </maml:navigationLink>
-          </maml:description>
-          <dev:type>
-            <maml:name>SwitchParameter</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>False</dev:defaultValue>
-        </command:parameter>
+        <maml:name>Install-Buildkit</maml:name>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>DownloadPath</maml:name>
           <maml:description>
@@ -516,7 +565,7 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>InstallPath</maml:name>
           <maml:description>
-            <maml:para>Path to install BuildKit. Defaults to `$ENV:ProramFiles\BuildKit`</maml:para>
+            <maml:para>Path to install BuildKit. Defaults to `$ENV:ProgramFiles\BuildKit`</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -551,7 +600,7 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>Version</maml:name>
           <maml:description>
-            <maml:para>Buildkit version to use. Defaults to latest version</maml:para>
+            <maml:para>Buildkit version to install. Defaults to latest version</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -572,7 +621,18 @@
           </dev:type>
           <dev:defaultValue>$ENV:ProgramFiles\Containerd\cni</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -586,26 +646,6 @@
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-        <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
-            <maml:navigationLink>
-              <maml:linkText>about_Preference_Variables</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference</maml:uri>
-            </maml:navigationLink>
-            <maml:navigationLink>
-              <maml:linkText>about_Functions_CmdletBindingAttribute</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact</maml:uri>
-            </maml:navigationLink>
-          </maml:description>
-        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
-        <dev:type>
-          <maml:name>SwitchParameter</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>False</dev:defaultValue>
-      </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>DownloadPath</maml:name>
         <maml:description>
@@ -633,7 +673,7 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>InstallPath</maml:name>
         <maml:description>
-          <maml:para>Path to install BuildKit. Defaults to `$ENV:ProramFiles\BuildKit`</maml:para>
+          <maml:para>Path to install BuildKit. Defaults to `$ENV:ProgramFiles\BuildKit`</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -690,7 +730,19 @@
         </dev:type>
         <dev:defaultValue>$ENV:ProgramFiles\Containerd\cni</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
         <maml:description>
           <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -742,7 +794,7 @@
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
-  
+
   <!-- Install-Containerd -->
   <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
     xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
@@ -757,11 +809,9 @@
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>Downloads Containerd files from containerd releases (https://github.com/containerd/containerd/releases)and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.</maml:para>
-      <maml:para>Once Containerd is installed and added to the environment path, we can get the path where it is installed using:   
-      
-          ((Get-Command -Name containerd.exe).Source | Split-Path -Parent).TrimEnd("\bin")
-      </maml:para>
+      <maml:para>Downloads Containerd files from containerd releases (https://github.com/containerd/containerd/releases)and installs it the provided path. After installation is complete, the downloaded files are deleted to save on disk space.</maml:para>
+      <maml:para>We can get the path where it is installed using:</maml:para>
+      <maml:para>   ((Get-Command -Name containerd.exe).Source | Split-Path -Parent).TrimEnd("\bin")</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
@@ -781,14 +831,14 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>InstallPath</maml:name>
           <maml:description>
-            <maml:para>Path to install Containerd. Defaults to Defaults to `$ENV:ProramFiles\containerd`</maml:para>
+            <maml:para>Path to install Containerd. Defaults to Defaults to `$ENV:ProgramFiles\containerd`</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>$ENV:ProramFiles\containerd</dev:defaultValue>
+          <dev:defaultValue>$ENV:ProgramFiles\containerd</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
           <maml:name>DownloadPath</maml:name>
@@ -801,25 +851,6 @@
             <maml:uri />
           </dev:type>
           <dev:defaultValue>$HOME\Downloads</dev:defaultValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-          <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
-            <maml:navigationLink>
-              <maml:linkText>about_Preference_Variables</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference</maml:uri>
-            </maml:navigationLink>
-            <maml:navigationLink>
-              <maml:linkText>about_Functions_CmdletBindingAttribute</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact</maml:uri>
-            </maml:navigationLink>
-          </maml:description>
-          <dev:type>
-            <maml:name>SwitchParameter</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>Force</maml:name>
@@ -855,7 +886,18 @@
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -869,26 +911,6 @@
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-        <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
-            <maml:navigationLink>
-              <maml:linkText>about_Preference_Variables</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference</maml:uri>
-            </maml:navigationLink>
-            <maml:navigationLink>
-              <maml:linkText>about_Functions_CmdletBindingAttribute</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact</maml:uri>
-            </maml:navigationLink>
-          </maml:description>
-        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
-        <dev:type>
-          <maml:name>SwitchParameter</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>False</dev:defaultValue>
-      </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
         <maml:name>DownloadPath</maml:name>
         <maml:description>
@@ -916,14 +938,14 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>InstallPath</maml:name>
         <maml:description>
-          <maml:para>Path to install Containerd. Defaults to Defaults to `$ENV:ProramFiles\containerd`</maml:para>
+          <maml:para>Path to install Containerd. Defaults to Defaults to `$ENV:ProgramFiles\containerd`</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>$ENV:ProramFiles\containerd</dev:defaultValue>
+        <dev:defaultValue>$ENV:ProgramFiles\containerd</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>OSArchitecture</maml:name>
@@ -960,7 +982,20 @@
           <maml:uri />
         </dev:type>
         <dev:defaultValue>Latest version</dev:defaultValue>
-      </command:parameter><command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
         <maml:description>
           <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -1093,25 +1128,6 @@
           <dev:defaultValue>$HOME\Downloads</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-          <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
-            <maml:navigationLink>
-              <maml:linkText>about_Preference_Variables</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference</maml:uri>
-            </maml:navigationLink>
-            <maml:navigationLink>
-              <maml:linkText>about_Functions_CmdletBindingAttribute</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact</maml:uri>
-            </maml:navigationLink>
-          </maml:description>
-          <dev:type>
-            <maml:name>SwitchParameter</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>False</dev:defaultValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>Force</maml:name>
           <maml:description>
             <maml:para>Force container tools uninstallation (if it exists) without any confirmation prompts</maml:para>
@@ -1133,19 +1149,18 @@
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-          <maml:name>OSArchitecture</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
           <maml:description>
-            <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
           </maml:description>
-          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
-            <maml:name>String</maml:name>
+            <maml:name>SwitchParameter</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
+          <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -1170,26 +1185,6 @@
           <maml:uri />
         </dev:type>
         <dev:defaultValue>Latest version</dev:defaultValue>
-      </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-        <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
-            <maml:navigationLink>
-              <maml:linkText>about_Preference_Variables</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference</maml:uri>
-            </maml:navigationLink>
-            <maml:navigationLink>
-              <maml:linkText>about_Functions_CmdletBindingAttribute</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact</maml:uri>
-            </maml:navigationLink>
-          </maml:description>
-        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
-        <dev:type>
-          <maml:name>SwitchParameter</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="0" aliases="none">
         <maml:name>ContainerDVersion</maml:name>
@@ -1227,18 +1222,6 @@
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-        <maml:name>RegisterServices</maml:name>
-        <maml:description>
-          <maml:para>Register and Start Containerd and Buildkitd services and set up NAT network.</maml:para>
-        </maml:description>
-        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
-        <dev:type>
-          <maml:name>SwitchParameter</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>False</dev:defaultValue>
-      </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="3" aliases="none">
         <maml:name>InstallPath</maml:name>
         <maml:description>
@@ -1264,18 +1247,30 @@
         <dev:defaultValue>Latest version</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-        <maml:name>OSArchitecture</maml:name>
+        <maml:name>RegisterServices</maml:name>
         <maml:description>
-          <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+          <maml:para>Register and Start Containerd and Buildkitd services and set up NAT network.</maml:para>
         </maml:description>
-        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
         <dev:type>
-          <maml:name>String</maml:name>
+          <maml:name>SwitchParameter</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
+        <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
         <maml:description>
           <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -1361,14 +1356,14 @@
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>InstallPath</maml:name>
           <maml:description>
-            <maml:para>Path to install nerdctl. Defaults to `$ENV:ProramFiles\nerdctl`</maml:para>
+            <maml:para>Path to install nerdctl. Defaults to `$ENV:ProgramFiles\nerdctl`</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
             <maml:name>String</maml:name>
             <maml:uri />
           </dev:type>
-          <dev:defaultValue>$ENV:ProramFiles\nerdctl`</dev:defaultValue>
+          <dev:defaultValue>$ENV:ProgramFiles\nerdctl`</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="2" aliases="none">
           <maml:name>DownloadPath</maml:name>
@@ -1395,25 +1390,6 @@
           <dev:defaultValue>None</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-          <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
-            <maml:navigationLink>
-              <maml:linkText>about_Preference_Variables</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference</maml:uri>
-            </maml:navigationLink>
-            <maml:navigationLink>
-              <maml:linkText>about_Functions_CmdletBindingAttribute</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact</maml:uri>
-            </maml:navigationLink>
-          </maml:description>
-          <dev:type>
-            <maml:name>SwitchParameter</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>False</dev:defaultValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>Force</maml:name>
           <maml:description>
             <maml:para>Force nerdctl (and its dependecies if specified) uninstallation (if it exists) without any confirmation prompts</maml:para>
@@ -1436,7 +1412,18 @@
           </dev:type>
           <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -1450,26 +1437,6 @@
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-        <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
-            <maml:navigationLink>
-              <maml:linkText>about_Preference_Variables</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference</maml:uri>
-            </maml:navigationLink>
-            <maml:navigationLink>
-              <maml:linkText>about_Functions_CmdletBindingAttribute</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact</maml:uri>
-            </maml:navigationLink>
-          </maml:description>
-        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
-        <dev:type>
-          <maml:name>SwitchParameter</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>False</dev:defaultValue>
-      </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="3" aliases="none">
         <maml:name>Dependencies</maml:name>
         <maml:description>
@@ -1509,14 +1476,14 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>InstallPath</maml:name>
         <maml:description>
-          <maml:para>Path to install nerdctl. Defaults to `$ENV:ProramFiles\nerdctl`</maml:para>
+          <maml:para>Path to install nerdctl. Defaults to `$ENV:ProgramFiles\nerdctl`</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
           <maml:name>String</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>$ENV:ProramFiles\nerdctl`</dev:defaultValue>
+        <dev:defaultValue>$ENV:ProgramFiles\nerdctl`</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>OSArchitecture</maml:name>
@@ -1542,7 +1509,19 @@
         </dev:type>
         <dev:defaultValue>Latest version</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
         <maml:description>
           <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -1597,36 +1576,11 @@
       </maml:description>
     </command:details>
     <maml:description>
-      <maml:para>Downloads Windows CNI plugin from windows-container-networking (https://github.com/microsoft/windows-container-networking/releases)and installs it in the specified location.</maml:para>
+      <maml:para>Downloads Windows CNI plugin and installs it in the specified location.</maml:para>
     </maml:description>
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Install-WinCNIPlugin</maml:name>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-          <maml:name>OSArchitecture</maml:name>
-          <maml:description>
-            <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
-          </maml:description>
-          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
-          <dev:type>
-            <maml:name>String</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-          <maml:name>SourceRepo</maml:name>
-          <maml:description>
-            <maml:para>Source of the Windows CNI plugins. Defaults to
-              'microsoft/windows-container-networking'</maml:para>
-          </maml:description>
-          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
-          <dev:type>
-            <maml:name>String</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>"microsoft/windows-container-networking"</dev:defaultValue>
-        </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="0" aliases="none">
           <maml:name>WinCNIVersion</maml:name>
           <maml:description>
@@ -1652,25 +1606,6 @@
           <dev:defaultValue>Path where containerd is installed or `$Env:ProgramFiles\Containerd`</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-          <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
-            <maml:navigationLink>
-              <maml:linkText>about_Preference_Variables</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference</maml:uri>
-            </maml:navigationLink>
-            <maml:navigationLink>
-              <maml:linkText>about_Functions_CmdletBindingAttribute</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact</maml:uri>
-            </maml:navigationLink>
-          </maml:description>
-          <dev:type>
-            <maml:name>SwitchParameter</maml:name>
-            <maml:uri />
-          </dev:type>
-          <dev:defaultValue>False</dev:defaultValue>
-        </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>Force</maml:name>
           <maml:description>
             <maml:para>Force Windows CNI plugins uninstallation (if it exists) without any confirmation prompts</maml:para>
@@ -1682,6 +1617,41 @@
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>OSArchitecture</maml:name>
+          <maml:description>
+            <maml:para>OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>$env:PROCESSOR_ARCHITECTURE</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>SourceRepo</maml:name>
+          <maml:description>
+            <maml:para>Source of the Windows CNI plugins. Defaults to             'microsoft/windows-container-networking'</maml:para>
+          </maml:description>
+          <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>"microsoft/windows-container-networking"</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -1695,26 +1665,6 @@
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
-        <maml:name>Confirm</maml:name>
-          <maml:description>
-            <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
-            <maml:navigationLink>
-              <maml:linkText>about_Preference_Variables</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference</maml:uri>
-            </maml:navigationLink>
-            <maml:navigationLink>
-              <maml:linkText>about_Functions_CmdletBindingAttribute</maml:linkText>
-              <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact</maml:uri>
-            </maml:navigationLink>
-          </maml:description>
-        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
-        <dev:type>
-          <maml:name>SwitchParameter</maml:name>
-          <maml:uri />
-        </dev:type>
-        <dev:defaultValue>False</dev:defaultValue>
-      </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>Force</maml:name>
         <maml:description>
@@ -1742,8 +1692,7 @@
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>SourceRepo</maml:name>
         <maml:description>
-          <maml:para>Source of the Windows CNI plugins. Defaults to
-            'microsoft/windows-container-networking'</maml:para>
+          <maml:para>Source of the Windows CNI plugins. Defaults to 'microsoft/windows-container-networking'</maml:para>
         </maml:description>
         <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
         <dev:type>
@@ -1752,8 +1701,7 @@
         </dev:type>
         <dev:defaultValue>"microsoft/windows-container-networking"</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false"
-        pipelineInput="False" position="1" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
         <maml:name>WinCNIPath</maml:name>
         <maml:description>
           <maml:para>Location to install Windows CNI.</maml:para>
@@ -1777,7 +1725,19 @@
         </dev:type>
         <dev:defaultValue>Latest version</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts for confirmation before running the cmdlet. For more information, see the following articles:</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
         <maml:description>
           <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -1837,12 +1797,10 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Register-BuildkitdService</maml:name>
-        <command:parameter required="false" variableLength="true" globbing="false"
-          pipelineInput="False" position="0" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="0" aliases="none">
           <maml:name>BuildKitPath</maml:name>
           <maml:description>
-            <maml:para>Path where Buildkit is installed. If not provided, it defaults to Buildkit
-              path in the environment path variable or `$Env:ProgramFiles\Buildkit`</maml:para>
+            <maml:para>Path where Buildkit is installed. If not provided, it defaults to Buildkit path in the environment path variable or `$Env:ProgramFiles\Buildkit`</maml:para>
           </maml:description>
           <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
           <dev:type>
@@ -1851,8 +1809,7 @@
           </dev:type>
           <dev:defaultValue>Buildkit path in the environment path variable or $Env:ProgramFiles\Buildkit</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false"
-          pipelineInput="False" position="1" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
           <maml:name>WinCNIPath</maml:name>
           <maml:description>
             <maml:para>Path where Windows CNI plugin is installed. If not provided, it defaults to Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd`</maml:para>
@@ -1865,6 +1822,17 @@
           <dev:defaultValue>Containerd path in the environment path variable or $Env:ProgramFiles\Containerd</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Force</maml:name>
+          <maml:description>
+            <maml:para>Bypass confirmation to register buildkitd service</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>Start</maml:name>
           <maml:description>
             <maml:para>Specify to start Buildkitd service after registration is complete</maml:para>
@@ -1875,7 +1843,18 @@
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -1901,18 +1880,17 @@
         </dev:type>
         <dev:defaultValue>Buildkit path in the environment path variable or $Env:ProgramFiles\Buildkit</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false"
-        pipelineInput="False" position="1" aliases="none">
-        <maml:name>WinCNIPath</maml:name>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Force</maml:name>
         <maml:description>
-          <maml:para>Path where Windows CNI plugin is installed. If not provided, it defaults to Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd`</maml:para>
+          <maml:para>Bypass confirmation to register buildkitd service</maml:para>
         </maml:description>
-        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
         <dev:type>
-          <maml:name>String</maml:name>
+          <maml:name>SwitchParameter</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>Containerd path in the environment path variable or $Env:ProgramFiles\Containerd</dev:defaultValue>
+        <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>Start</maml:name>
@@ -1926,7 +1904,31 @@
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="1" aliases="none">
+        <maml:name>WinCNIPath</maml:name>
+        <maml:description>
+          <maml:para>Path where Windows CNI plugin is installed. If not provided, it defaults to Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd`</maml:para>
+        </maml:description>
+        <command:parameterValue required="true" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>Containerd path in the environment path variable or $Env:ProgramFiles\Containerd</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
         <maml:description>
           <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -1942,11 +1944,7 @@
     <maml:alertSet>
       <maml:alert>
         <maml:para>When the `0-containerd-nat.conf` does not exist, the user is prompted to register buildkitd service with or without this file.</maml:para>
-        <maml:para></maml:para>
-        <maml:para>
-          Buildkit conf file not found at ~\cni\conf\0-containerd-nat.conf. Do you want to register buildkit service without containerd cni configuration? [Y] Yes [N] No [?] Help (default is "Y"):
-        </maml:para>
-        <maml:para></maml:para>
+        <maml:para>Buildkit conf file not found at ~\cni\conf\0-containerd-nat.conf. Do you want to register buildkit service without containerd cni configuration? [Y] Yes [N] No [?] Help (default is "Y"):</maml:para>
         <maml:para>- If a user enters `Y` (default), the user consents to register buildkitd service without the default containerd NAT configuration file.</maml:para>
         <maml:para>- If a user enters `N`, buildkitd service is not registered and the user has to register the service themselves.</maml:para>
       </maml:alert>
@@ -2010,8 +2008,7 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Register-ContainerdService</maml:name>
-        <command:parameter required="false" variableLength="true" globbing="false"
-          pipelineInput="False" position="0" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="0" aliases="none">
           <maml:name>ContainerdPath</maml:name>
           <maml:description>
             <maml:para>Path where Containerd is installed.</maml:para>
@@ -2024,6 +2021,17 @@
           <dev:defaultValue>The containerd path in the environment path variable or $Env:ProgramFiles\containerd</dev:defaultValue>
         </command:parameter>
         <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Force</maml:name>
+          <maml:description>
+            <maml:para>Bypass confirmation to register containerd service</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>Start</maml:name>
           <maml:description>
             <maml:para>Specify to start Containerd service after registration is complete</maml:para>
@@ -2034,7 +2042,18 @@
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -2061,6 +2080,18 @@
         <dev:defaultValue>The containerd path in the environment path variable or $Env:ProgramFiles\containerd</dev:defaultValue>
       </command:parameter>
       <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Force</maml:name>
+        <maml:description>
+          <maml:para>Bypass confirmation to register containerd service</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>Start</maml:name>
         <maml:description>
           <maml:para>Specify to start Containerd service after registration is complete</maml:para>
@@ -2072,7 +2103,19 @@
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
         <maml:description>
           <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -2144,8 +2187,7 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Show-ContainerTools</maml:name>
-        <command:parameter required="false" variableLength="true" globbing="false"
-          pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>Latest</maml:name>
           <maml:description>
             <maml:para>Show latest release version</maml:para>
@@ -2156,14 +2198,14 @@
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false"
-          pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
           <maml:name>ToolName</maml:name>
           <maml:description>
-            <maml:para>Tool to show the version of.</maml:para>
+            <maml:para>Displays the version of a specified tool. If no tool is specified, it returns the versions of containerd, buildkit, and nerdctl.</maml:para>
           </maml:description>
+          <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
           <dev:type>
-            <maml:name>String</maml:name>
+            <maml:name>String[]</maml:name>
             <maml:uri />
           </dev:type>
           <dev:defaultValue>null</dev:defaultValue>
@@ -2171,8 +2213,7 @@
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
-      <command:parameter required="false" variableLength="true" globbing="false"
-        pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>Latest</maml:name>
         <maml:description>
           <maml:para>Show latest release version</maml:para>
@@ -2184,25 +2225,24 @@
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false"
-        pipelineInput="False" position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
         <maml:name>ToolName</maml:name>
         <maml:description>
-          <maml:para>Tool to show the version of.</maml:para>
+          <maml:para>Displays the version of a specified tool. If no tool is specified, it returns the versions of containerd, buildkit, and nerdctl.</maml:para>
         </maml:description>
-        <command:parameterValue required="false" variableLength="false">String</command:parameterValue>
+        <command:parameterValue required="true" variableLength="false">String[]</command:parameterValue>
         <dev:type>
-          <maml:name>String</maml:name>
+          <maml:name>String[]</maml:name>
           <maml:uri />
         </dev:type>
-        <dev:defaultValue>null (When null, it returns the version of containerd, buildkit, and nerdctl)</dev:defaultValue>
+        <dev:defaultValue>null</dev:defaultValue>
       </command:parameter>
     </command:parameters>
+    <command:inputTypes />
     <command:returnValues>
       <command:returnValue>
         <dev:type>
-          <maml:name>
-            [System.Array](https://learn.microsoft.com/en-us/dotnet/api/system.array?view=net-7.0)</maml:name>
+          <maml:name>[System.Array](https://learn.microsoft.com/en-us/dotnet/api/system.array?view=net-7.0)</maml:name>
         </dev:type>
         <maml:description>
           <maml:para>
@@ -2269,8 +2309,56 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Start-BuildkitdService</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
@@ -2283,8 +2371,7 @@
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Start-Service</maml:linkText>
-        <maml:uri>
-          https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-service?view=powershell-7.3</maml:uri>
+        <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-service?view=powershell-7.3</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Get-BuildkitLatestVersion</maml:linkText>
@@ -2328,8 +2415,56 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Start-ContainerdService</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
@@ -2342,8 +2477,7 @@
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Start-Service</maml:linkText>
-        <maml:uri>
-          https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-service?view=powershell-7.3</maml:uri>
+        <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-service?view=powershell-7.3</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Get-ContainerdLatestVersion</maml:linkText>
@@ -2387,8 +2521,56 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Stop-BuildkitdService</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
@@ -2401,8 +2583,7 @@
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Stop-Service</maml:linkText>
-        <maml:uri>
-          https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/stop-service?view=powershell-7.3</maml:uri>
+        <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/stop-service?view=powershell-7.3</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Get-BuildkitLatestVersion</maml:linkText>
@@ -2446,8 +2627,56 @@
     <command:syntax>
       <command:syntaxItem>
         <maml:name>Stop-ContainerdService</maml:name>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+          <maml:name>WhatIf</maml:name>
+          <maml:description>
+            <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
+    <command:parameters>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
+        <maml:name>WhatIf</maml:name>
+        <maml:description>
+          <maml:para>Shows what would happen if the cmdlet runs. The cmdlet is not run.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+    </command:parameters>
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
@@ -2460,8 +2689,7 @@
     <command:relatedLinks>
       <maml:navigationLink>
         <maml:linkText>Stop-Service</maml:linkText>
-        <maml:uri>
-          https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/stop-service?view=powershell-7.3</maml:uri>
+        <maml:uri>https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/stop-service?view=powershell-7.3</maml:uri>
       </maml:navigationLink>
       <maml:navigationLink>
         <maml:linkText>Get-ContainerdLatestVersion</maml:linkText>
@@ -2528,8 +2756,29 @@
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false"
-          pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Purge</maml:name>
+          <maml:description>
+            <maml:para>Delete all Buildkit program files and program data.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -2567,8 +2816,31 @@
         </dev:type>
         <dev:defaultValue>The Buildkit path in the environment path variable or `$Env:ProgramFiles\Buildkit`</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False"
-        position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Purge</maml:name>
+        <maml:description>
+          <maml:para>Delete all Buildkit program files and program data.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
         <maml:description>
           <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -2656,8 +2928,29 @@
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false"
-          pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Purge</maml:name>
+          <maml:description>
+            <maml:para>Delete all Containerd program files and program data.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -2695,8 +2988,31 @@
         </dev:type>
         <dev:defaultValue>The Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd`</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False"
-        position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Purge</maml:name>
+        <maml:description>
+          <maml:para>Delete all Containerd program files and program data.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
         <maml:description>
           <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -2784,8 +3100,29 @@
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false"
-          pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+          <maml:name>Purge</maml:name>
+          <maml:description>
+            <maml:para>Delete all nerdctl program files and program data.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -2823,8 +3160,31 @@
         </dev:type>
         <dev:defaultValue>The nerdctl path in the environment path variable or $Env:ProgramFiles\nerdctl</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False"
-        position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="none">
+        <maml:name>Purge</maml:name>
+        <maml:description>
+          <maml:para>Delete all nerdctl program files and program data.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
         <maml:description>
           <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -2837,11 +3197,6 @@
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
     </command:parameters>
-    <command:inputTypes />
-    <command:returnValues />
-    <maml:alertSet>
-      <maml:alert />
-    </maml:alertSet>
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>
@@ -2862,9 +3217,12 @@
       </maml:navigationLink>
     </command:relatedLinks>
   </command:command>
-
+  
   <!-- Uninstall-WinCNIPlugin -->
-  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10" xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10" xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10" xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
+  <command:command xmlns:maml="http://schemas.microsoft.com/maml/2004/10"
+    xmlns:command="http://schemas.microsoft.com/maml/dev/command/2004/10"
+    xmlns:dev="http://schemas.microsoft.com/maml/dev/2004/10"
+    xmlns:MSHelp="http://msdn.microsoft.com/mshelp">
     <command:details>
       <command:name>Uninstall-WinCNIPlugin</command:name>
       <command:verb>Uninstall</command:verb>
@@ -2902,8 +3260,18 @@
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
-        <command:parameter required="false" variableLength="true" globbing="false"
-          pipelineInput="False" position="named" aliases="none">
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+          <maml:name>Confirm</maml:name>
+          <maml:description>
+            <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>SwitchParameter</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>False</dev:defaultValue>
+        </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
           <maml:name>WhatIf</maml:name>
           <maml:description>
             <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -2941,8 +3309,19 @@
         </dev:type>
         <dev:defaultValue>$ENV:ProgramFiles\Containerd\cni</dev:defaultValue>
       </command:parameter>
-      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False"
-        position="named" aliases="none">
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="cf">
+        <maml:name>Confirm</maml:name>
+        <maml:description>
+          <maml:para>Prompts you for confirmation before running the cmdlet.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">SwitchParameter</command:parameterValue>
+        <dev:type>
+          <maml:name>SwitchParameter</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false" pipelineInput="False" position="named" aliases="wi">
         <maml:name>WhatIf</maml:name>
         <maml:description>
           <maml:para>Shows what would happen if the cmdlet runs. The cmdlet isn't run.</maml:para>
@@ -2955,11 +3334,6 @@
         <dev:defaultValue>False</dev:defaultValue>
       </command:parameter>
     </command:parameters>
-    <command:inputTypes />
-    <command:returnValues />
-    <maml:alertSet>
-      <maml:alert />
-    </maml:alertSet>
     <command:examples>
       <command:example>
         <maml:title>-------------------------- Example 1 --------------------------</maml:title>

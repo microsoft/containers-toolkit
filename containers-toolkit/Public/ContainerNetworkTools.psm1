@@ -14,6 +14,9 @@ Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 function Get-WinCNILatestVersion {
     param (
+        [parameter(HelpMessage = "Source of the Windows CNI plugins. Accepted values are 'microsoft/windows-container-networking' and 'containernetworking/plugins'. Defaults to 'microsoft/windows-container-networking'")]
+        [ValidateSet("microsoft/windows-container-networking", "containernetworking/plugins")]
+        [Alias("SourceRepo", "Repository")]
         [String]$repo = "microsoft/windows-container-networking"
     )
     $tool = switch ($repo.ToLower()) {
@@ -56,16 +59,16 @@ function Install-WinCNIPlugin {
             $containerdPath = Get-DefaultInstallPath -Tool "containerd"
             $WinCNIPath = "$containerdPath\cni"
         }
-        $WinCNIPath = $WinCNIPath -replace '(\\bin)$', ''
+        $WinCNIPath = "$WinCNIPath" -replace '(\\bin)$', ''
 
-        # Check if WinCNI plugins are installed
-        $isInstalled = -not (Test-EmptyDirectory -Path $WinCNIPath)
+        # Check if the CNI plugins are already installed
+        $isInstalled = -not (Test-EmptyDirectory -Path "$WinCNIPath")
 
         $plugin = "Windows CNI plugins"
 
-        $WhatIfMessage = "$plugin will be installed at $WINCNIPath"
+        $WhatIfMessage = "$plugin will be installed at '$WINCNIPath'"
         if ($isInstalled) {
-            $WhatIfMessage = "$plugin will be uninstalled from and reinstalled at $WINCNIPath"
+            $WhatIfMessage = "$plugin will be uninstalled from and reinstalled at '$WINCNIPath'"
         }
     }
 
@@ -73,7 +76,7 @@ function Install-WinCNIPlugin {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
-                $errMsg = "Windows CNI plugins already exists at $WinCNIPath or the directory is not empty"
+                $errMsg = "Windows CNI plugins already exists at '$WinCNIPath' or the directory is not empty."
                 Write-Warning $errMsg
 
                 # Uninstall if tool exists at specified location. Requires user consent
@@ -184,7 +187,7 @@ function Initialize-NatNetwork {
         # Check if WinCNI plugins is already installed
         $isInstalled = -not (Test-EmptyDirectory -Path "$WinCNIPath\bin")
 
-        $WhatIfMessage = "Initialises a NAT network using Windows CNI plugins installed"
+        $WhatIfMessage = "Initializes a NAT network using Windows CNI plugins installed"
         if (!$isInstalled) {
             $WhatIfMessage = "`n`t1. Import `"HostNetworkingService`" or `"HNS`" module,`n`t2. Install Windows CNI plugins, and 3. Initialize a NAT network using Windows CNI plugins installed`n"
         }
@@ -194,7 +197,7 @@ function Initialize-NatNetwork {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             if (!$force) {
                 if (!$ENV:PESTER) {
-                    if (-not $PSCmdlet.ShouldContinue('', "Are you sure you want to initialises a NAT network?`n`t`tHNS module will be imported and missing dependencies (Windows CNI Plugins) will be installed if missing.")) {
+                    if (-not $PSCmdlet.ShouldContinue('', "Are you sure you want to initialize a NAT network?`n`t`tHNS module will be imported and missing dependencies (Windows CNI Plugins) will be installed if missing.")) {
                         Write-Error "NAT network initialisation cancelled."
                         return
                     }
@@ -237,7 +240,7 @@ function Initialize-NatNetwork {
                 Throw "`"New-HNSNetwork`" command does not exist. Ensure the HNS module is installed. To resolve this issue, see`n`thttps://github.com/microsoft/containers-toolkit/blob/main/docs/FAQs.md#2-new-hnsnetwork-command-does-not-exist"
             }
 
-            # Set default gateway if gateway us null and generate subnet mash=k from Gateway
+            # Set default gateway and generate subnet mask from Gateway
             if (!$gateway) {
                 $gateway = (Get-NetRoute -DestinationPrefix "0.0.0.0/0").NextHop
             }
@@ -291,7 +294,7 @@ function Uninstall-WinCNIPlugin {
     )]
     param(
         [parameter(HelpMessage = "Windows CNI plugin path")]
-        [String]$Path,
+        [String]$Path="$ENV:ProgramFiles\Containerd\cni",
 
         [parameter(HelpMessage = "Bypass confirmation to uninstall Windows CNI plugins")]
         [Switch] $Force
@@ -300,12 +303,15 @@ function Uninstall-WinCNIPlugin {
     begin {
         $tool = 'WinCNIPlugin'
 
+        # Get the default path
         if (!$Path) {
-            $ContainerdPath = Get-DefaultInstallPath -Tool "containerd"
-            $Path = "$ContainerdPath\cni"
+            $path = Get-DefaultInstallPath -Tool "containerd"
         }
 
-        $Path = $Path -replace '(\\bin\\?)$', ''
+        # Only delete the /cni dir
+        if (-not $path.EndsWith("\cni")) {
+            $path = Join-Path -Path "$path" -ChildPath "cni"
+        }
 
         $WhatIfMessage = "Windows CNI plugins will be uninstalled from $path"
     }
@@ -324,7 +330,8 @@ function Uninstall-WinCNIPlugin {
             }
 
             if (!$consent) {
-                Throw "Windows CNI plugins uninstallation cancelled."
+                Write-Warning "$tool uninstallation cancelled."
+                return
             }
 
             Write-Warning "Uninstalling preinstalled Windows CNI plugin at the path $path"
@@ -357,7 +364,7 @@ function Uninstall-WinCNIPluginHelper {
     }
 
     # Remove the folder where WinCNI plugins are installed
-    Remove-Item $Path -Recurse -Force -ErrorAction Ignore
+    Remove-Item $Path -Recurse -Force -ErrorAction Continue
 
     Write-Output "Successfully uninstalled Windows CNI plugin."
 }
@@ -423,7 +430,7 @@ function Set-DefaultCNIConfig {
     }
 }
 "@
-            $CNIConfig | Set-Content "$cniConfDir\0-containerd-nat.conf" -Force
+            $CNIConfig | Set-Content -Path "$cniConfDir\0-containerd-nat.conf" -Force
         }
         else {
             # Code that should be processed if doing a WhatIf operation

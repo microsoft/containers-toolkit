@@ -15,28 +15,28 @@ Downloads and installs BuildKit.
 
 ### Install (Default)
 
-```PowerShell
-Install-Buildkit [-Version <String>] [-InstallPath <String>] [-DownloadPath <String>] [-OSArchitecture <string>] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+```
+Install-Buildkit [-Version <String>] [-InstallPath <String>] [-DownloadPath <String>] [-OSArchitecture <String>]
+ [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ### Setup
 
-```PowerShell
-Install-Buildkit [-Version <String>] [-InstallPath <String>] [-DownloadPath <String>] [-Setup]
- [-WinCNIPath <String>] [-OSArchitecture <string>]  [-Force] [-Confirm] [-WhatIf] [<CommonParameters>]
+```
+Install-Buildkit [-Version <String>] [-InstallPath <String>] [-DownloadPath <String>] [-RegisterService]
+ [-WinCNIPath <String>] [-OSArchitecture <String>] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 
-Downloads BuildKit files from [Containerd releases](https://github.com/moby/buildkit/releases) and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.
-
-Once BuildKit is installed and added to the environment path, we can get the path where it is installed using:
+Downloads BuildKit files from [Containerd releases](https://github.com/moby/buildkit/releases) and installs it the provided path. After installation is complete, the downloaded files are deleted to save on disk space.
+We can get the path where Buildkit is installed using:
 
 ```PowerShell
-((Get-Command -Name "build*.exe" | Where-Object {$_.Source -like "*buildkit*"} | Select-Object -Unique).Source | Split-Path -Parent).TrimEnd("\bin")
+((Get-Command -Name "buildkitd.exe").Source | Split-Path -Parent).TrimEnd("\bin")
 ```
 
-**NOTE:** If BuildKit already exists at the specified install path, it will be uninstalled and the specified version will be installed.
+**NOTE:** If `-Force` is specified and BuildKit is already present at the specified install path, it will be uninstalled and replaced with the specified version. Otherwise, the installation will be skipped.
 
 ## EXAMPLES
 
@@ -58,28 +58,9 @@ PS C:\> Install-BuildKit -Version "0.12.2" -InstallPath 'C:\Test\Path\buildkit'
 
 ## PARAMETERS
 
-### -Confirm
-
-Prompts for confirmation before running the cmdlet. For more information, see the following articles:
-
-- [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference)
-- [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact)
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -DownloadPath
 
-Path to download files. Defaults to user's Downloads folder
+Path to download files. Defaults to `$HOME\Downloads`
 
 ```yaml
 Type: String
@@ -111,7 +92,7 @@ Accept wildcard characters: False
 
 ### -InstallPath
 
-Path to install BuildKit. Defaults to `$ENV:ProramFiles\BuildKit`
+Path to install BuildKit. Defaults to `$ENV:ProgramFiles\BuildKit`
 
 ```yaml
 Type: String
@@ -132,35 +113,35 @@ Default is `$env:PROCESSOR_ARCHITECTURE`
 
 ```yaml
 Type: String
-Parameter Sets: Setup
+Parameter Sets: (All)
 Aliases:
 
 Required: False
 Position: Named
-Default value:  $env:PROCESSOR_ARCHITECTURE
+Default value: $env:PROCESSOR_ARCHITECTURE
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Setup
+### -RegisterService
 
-Register and start buildkitd Service once BuildKit installation is done.
+Register and start the buildkitd Service.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: Setup
-Aliases:
+Parameter Sets: (All)
+Aliases: Setup
 
 Required: False
 Position: Named
-Default value: False
+Default value: None
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -Version
 
-Buildkit version to install. Defaults to latest version
+Buildkit version to use. Defaults to latest version.
 
 ```yaml
 Type: String
@@ -169,7 +150,7 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: Latest version
+Default value: latest
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -190,14 +171,14 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -WhatIf
+### -Confirm
 
-Shows what would happen if the cmdlet runs. The cmdlet isn't run.
+Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: Setup
-Aliases:
+Parameter Sets: (All)
+Aliases: cf
 
 Required: False
 Position: Named
@@ -205,6 +186,26 @@ Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
+
+### -WhatIf
+
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## RELATED LINKS
 
