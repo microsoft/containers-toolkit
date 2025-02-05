@@ -313,9 +313,10 @@ function Uninstall-Containerd {
         }
 
         # If we are not purging, we are uninstalling from the bin directory
-        # that contains the containerd executables
+        # that contains the containerd binaries, containerd/bin
+        $path = $path.TrimEnd("\")
         if (-not $Purge -and (-not $path.EndsWith("\bin"))) {
-            $path = $path.TrimEnd("\").Trim() + "\bin"
+            $path = $path.Trim() + "\bin"
         }
 
         $WhatIfMessage = "Containerd will be uninstalled from '$path' and containerd service will be stopped and unregistered."
@@ -340,7 +341,8 @@ function Uninstall-Containerd {
             }
 
             if (!$consent) {
-                Throw "$tool uninstallation cancelled."
+                Write-Warning "$tool uninstallation cancelled."
+                return
             }
 
             Write-Warning "Uninstalling preinstalled $tool at the path '$path'.`n$WhatIfMessage"

@@ -236,7 +236,8 @@ function Uninstall-Nerdctl {
             }
 
             if (!$consent) {
-                Throw "$tool uninstallation cancelled."
+                Write-Warning "$tool uninstallation cancelled."
+                return
             }
 
             Write-Warning "Uninstalling preinstalled $tool at the path '$path'.`n$WhatIfMessage"

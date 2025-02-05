@@ -279,35 +279,37 @@ Describe "ContainerdTools.psm1" {
         }
 
         It "Should successfully uninstall Containerd" {
-            Mock Uninstall-ContainerdHelper -ModuleName 'ContainerdTools'
+            Uninstall-Containerd -Path 'TestDrive:\Custom\Containerd\' -Confirm:$false -Force
 
-            Uninstall-Containerd -Path 'TestDrive:\Program Files\Containerd' -Confirm:$false -Force
+            # Should stop and deregister the containerd service
+            Should -Invoke Stop-ContainerdService -Times 1 -Scope It -ModuleName "ContainerdTools"
+            Should -Invoke Unregister-Containerd -Times 1 -Scope It -ModuleName "ContainerdTools"
 
-            Should -Invoke Uninstall-ContainerdHelper -Times 1 -Scope It -ModuleName "ContainerdTools" `
-                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Containerd' }
+            # Should remove containerd binaries only not the entire dir
+            # The containerd dir contains cni binaries and config.toml
+            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "ContainerdTools" `
+                -ParameterFilter { $Path -eq 'TestDrive:\Custom\Containerd\bin' }
+
+            # Should not purge program data
+            Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "ContainerdTools" `
+                -ParameterFilter { $Path -eq 'HKLM:\SYSTEM\CurrentControlSet\Services\containerd' }
+            Should -Invoke Uninstall-ProgramFiles -Times 0 -Scope It -ModuleName "ContainerdTools" `
+                -ParameterFilter { $Path -eq "$ENV:ProgramData\Containerd" }
+            Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "ContainerdTools" `
+                -ParameterFilter { $Feature -eq "containerd" }
         }
 
         It "Should successfully uninstall Containerd from default path" {
-            Mock Uninstall-ContainerdHelper -ModuleName 'ContainerdTools'
-
             Uninstall-Containerd -Confirm:$false -Force
 
-            Should -Invoke Uninstall-ContainerdHelper -Times 1 -Scope It -ModuleName "ContainerdTools" `
-                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Containerd' }
-        }
-
-        It "Should throw an error if user does not consent to uninstalling Containerd" {
-            $ENV:PESTER = $true
-            { Uninstall-Containerd -Path 'TestDrive:\Program Files\Containerd' -Confirm:$false -Force:$false } | Should -Throw "Containerd uninstallation cancelled."
-        }
-
-        It "Should successfully call uninstall Containerd helper function" {
-            Uninstall-ContainerdHelper -Path 'TestDrive:\Program Files\Containerd'
-
-            Should -Invoke Stop-ContainerdService -Times 1 -Scope It -ModuleName "ContainerdTools"
-            Should -Invoke Unregister-Containerd -Times 1 -Scope It -ModuleName "ContainerdTools"
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "ContainerdTools" `
-                -ParameterFilter { $Path -eq 'HKLM:\SYSTEM\CurrentControlSet\Services\containerd' }
+                -ParameterFilter { $Path -eq "$ENV:ProgramFiles\Containerd\bin" }
+        }
+
+        It "Should successfully purge program data" {
+            Uninstall-Containerd -Path 'TestDrive:\Program Files\Containerd' -Confirm:$false -Force -Purge
+
+            # Should purge program data
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "ContainerdTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Containerd' }
             Should -Invoke Uninstall-ProgramFiles -Times 1 -Scope It -ModuleName "ContainerdTools" `
@@ -316,23 +318,32 @@ Describe "ContainerdTools.psm1" {
                 -ParameterFilter { $Feature -eq "containerd" }
         }
 
+        It "Should do nothing if user does not consent to uninstalling Containerd" {
+            $ENV:PESTER = $true
+            Uninstall-Containerd -Path 'TestDrive:\Program Files\Containerd' -Confirm:$false -Force:$false
+
+            # Should NOT stop and deregister the containerd service
+            Should -Invoke Stop-ContainerdService -Times 0 -Scope It -ModuleName "ContainerdTools"
+            Should -Invoke Unregister-Containerd -Times 0 -Scope It -ModuleName "ContainerdTools"
+
+            # Should NOT remove containerd binaries/dir
+            Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "ContainerdTools"
+        }
+
         It "Should do nothing if containerd is not installed at specified path" {
             Mock Test-EmptyDirectory -ModuleName 'ContainerdTools' -MockWith { return $true }
 
-            Uninstall-ContainerdHelper -Path 'TestDrive:\Program Files\Containerd'
+            Uninstall-Containerd -Path 'TestDrive:\Program Files\Containerd' -Confirm:$false
 
             Should -Invoke Stop-ContainerdService -Times 0 -Scope It -ModuleName "ContainerdTools"
             Should -Invoke Unregister-Containerd -Times 0 -Scope It -ModuleName "ContainerdTools"
             Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "ContainerdTools"
-            Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "ContainerdTools"
-
-            $Error[0].Exception.Message | Should -BeExactly 'Containerd does not exist at TestDrive:\Program Files\Containerd or the directory is empty.'
         }
 
         It "Should throw an error if containerd service stop or unregister was unsuccessful" {
             Mock Stop-ContainerdService -ModuleName 'ContainerdTools' -MockWith { Throw 'Error' }
 
-            { Uninstall-ContainerdHelper -Path 'TestDrive:\Program Files\Containerd' } | Should -Throw "Could not stop or unregister containerd service.*"
+            { Uninstall-Containerd -Path 'TestDrive:\Program Files\Containerd' -Confirm:$false -Force -Purge } | Should -Throw "*Could not stop or unregister containerd service.*"
             Should -Invoke Unregister-Containerd -Times 0 -Scope It -ModuleName "ContainerdTools"
             Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "ContainerdTools"
             Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "ContainerdTools"

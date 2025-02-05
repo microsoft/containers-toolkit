@@ -252,42 +252,33 @@ Describe "ContainerNetworkTools.psm1" {
         }
 
         It "Should successfully uninstall WinCNI plugins" {
-            Mock Uninstall-WinCNIPluginHelper -ModuleName 'ContainerNetworkTools'
+            Uninstall-WinCNIPlugin -Path 'TestDrive:\Program Files' -Confirm:$false -Force
 
-            Uninstall-WinCNIPlugin -Confirm:$false -Path 'TestDrive:\Program Files\cni' -Force
-
-            Should -Invoke Uninstall-WinCNIPluginHelper -Times 1 -Scope It -ModuleName "ContainerNetworkTools" `
+            # Should remove containerd/cni dir
+            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "ContainerNetworkTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\cni' }
         }
 
         It "Should successfully uninstall WinCNI plugins from default path" {
-            Mock Uninstall-WinCNIPluginHelper -ModuleName 'ContainerNetworkTools'
-
             Uninstall-WinCNIPlugin -Confirm:$false -Force
 
-            Should -Invoke Uninstall-WinCNIPluginHelper -Times 1 -Scope It -ModuleName "ContainerNetworkTools" `
-                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Containerd\cni' }
-        }
-
-        It "Should throw an error if user does not consent to uninstalling WinCNIPlugin" {
-            $ENV:PESTER = $true
-            { Uninstall-WinCNIPlugin -Confirm:$false -Path 'TestDrive:\Program Files\cni' -Force:$false } | Should -Throw "Windows CNI plugins uninstallation cancelled."
-        }
-
-        It "Should successfully call uninstall WinCNIPlugin helper function" {
-            Uninstall-WinCNIPluginHelper -Path 'TestDrive:\TestDir\cni'
-
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "ContainerNetworkTools" `
-                -ParameterFilter { $Path -eq 'TestDrive:\TestDir\cni' }
+                -ParameterFilter { $Path -eq "$ENV:ProgramFiles\Containerd\cni" }
+        }
+
+        It "Should do nothing if user does not consent to uninstalling WinCNIPlugin" {
+            $ENV:PESTER = $true
+            Uninstall-WinCNIPlugin -Confirm:$false -Force:$false
+
+            # Should NOT remove WinCNIPlugin binaries/dir
+            Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "ContainerNetworkTools"
         }
 
         It "Should do nothing if WinCNI plugins is not installed at specified path" {
             Mock Test-EmptyDirectory -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
 
-            Uninstall-WinCNIPluginHelper -Path 'TestDrive:\TestDir\cni'
+            Uninstall-WinCNIPlugin -Path 'TestDrive:\TestDir\cni' -Confirm:$false
             Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "ContainerNetworkTools"
-
-            $Error[0].Exception.Message | Should -Be 'Windows CNI plugin does not exist at TestDrive:\TestDir\cni or the directory is empty.'
         }
     }
 }

@@ -160,39 +160,30 @@ Describe "NerdctlTools.psm1" {
         }
 
         It "Should successfully uninstall nerdctl" {
-            Mock Uninstall-NerdctlHelper -ModuleName 'NerdctlTools'
+            Uninstall-Nerdctl -Path 'TestDrive:\Custom\nerdctl\' -Confirm:$false -Force
 
-            Uninstall-Nerdctl -Path 'TestDrive:\Program Files\nerdctl' -Confirm:$false -Force
+            # Should remove nerdctl dir
+            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "NerdctlTools" `
+                -ParameterFilter { $Path -eq 'TestDrive:\Custom\nerdctl\' }
 
-            Should -Invoke Uninstall-NerdctlHelper -Times 1 -Scope It -ModuleName "NerdctlTools" `
-                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\nerdctl' }
+            # Should not purge program data
+            Should -Invoke Uninstall-ProgramFiles -Times 0 -Scope It -ModuleName "NerdctlTools" `
+                -ParameterFilter { $Path -eq "$ENV:ProgramData\nerdctl" }
+            Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "NerdctlTools" `
+                -ParameterFilter { $Feature -eq "nerdctl" }
         }
 
         It "Should successfully uninstall nerdctl from default path" {
-            Mock Uninstall-NerdctlHelper -ModuleName 'NerdctlTools'
-
             Uninstall-Nerdctl -Confirm:$false -Force
 
-            Should -Invoke Uninstall-NerdctlHelper -Times 1 -Scope It -ModuleName "NerdctlTools" `
-                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\nerdctl' }
+            Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "NerdctlTools" `
+                -ParameterFilter { $Path -eq "$ENV:ProgramFiles\nerdctl" }
         }
 
-        It "Should throw an error if user does not consent to uninstalling nerdctl" {
-            $ENV:PESTER = $true
-            { Uninstall-Nerdctl -Confirm:$false -Path 'TestDrive:\Program Files\nerdctl'-Force:$false } | Should -Throw 'nerdctl uninstallation cancelled.'
-        }
+        It "Should successfully purge program data" {
+            Uninstall-Nerdctl -Path 'TestDrive:\Program Files\nerdctl' -Confirm:$false -Force -Purge
 
-        It "Should do nothing if nerdctl is not installed at specified path" {
-            Mock Test-EmptyDirectory -ModuleName 'NerdctlTools' -MockWith { return $true }
-
-            Uninstall-Nerdctl -Confirm:$false -Force
-            Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "NerdctlTools"
-            Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "NerdctlTools"
-        }
-
-        It "Should successfully call uninstall nerdctl helper function" {
-            Uninstall-NerdctlHelper -Path 'TestDrive:\Program Files\nerdctl'
-
+            # Should purge program data
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "NerdctlTools" `
                 -ParameterFilter { $Path -eq 'TestDrive:\Program Files\nerdctl' }
             Should -Invoke Uninstall-ProgramFiles -Times 1 -Scope It -ModuleName "NerdctlTools" `
@@ -201,12 +192,19 @@ Describe "NerdctlTools.psm1" {
                 -ParameterFilter { $Feature -eq "nerdctl" }
         }
 
-        It "Should write an error if nerdctl is not installed at specified path" {
+        It "Should do nothing if user does not consent to uninstalling nerdctl" {
+            $ENV:PESTER = $true
+            Uninstall-Nerdctl -Path 'TestDrive:\Program Files\nerdctl' -Confirm:$false -Force:$false
+
+            # Should NOT remove nerdctl binaries/dir
+            Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "NerdctlTools"
+        }
+
+        It "Should do nothing if nerdctl is not installed at specified path" {
             Mock Test-EmptyDirectory -ModuleName 'NerdctlTools' -MockWith { return $true }
 
-            Uninstall-NerdctlHelper -Path 'TestDrive:\Program Files\nerdctl'
-
-            $Error[0].Exception.Message | Should -BeExactly 'nerdctl does not exist at TestDrive:\Program Files\nerdctl or the directory is empty.'
+            Uninstall-Nerdctl -Path 'TestDrive:\Program Files\nerdctl' -Confirm:$false
+            Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "NerdctlTools"
         }
     }
 }
