@@ -46,15 +46,15 @@ function Install-Containerd {
 
     begin {
         # Check if Containerd is alread installed
-        $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
+        $isInstalled = -not (Test-EmptyDirectory -Path "$InstallPath\bin")
 
-        $WhatIfMessage = "Containerd will be installed at $InstallPath"
+        $WhatIfMessage = "Containerd will be installed at '$InstallPath'"
         if ($isInstalled) {
-            $WhatIfMessage = "Containerd will be uninstalled from and reinstalled at $InstallPath"
+            $WhatIfMessage = "Containerd will be uninstalled from and reinstalled at '$InstallPath'"
         }
         if ($Setup) {
             <# Action when this condition is true #>
-            $WhatIfMessage = "Containerd will be installed at $InstallPath and containerd service will be registered and started"
+            $WhatIfMessage = "Containerd will be installed at '$InstallPath' and containerd service will be registered and started"
         }
     }
 
@@ -62,7 +62,7 @@ function Install-Containerd {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
-                $errMsg = "Containerd already exists at $InstallPath or the directory is not empty"
+                $errMsg = "Containerd already exists at '$InstallPath' or the directory is not empty."
                 Write-Warning $errMsg
 
                 # Uninstall if tool exists at specified location. Requires user consent
@@ -297,7 +297,10 @@ function Uninstall-Containerd {
     )]
     param(
         [parameter(HelpMessage = "Containerd path")]
-        [String]$Path,
+        [String]$Path = "$ENV:ProgramFiles\Containerd",
+
+        [parameter(HelpMessage = "Remove all program data for Containerd")]
+        [Switch] $Purge,
 
         [parameter(HelpMessage = "Bypass confirmation to uninstall Containerd")]
         [Switch] $Force
@@ -309,7 +312,19 @@ function Uninstall-Containerd {
             $Path = Get-DefaultInstallPath -Tool $tool
         }
 
-        $WhatIfMessage = "Containerd will be uninstalled from $path and containerd service will be stopped and unregistered"
+        # If we are not purging, we are uninstalling from the bin directory
+        # that contains the containerd executables
+        if (-not $Purge -and (-not $path.EndsWith("\bin"))) {
+            $path = $path.TrimEnd("\").Trim() + "\bin"
+        }
+
+        $WhatIfMessage = "Containerd will be uninstalled from '$path' and containerd service will be stopped and unregistered."
+        if ($Purge) {
+            $WhatIfMessage += " Containerd program data will also be removed."
+        }
+        else {
+            $WhatIfMessage += " Containerd program data won't be removed. To remove program data, run 'Uninstall-Containerd' command without -Purge flag."
+        }
     }
 
     process {
@@ -328,9 +343,9 @@ function Uninstall-Containerd {
                 Throw "$tool uninstallation cancelled."
             }
 
-            Write-Warning "Uninstalling preinstalled $tool at the path $path"
+            Write-Warning "Uninstalling preinstalled $tool at the path '$path'.`n$WhatIfMessage"
             try {
-                Uninstall-ContainerdHelper -Path $path
+                Uninstall-ContainerdHelper -Path "$path" -Purge:$Purge
             }
             catch {
                 Throw "Could not uninstall $tool. $_"
@@ -348,10 +363,13 @@ function Uninstall-ContainerdHelper {
     param(
         [ValidateNotNullOrEmpty()]
         [parameter(Mandatory = $true, HelpMessage = "Containerd path")]
-        [String]$Path
+        [String]$Path,
+
+        [parameter(HelpMessage = "Remove all program data for Containerd")]
+        [Switch] $Purge
     )
 
-    if (Test-EmptyDirectory -Path $Path) {
+    if (Test-EmptyDirectory -Path "$Path") {
         Write-Error "Containerd does not exist at $Path or the directory is empty."
         return
     }
@@ -359,24 +377,31 @@ function Uninstall-ContainerdHelper {
     try {
         if (Test-ServiceRegistered -Service 'containerd') {
             Stop-ContainerdService
-            Unregister-Containerd -ContainerdPath $Path
+            Unregister-Containerd -ContainerdPath "$Path"
         }
     }
     catch {
         Throw "Could not stop or unregister containerd service. $_"
     }
 
-    # Delete the containerd key
-    Remove-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\containerd" -Recurse -Force -ErrorAction Ignore
-
     # Remove the folder where containerd is installed and related folders
-    Remove-Item -Path $Path -Recurse -Force
+    Remove-Item -Path "$Path" -Recurse -Force
 
-    # Delete containerd programdata
-    Uninstall-ProgramFiles "$ENV:ProgramData\Containerd"
+    if ($Purge) {
+        Write-Output "Purging Containerd program data"
 
-    # Remove from env path
-    Remove-FeatureFromPath -Feature "containerd"
+        # Delete the containerd key
+        Write-Warning "Removing Containerd registry key"
+        Remove-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\containerd" -Recurse -Force -ErrorAction Ignore
+
+        # Delete containerd programdata
+        Write-Warning "Removing Containerd program data"
+        Uninstall-ProgramFiles "$ENV:ProgramData\Containerd"
+
+        # Remove from env path
+        Write-Warning "Removing Containerd from env path"
+        Remove-FeatureFromPath -Feature "containerd"
+    }
 
     Write-Output "Successfully uninstalled Containerd."
 }
@@ -388,7 +413,7 @@ function Unregister-Containerd ($containerdPath) {
     }
 
     # Unregister containerd service
-    $containerdExecutable = "$ContainerdPath\bin\containerd.exe"
+    $containerdExecutable = (Get-ChildItem -Path "$ContainerdPath" -Recurse -Filter "containerd.exe").FullName | Select-Object -First 1
     $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "--unregister-service"
     if ($output.ExitCode -ne 0) {
         Throw "Could not unregister containerd service. $($output.StandardError.ReadToEnd())"
