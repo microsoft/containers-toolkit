@@ -13,7 +13,7 @@ $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 function Get-WinCNILatestVersion {
-    $latestVersion = Get-LatestToolVersion -Repository "microsoft/windows-container-networking"
+    $latestVersion = Get-LatestToolVersion -Tool "WinCNIPlugin"
     return $latestVersion
 }
 

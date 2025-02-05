@@ -12,7 +12,7 @@ $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 function Get-NerdctlLatestVersion {
-    $latestVersion = Get-LatestToolVersion -Repository "containerd/nerdctl"
+    $latestVersion = Get-LatestToolVersion -Tool "nerdctl"
     return $latestVersion
 }
 
@@ -86,6 +86,8 @@ function Install-Nerdctl {
     )
 
     begin {
+        $tool = 'nerdctl'
+
         # Check if Containerd is alread installed
         $nerdctlexe = (Get-ChildItem -Path $InstallPath -Recurse -Filter "nerdctl.exe" | Select-Object -First 1).FullName
         $isInstalled = ($null -ne $nerdctlexe)
@@ -118,36 +120,15 @@ function Install-Nerdctl {
             }
             $Version = $Version.TrimStart('v')
 
-            # Check if a newer version is available
-            $userVersion = $Version
-            if ($Version -ne 'latest') {
-                Test-IsLatestVersion -Tool 'nerdctl' -Version $Version -LatestVersion $latestVersion | Out-Null
-            }
-            else {
-                $userVersion = $latestVersion
-            }
-
-            # Check if tool already exists at specified location
-            if ($isInstalled) {
-                $errMsg = "nerdctl already exists at $InstallPath or the directory is not empty"
+            # Check if we need to reinstall
+            $reinstall = Test-ToolReinstall $tool $Version $nerdctlexe
+            if ($reinstall) {
+                $errMsg = "$tool already exists at $InstallPath."
                 Write-Warning $errMsg
 
-                Write-Debug "nerdctl executable: $nerdctlexe"
-                $cmdOutput = Invoke-ExecutableCommand -Executable "$nerdctlexe" -Arguments "--version"
-                if ($cmdOutput.ExitCode -eq 0) {
-                    # Sample: nerdctl version v7.9.8
-                    $nerdctlVersion = $cmdOutput.StandardOutput.ReadToEnd().Trim()
-
-                    # Extract version from the output
-                    $nerdctlVersion = ($nerdctlVersion.Split(' ')[2]).TrimStart('v')
-                    Write-Debug "{ User Version: $userVersion, Current Version: $nerdctlVersion }"
-
-                    if ($userVersion -eq $nerdctlVersion) {
-                        Write-Warning "Installed nerdctl version is the same as the requested version. Please uninstall the existing version using 'Uninstall-Containerd' or use -Force to reinstall."
-                        if (!$Force) {
-                            return
-                        }
-                    }
+                if (!$Force) {
+                    Write-Warning "Installation cancelled. $errMsg Please uninstall the existing version using 'Uninstall-Nerdctl' or use -Force to reinstall."
+                    return
                 }
 
                 # Uninstall if tool exists at specified location. Requires user consent

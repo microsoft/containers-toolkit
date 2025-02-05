@@ -72,28 +72,105 @@ $HASH_FUNCTIONS_STR = $HASH_FUNCTIONS -join '|' # SHA1|SHA256|SHA384|SHA512|MD5
 $NERDCTL_CHECKSUM_FILE_PATTERN = "(?<hashfunction>(?:^({0})))" -f ($HASH_FUNCTIONS -join '|')
 $NERDCTL_FILTER_SCRIPTBLOCK_STR = { (("{0}" -match "$NERDCTL_CHECKSUM_FILE_PATTERN") -and "{0}" -notmatch ".*.asc$") }.ToString()
 
-function Get-LatestToolVersion($repository) {
+$CONTAINERD_REPO = "containerd/containerd"
+$BUILDKIT_REPO = "moby/buildkit"
+$NERDCTL_REPO = "containerd/nerdctl"
+$WINCNI_PLUGIN_REPO = "microsoft/Windows-Container-Networking"
+$CLOUDNATIVE_CNI_REPO = "containernetworking/plugins"
+
+
+function Get-LatestToolVersion($tool) {
+    # Get the repository based on the tool
+    $repository = switch ($tool.ToLower()) {
+        "containerd" { $CONTAINERD_REPO }
+        "buildkit" { $BUILDKIT_REPO }
+        "nerdctl" { $NERDCTL_REPO }
+        "wincniplugin" { $WINCNI_PLUGIN_REPO }
+        "cloudnativecni" { $CLOUDNATIVE_CNI_REPO }
+        Default { Throw "Couldn't get latest $tool version. Invalid tool: $tool" }
+    }
+
+    # Get the latest release version URL string
+    $uri = "https://api.github.com/repos/$repository/releases/latest"
+
+    Write-Debug "Getting the latest $tool version from $uri"
+
+    # Get the latest release version
     try {
-        $uri = "https://api.github.com/repos/$repository/releases/latest"
         $response = Invoke-WebRequest -Uri $uri -UseBasicParsing
         $version = ($response.content | ConvertFrom-Json).tag_name
         return $version.TrimStart("v")
     }
     catch {
-        $tool = ($repository -split "/")[1]
-        Throw "Could not get $tool latest version. $($_.Exception.Message)"
+        Throw "Couldn't get latest $tool version from $uri. $($_.Exception.Message)"
     }
 }
 
-function Test-IsLatestVersion($Tool, $Version, $LatestVersion) {
-    $currentVersion = [System.Version]$Version
-    $latestVersion = [System.Version]$latestVersion
+function Test-IsLatestVersion($Tool, $Version) {
+    $targetVersion = [System.Version]$Version
 
-    $isLatest = ($currentVersion -eq $latestVersion)
+    # Get the latest version of the tool
+    $latestVersion = Get-LatestToolVersion -Tool $Tool
+    Write-Debug "Latest $Tool version: $latestVersion"
+    $latestVersion = [System.Version](Get-LatestToolVersion -Tool $Tool)
+
+    $isLatest = ($targetVersion -eq $latestVersion)
     if (-not $isLatest) {
-        Write-Warning "A newer version of $tool is available. { Version: $currentVersion, Latest version: $latestVersion }"
+        Write-Warning "A newer version of $tool is available. { Target Version: $targetVersion, Latest Version: $latestVersion }"
     }
     return $isLatest
+}
+
+function Test-ToolReinstall {
+    param(
+        [string]$tool,
+        [string]$targetVersion,
+        [string]$executable
+    )
+
+    Write-Debug "Tool: $tool, Target Version: $targetVersion, Executable: $executable"
+
+    # Check if the target version is the latest version
+    if ($targetVersion -eq 'latest') {
+        $targetVersion = Get-LatestToolVersion -Tool $tool
+    }
+    else {
+        # Check if a newer version is available
+        Test-IsLatestVersion -Tool "$tool" -Version $targetVersion | Out-Null
+    }
+
+    # Check if the tool is already installed
+    Write-Debug "$tool executable: $executable"
+    $isInstalled = ($executable -and (Test-Path -Path $executable))
+
+    #  If tool is not installed, the tool is a new installation.
+    if (-not $isInstalled) {
+        return $false
+    }
+
+    # Check if the installed version is the same as the target version
+    $cmdOutput = Invoke-ExecutableCommand -Executable "$executable" -Arguments "--version"
+    if ($cmdOutput.ExitCode -ne 0) {
+        Write-Warning "Failed to get nerdctl version: $($cmdOutput.StandardError.ReadToEnd())"
+        return $true
+    }
+
+    # Extract version from the output
+    #     containerd github.com/containerd/containerd/v2 v2.0.2 c507a0257ea6462fbd6f5ba4f5c74facb04021f4
+    #     buildkitd github.com/moby/buildkit v0.19.0 3637d1b15a13fc3cdd0c16fcf3be0845ae68f53d
+    #     nerdctl version v7.9.8
+    $installedVersion = $cmdOutput.StandardOutput.ReadToEnd().Trim()
+    $installedVersion = ($installedVersion.Split(' ')[2]).TrimStart('v')
+    Write-Debug "{ Target Version: $targetVersion, Installed Version: $installedVersion }"
+
+    # Compare the installed version with the target version
+    if ($targetVersion -eq $installedVersion) {
+        Write-Warning "Installed $tool version is the same as the requested version, '$installedVersion'."
+    } else {
+        Write-Warning "$tool version '$installedVersion' is installed."
+    }
+
+    return $true
 }
 
 function Test-EmptyDirectory($path) {
@@ -524,7 +601,8 @@ function Test-FileChecksum {
                 $isValid = $downloadedChecksum.Hash -eq $checksum
                 $found = $true
                 return
-            } else {
+            }
+            else {
                 Write-Debug "File name does not match. {checksum file: $filename, downloaded file: $downloadedFileName}"
             }
         }
@@ -903,8 +981,10 @@ function Invoke-ExecutableCommand {
 }
 
 
+# Export-ModuleMember -Variable CONTAINERD_REPO, BUILDKIT_REPO, NERDCTL_REPO, WINCNI_PLUGIN_REPO, CLOUDNATIVE_CNI_REPO
 Export-ModuleMember -Function Get-LatestToolVersion
 Export-ModuleMember -Function Test-IsLatestVersion
+Export-ModuleMember -Function Test-ToolReinstall
 Export-ModuleMember -Function Get-DefaultInstallPath
 Export-ModuleMember -Function Test-EmptyDirectory
 Export-ModuleMember -Function Get-InstallationFile

@@ -13,7 +13,7 @@ $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 function Get-BuildkitLatestVersion {
-    $latestVersion = Get-LatestToolVersion -Repository "moby/buildkit"
+    $latestVersion = Get-LatestToolVersion -Tool "buildkit"
     return $latestVersion
 }
 
@@ -56,6 +56,8 @@ function Install-Buildkit {
     )
 
     begin {
+        $tool = 'Buildkit'
+
         # Check if Buildkit is alread installed
         $blktdexe = (Get-ChildItem -Path $InstallPath -Recurse -Filter "buildkitd.exe" | Select-Object -First 1).FullName
         $isInstalled = ($null -ne $blktdexe)
@@ -81,44 +83,23 @@ function Install-Buildkit {
             }
             $Version = $Version.TrimStart('v')
 
-            # Check if a newer version is available
-            $userVersion = $Version
-            if ($Version -ne 'latest') {
-                Test-IsLatestVersion -Tool 'Buildkit' -Version $Version -LatestVersion $latestVersion | Out-Null
-            }
-            else {
-                $userVersion = $latestVersion
-            }
-
-            # Check if tool already exists at specified location
-            if ($isInstalled) {
-                $errMsg = "Buildkit already exists at $InstallPath or the directory is not empty"
+            # Check if we need to reinstall
+            $reinstall = Test-ToolReinstall $tool $Version $blktdexe
+            if ($reinstall) {
+                $errMsg = "$tool already exists at $InstallPath."
                 Write-Warning $errMsg
 
-                # Check if user wants to install an already installed version
-                Write-Debug "Buildkit executable: $blktdexe"
-                $cmdOutput = Invoke-ExecutableCommand -Executable "$blktdexe" -Arguments "--version"
-                if ($cmdOutput.ExitCode -eq 0) {
-                    # buildkitd github.com/moby/buildkit v0.19.0 3637d1b15a13fc3cdd0c16fcf3be0845ae68f53d
-                    $blktVersion = $cmdOutput.StandardOutput.ReadToEnd().Trim()
-
-                    # Extract version from the output
-                    $blktVersion = ($blktVersion.Split(' ')[2]).TrimStart('v')
-                    Write-Debug "{ User Version: $userVersion, Current Version: $blktVersion }"
-                    if ($userVersion -eq $blktVersion) {
-                        Write-Warning "Installed Buildkit version is the same as the requested version. Please uninstall the existing version using 'Uninstall-Containerd' or use -Force to reinstall."
-                        if (!$Force) {
-                            return
-                        }
-                    }
+                if (!$Force) {
+                    Write-Warning "Installation cancelled. $errMsg Please uninstall the existing version using 'Uninstall-Buildkit' or use -Force to reinstall."
+                    return
                 }
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
-                    Uninstall-Buildkit -Path "$InstallPath" -Force:$Force -Confirm:$false | Out-Null
+                    Uninstall-Buildkit -Path "$InstallPath" -Confirm:$false -Force:$Force | Out-Null
                 }
                 catch {
-                    Throw "Buildkit installation failed. $_"
+                    Throw "nerdctl installation failed. $_"
                 }
             }
 
