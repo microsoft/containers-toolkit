@@ -55,6 +55,17 @@ Describe "BuildkitTools.psm1" {
             Mock Test-EmptyDirectory  -ModuleName 'BuildkitTools' -MockWith { return $true }
             Mock Install-Buildkit -ModuleName 'BuildkitTools'
             Mock Remove-Item -ModuleName 'BuildkitTools'
+
+            # Mock for Invoke-ExecutableCommand- "nerdctl --version"
+            $mockExecutablePath = "$TestDrive\Program Files\Buildkit\bin\buildkitd.exe"
+            $mockConfigStdOut = New-MockObject -Type 'System.IO.StreamReader' -Methods @{ ReadToEnd = { return "buildkitd github.com/moby/buildkit v1.0.0 c949t3ti0484" } }
+            $mockProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{
+                StandardOutput = $mockConfigStdOut
+                ExitCode       = 0
+            }
+            Mock Invoke-ExecutableCommand -ModuleName "BuildkitTools" -MockWith { return $mockProcess } -ParameterFilter {
+                $Executable -eq "$mockExecutablePath" -and
+                $Arguments -eq "--version" }
         }
 
         AfterEach {
@@ -77,6 +88,7 @@ Describe "BuildkitTools.psm1" {
         It "Should use defaults" {
             Install-Buildkit -Force -Confirm:$false
 
+            Should -Invoke Get-BuildkitLatestVersion -ModuleName 'BuildkitTools' -Times 1 -Exactly -Scope It
             Should -Invoke Uninstall-Buildkit -ModuleName 'BuildkitTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFile -ModuleName 'BuildkitTools'  -ParameterFilter {
                 $fileParameters[0].Feature -eq "Buildkit" -and
@@ -127,11 +139,35 @@ Describe "BuildkitTools.psm1" {
                 -ParameterFilter { $BuildKitPath -eq "$Env:ProgramFiles\Buildkit" -and $WinCNIPath -eq "" }
         }
 
+        It "Should not reinstall tool if version already exists and force is not specified" {
+            Mock Test-EmptyDirectory -ModuleName 'BuildkitTools' -MockWith { return $false }
+
+            # Mock for Get-ChildItem - "buildkitd.exe"
+            Mock Get-ChildItem -ModuleName 'BuildkitTools' -ParameterFilter {
+                $Path -eq "$Env:ProgramFiles\Buildkit" -and
+                $Recurse -eq $true
+                $Filter -eq "buildkitd.exe"
+            } -MockWith { return @{FullName = "$mockExecutablePath" } }
+
+            Install-Buildkit -Confirm:$false
+            Should -Invoke Uninstall-Buildkit -ModuleName 'BuildkitTools' -Times 0
+            Should -Invoke Install-RequiredFeature -ModuleName 'BuildkitTools' -Times 0
+        }
+
         It "Should uninstall tool if it is already installed" {
             Mock Test-EmptyDirectory -ModuleName 'BuildkitTools' -MockWith { return $false }
 
+            # Mock for Get-ChildItem - "buildkitd.exe"
+            Mock Get-ChildItem -ModuleName 'BuildkitTools' -ParameterFilter {
+                $Path -eq "$Env:ProgramFiles\Buildkit" -and
+                $Recurse -eq $true
+                $Filter -eq "buildkitd.exe"
+            } -MockWith { return @{FullName = "$mockExecutablePath" } }
+
             Install-Buildkit -Force -Confirm:$false
 
+            Should -Invoke Invoke-ExecutableCommand -ModuleName "BuildkitTools" `
+                -ParameterFilter { ($Executable -eq $mockExecutablePath ) -and ($Arguments -eq "--version") }
             Should -Invoke Uninstall-Buildkit -ModuleName 'BuildkitTools' -Times 1 -Exactly -Scope It `
                 -ParameterFilter { $Path -eq "$Env:ProgramFiles\Buildkit" -and $force -eq $true }
         }
@@ -140,7 +176,14 @@ Describe "BuildkitTools.psm1" {
             Mock Test-EmptyDirectory -ModuleName 'BuildkitTools' -MockWith { return $false }
             Mock Uninstall-Buildkit -ModuleName 'BuildkitTools' -MockWith { throw 'Error' }
 
-            { Install-Buildkit -Confirm:$false } | Should -Throw "Buildkit installation failed. Error"
+            # Mock for Get-ChildItem - "buildkitd.exe"
+            Mock Get-ChildItem -ModuleName 'BuildkitTools' -ParameterFilter {
+                $Path -eq "$Env:ProgramFiles\Buildkit" -and
+                $Recurse -eq $true
+                $Filter -eq "buildkitd.exe"
+            } -MockWith { return @{FullName = "$mockExecutablePath" } }
+
+            { Install-Buildkit -Confirm:$false -Force } | Should -Throw "Buildkit installation failed. Error"
         }
     }
 
