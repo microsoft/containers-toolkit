@@ -37,22 +37,30 @@ List container tools (Containerd, BuildKit, nerdctl) and shows if the tool is in
 
 **Parameters**
 
-None
+| Name       | Type   | Description                 | Default                                                                        |
+|------------|--------|-----------------------------|--------------------------------------------------------------------------------|
+| Latest     | Switch | Show latest release version. | False                                                                         |
+| ToolName   | String | Tool to show the version of.| When not provided, it returns the version of containerd, buildkit, and nerdctl |
 
 **Output**
 
-| Name | Type | Description |
-| -------- | ------- | ------- |
-| Tool | String | Name of the container tool. Either Containerd, BuildKit, or nerdctl. |
-| Installed | Boolean | Specifies whether the tool is installed or not. |
-| Version | String | Installed version. |
-| LatestVersion | String | Latest available version |
+| Name            | Type     | Description                                                          |
+|-----------------|----------|----------------------------------------------------------------------|
+| Tool            | String   | Name of the container tool. Either Containerd, Buildkit, or nerdctl. |
+| Installed       | Boolean  | Specifies whether the tool is installed or not.                      |
+| Version         | String   | Installed version.                                                   |
+| LatestVersion   | String   | Latest available version.                                            |
+| Path            | String   | Path to the binary.                                                  |
+| BuildctlPath    | String   | Path to the buildctl binary.                                         |
+| Daemon          | String   | containerd or buildkitd.                                             |
+| DaemonStatus    | String   | Status of the tool service.                                          |
 
 #### Install-ContainerTools
 
 Downloads container tool (Containerd, BuildKit, nerdctl) asynchronously and installs them at the specified location
 
 **Parameters**
+
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
 | ContainerdVersion | String | Containerd version to install | Latest version |

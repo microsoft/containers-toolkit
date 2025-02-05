@@ -31,6 +31,22 @@ Describe "ContainerNetworkTools.psm1" {
         Remove-Module -Name "$RootPath\Tests\TestData\MockClasses.psm1" -Force -ErrorAction Ignore
     }
 
+    Context "Get-WinCNILatestVersion" -Tag "Get-WinCNILatestVersion" {
+        BeforeEach {
+            Mock Get-LatestToolVersion -ModuleName 'ContainerNetworkTools'
+        }
+
+        It "Should return the latest version of Windows CNI plugin" {
+            Get-WinCNILatestVersion
+            Should -Invoke Get-LatestToolVersion -Times 1 -Scope It -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Tool -eq 'wincniplugin' }
+        }
+
+        It "Should return the latest version of Cloud Native CNI plugin" {
+            Get-WinCNILatestVersion -Repo 'containernetworking/plugins'
+            Should -Invoke Get-LatestToolVersion -Times 1 -Scope It -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Tool -eq 'cloudnativecni' }
+        }
+    }
+
     Context "Install-WinCNIPlugin" -Tag "Install-WinCNIPlugin" {
         BeforeAll {
             $Script:ToolName = 'WinCNIPlugin'
