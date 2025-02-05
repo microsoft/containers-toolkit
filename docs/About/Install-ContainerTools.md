@@ -15,7 +15,8 @@ Downloads and installs container tool (Containerd, BuildKit, and nerdctl).
 
 ```
 Install-ContainerTools [[-ContainerDVersion] <String>] [[-BuildKitVersion] <String>]
- [[-NerdCTLVersion] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-RegisterServices] [-OSArchitecture <string>] [-Force] [-Confirm] [-WhatIf] [<CommonParameters>]
+ [[-NerdCTLVersion] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-RegisterServices]
+ [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -66,25 +67,6 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Confirm
-
-Prompts for confirmation before running the cmdlet. For more information, see the following articles:
-
-- [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference)
-- [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact)
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -ContainerDVersion
 
 Containerd version to install
@@ -103,7 +85,8 @@ Accept wildcard characters: False
 
 ### -DownloadPath
 
-Path to download files. Defaults to user's Downloads folder, `$HOME\Downloads`
+Path to download files.
+Defaults to user's Downloads folder, `$HOME\Downloads`
 
 ```yaml
 Type: String
@@ -119,23 +102,7 @@ Accept wildcard characters: False
 
 ### -Force
 
-Force install the tools even if they already exists at the specified path.
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -RegisterServices
-
-Register and Start Containerd and Buildkitd services and set up NAT network.
+Force container tools uninstallation (if it exists) without any confirmation prompts
 
 ```yaml
 Type: SwitchParameter
@@ -151,7 +118,8 @@ Accept wildcard characters: False
 
 ### -InstallPath
 
-Path to Install files. Defaults to Program Files, `$Env:ProgramFiles`
+Path to Install files.
+Defaults to Program Files, \`$Env:ProgramFiles\`
 
 ```yaml
 Type: String
@@ -181,30 +149,13 @@ Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -OSArchitecture
+### -RegisterServices
 
-OS architecture to download files for.
-Default is `$env:PROCESSOR_ARCHITECTURE`
-
-```yaml
-Type: String
-Parameter Sets: Setup
-Aliases:
-
-Required: False
-Position: Named
-Default value:  $env:PROCESSOR_ARCHITECTURE
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
-### -WhatIf
-
-Shows what would happen if the cmdlet runs. The cmdlet isn't run.
+Register and Start Containerd and Buildkitd services and set up NAT network.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: Setup
+Parameter Sets: (All)
 Aliases:
 
 Required: False
@@ -213,6 +164,44 @@ Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
+
+### -Confirm
+
+Prompts for confirmation before running the cmdlet.
+For more information, see the following articles:
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: cf
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -WhatIf
+
+Shows what would happen if the cmdlet runs.
+The cmdlet isn't run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## RELATED LINKS
 

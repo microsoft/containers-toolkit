@@ -29,10 +29,8 @@ This returns a string of the latest release version of Containerd, e.g., v1.2.0.
 
 ```powershell
 PS C:\> Get-ContainerdLatestVersion
-```
 
-```Output
-v1.2.0
+    v1.2.0
 ```
 
 ## PARAMETERS
