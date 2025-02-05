@@ -12,9 +12,6 @@ using module "..\Private\CommonToolUtilities.psm1"
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
-$WINCNI_PLUGIN_REPO = "microsoft/windows-container-networking"
-$CLOUDNATIVE_CNI_REPO = "containernetworking/plugins"
-
 function Get-WinCNILatestVersion {
     param (
         [String]$repo = "microsoft/windows-container-networking"
@@ -37,8 +34,8 @@ function Install-WinCNIPlugin {
         [parameter(HelpMessage = "Windows CNI plugin version to use. Defaults to 'latest'")]
         [string]$WinCNIVersion = "latest",
 
-        [parameter(HelpMessage = "Path to cni folder ~\cni . Not ~\cni\bin")]
-        [String]$WinCNIPath,
+        [parameter(HelpMessage = "Path to cni folder ~\cni (not ~\cni\bin). Defaults to `$env:ProgramFiles\containerd\cni)")]
+        [String]$WinCNIPath = "$env:ProgramFiles\containerd\cni",
 
         [parameter(HelpMessage = "Source of the Windows CNI plugins. Defaults to 'microsoft/windows-container-networking'")]
         [ValidateSet("microsoft/windows-container-networking", "containernetworking/plugins")]
@@ -112,13 +109,13 @@ function Install-WinCNIPlugin {
 
             # Download file from repo
             $downloadParams = @{
-                ToolName = "$ToolName"
-                Repository = $SourceRepo
-                Version = $WinCNIVersion
-                OSArchitecture = $OSArchitecture
-                DownloadPath = "$HOME\Downloads\"
+                ToolName           = "$ToolName"
+                Repository         = $SourceRepo
+                Version            = $WinCNIVersion
+                OSArchitecture     = $OSArchitecture
+                DownloadPath       = "$HOME\Downloads\"
                 ChecksumSchemaFile = $null
-                FileFilterRegEx = $fileFilterRegEx
+                FileFilterRegEx    = $fileFilterRegEx
             }
             $downloadParamsProperties = [FileDownloadParameters]::new(
                 $downloadParams.ToolName,
@@ -133,10 +130,10 @@ function Install-WinCNIPlugin {
 
             # Untar and install tool
             $params = @{
-                Feature     = "$ToolName"
-                InstallPath = "$WinCNIPath\bin"
-                SourceFile  = $sourceFile
-                cleanup     = $true
+                Feature       = "$ToolName"
+                InstallPath   = "$WinCNIPath\bin"
+                SourceFile    = $sourceFile
+                cleanup       = $true
                 UpdateEnvPath = $false
             }
             Install-RequiredFeature @params
@@ -169,8 +166,8 @@ function Initialize-NatNetwork {
         [parameter(HelpMessage = "Windows CNI plugins version to use. Defaults to latest version.")]
         [String]$WinCNIVersion,
 
-        [parameter(HelpMessage = "Absolute path to cni folder ~\cni. Not ~\cni\bin")]
-        [String]$WinCNIPath,
+        [parameter(HelpMessage = "Absolute path to cni folder ~\cni (not ~\cni\bin). Defaults to `$env:ProgramFiles\containerd\cni)")]
+        [String]$WinCNIPath = "$env:ProgramFiles\containerd\cni",
 
         [parameter(HelpMessage = "Bypass confirmation to install any missing dependencies (Windows CNI plugins and HNS module)")]
         [Switch] $Force
@@ -212,18 +209,25 @@ function Initialize-NatNetwork {
                 Throw "Could not import HNS module. $_"
             }
 
+            Write-Information -MessageData "Creating NAT network" -InformationAction Continue
+
+            # Install missing WinCNI plugins
+            if (!$isInstalled) {
+                if ($force) {
+                    Write-Warning "Windows CNI plugins have not been installed. Installing Windows CNI plugins at '$WinCNIPath'"
+                    Install-WinCNIPlugin -WinCNIPath $WinCNIPath -WinCNIVersion $WinCNIVersion -Force:$force
+                }
+                else {
+                    Write-Warning "Couldn't initialize NAT network. CNI plugins have not been installed. To install, run the command `"Install-WinCNIPlugin`"."
+                    return
+                }
+            }
+
             # Check of NAT exists
             $natInfo = Get-HnsNetwork -ErrorAction Ignore | Where-Object { $_.Name -eq $networkName }
             if ($null -ne $natInfo) {
                 Write-Warning "$networkName already exists. To view existing networks, use `"Get-HnsNetwork`". To remove the existing network use the `"Remove-HNSNetwork`" command."
                 return
-            }
-
-            Write-Information -MessageData "Creating NAT network" -InformationAction Continue
-
-            # Install missing WinCNI plugins
-            if (!$isInstalled) {
-                Install-MissingPlugin -WinCNIVersion $WinCNIVersion -Force:$Force
             }
 
             New-Item -ItemType 'Directory' -Path $cniConfDir -Force | Out-Null
@@ -379,30 +383,6 @@ function Import-HNSModule {
     # Throw an error if the module is not installed
     Throw "`"HostNetworkingService`" or `"HNS`" module is not installed. To resolve this issue, see`n`thttps://github.com/microsoft/containers-toolkit/blob/main/docs/FAQs.md#2-new-hnsnetwork-command-does-not-exist"
 }
-
-function Install-MissingPlugin {
-    param(
-        [parameter(HelpMessage = "Windows CNI plugin version to use. Defaults to latest version")]
-        [string]$WinCNIVersion,
-
-        [Switch]$Force
-    )
-    # Get user consent to install missing dependencies
-    $consent = $Force
-    if (!$Force) {
-        $title = "Windows CNI plugins have not been installed."
-        $question = "Do you want to install the Windows CNI plugins?"
-        $choices = '&Yes', '&No'
-        $consent = ([ActionConsent](Get-Host).UI.PromptForChoice($title, $question, $choices, 1)) -eq [ActionConsent]::Yes
-
-        if (-not $consent) {
-            Throw "Windows CNI plugins have not been installed. To install, run the command `"Install-WinCNIPlugin`"."
-        }
-    }
-
-    Install-WinCNIPlugin -WinCNIVersion $WinCNIVersion -Force:$consent
-}
-
 
 # FIXME: nerdctl- Warning when user tries to run container with this network config
 function Set-DefaultCNIConfig {
