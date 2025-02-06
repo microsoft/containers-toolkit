@@ -12,8 +12,19 @@ using module "..\Private\CommonToolUtilities.psm1"
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
+$WINCNI_PLUGIN_REPO = "microsoft/windows-container-networking"
+$CLOUDNATIVE_CNI_REPO = "containernetworking/plugins"
+
 function Get-WinCNILatestVersion {
-    $latestVersion = Get-LatestToolVersion -Repository "microsoft/windows-container-networking"
+    param (
+        [String]$repo = "microsoft/windows-container-networking"
+    )
+    $tool = switch ($repo.ToLower()) {
+        $WINCNI_PLUGIN_REPO { "wincniplugin" }
+        $CLOUDNATIVE_CNI_REPO { "cloudnativecni" }
+        Default { Throw "Invalid repository. Supported repositories are $WINCNI_PLUGIN_REPO and $CLOUDNATIVE_CNI_REPO" }
+    }
+    $latestVersion = Get-LatestToolVersion -Tool $tool
     return $latestVersion
 }
 
@@ -80,7 +91,7 @@ function Install-WinCNIPlugin {
             # Get Windows CNI plugins version to install
             if (!$WinCNIVersion) {
                 # Get default version
-                $WinCNIVersion = Get-WinCNILatestVersion
+                $WinCNIVersion = Get-WinCNILatestVersion -Repo $SourceRepo
             }
             $WinCNIVersion = $WinCNIVersion.TrimStart('v')
             Write-Output "Downloading CNI plugin version $WinCNIVersion at $WinCNIPath"
@@ -212,7 +223,13 @@ function Initialize-NatNetwork {
 
             # Install missing WinCNI plugins
             if (!$isInstalled) {
-                Install-MissingPlugin -WinCNIVersion $WinCNIVersion -Force:$Force
+                if ($force) {
+                    Install-WinCNIPlugin -WinCNIVersion $WinCNIVersion -Force:$force
+                }
+                else {
+                    Write-Warning "Couldn't initialize NAT network. CNI plugins have not been installed. To install, run the command `"Install-WinCNIPlugin`"."
+                    return
+                }
             }
 
             New-Item -ItemType 'Directory' -Path $cniConfDir -Force | Out-Null
@@ -368,31 +385,6 @@ function Import-HNSModule {
     # Throw an error if the module is not installed
     Throw "`"HostNetworkingService`" or `"HNS`" module is not installed. To resolve this issue, see`n`thttps://github.com/microsoft/containers-toolkit/blob/main/docs/FAQs.md#2-new-hnsnetwork-command-does-not-exist"
 }
-
-function Install-MissingPlugin {
-    param(
-        [parameter(HelpMessage = "Windows CNI plugin version to use. Defaults to latest version")]
-        [string]$WinCNIVersion,
-
-        [Switch]$Force
-    )
-    # Get user consent to install missing dependencies
-    $consent = $Force
-    if (!$Force) {
-        $title = "Windows CNI plugins have not been installed."
-        $question = "Do you want to install the Windows CNI plugins?"
-        $choices = '&Yes', '&No'
-        $consent = ([ActionConsent](Get-Host).UI.PromptForChoice($title, $question, $choices, 1)) -eq [ActionConsent]::Yes
-
-        if (-not $consent) {
-            $downloadPath = "https://github.com/microsoft/windows-container-networking"
-            Throw "Windows CNI plugins have not been installed. To install, run the command `"Install-WinCNIPlugin`" or download from $downloadPath."
-        }
-    }
-
-    Install-WinCNIPlugin -WinCNIVersion $WinCNIVersion -Force:$consent
-}
-
 
 # FIXME: nerdctl- Warning when user tries to run container with this network config
 function Set-DefaultCNIConfig {

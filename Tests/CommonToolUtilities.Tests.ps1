@@ -84,6 +84,10 @@ Describe "CommonToolUtilities.psm1" {
     }
 
     Context "Get-LatestToolVersion" -Tag "Get-LatestToolVersion" {
+        BeforeEach {
+            $expectedUri = "https://api.github.com/repos/containerd/containerd/releases/latest"
+        }
+
         It "Should return the latest version for a tool" {
             $sampleOutput = @{
                 StatusCode        = 200
@@ -98,17 +102,20 @@ Describe "CommonToolUtilities.psm1" {
             }
             Mock Invoke-WebRequest { $sampleOutput } -ModuleName "CommonToolUtilities"
 
-            $result = Get-LatestToolVersion -Repository "test/tool"
+            $result = Get-LatestToolVersion -Tool "containerd"
 
-            $expectedUri = "https://api.github.com/repos/test/tool/releases/latest"
             Should -Invoke Invoke-WebRequest -ParameterFilter { $Uri -eq $expectedUri } -Exactly 1 -Scope It -ModuleName "CommonToolUtilities"
             $result | Should -Be '0.12.3'
+        }
+
+        It "Should throw an error if invalid tool name is provided" {
+            { Get-LatestToolVersion -Tool "invalid-tool" } | Should -Throw "Couldn't get latest invalid-tool version. Invalid tool name: 'invalid-tool'."
         }
 
         It "Should throw an error if API call fails" {
             $errorMessage = "Response status code does not indicate success: 404 (Not Found)."
             Mock Invoke-WebRequest -MockWith { Throw $errorMessage } -ModuleName "CommonToolUtilities"
-            { Get-LatestToolVersion -Repository "test/tool" } | Should -Throw "Could not get tool latest version. $errorMessage"
+            { Get-LatestToolVersion -Tool "containerd" } | Should -Throw "Couldn't get containerd latest version from $expectedUri. $errorMessage"
         }
     }
 
