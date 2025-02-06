@@ -2156,6 +2156,18 @@
           </dev:type>
           <dev:defaultValue>False</dev:defaultValue>
         </command:parameter>
+        <command:parameter required="false" variableLength="true" globbing="false"
+          pipelineInput="False" position="named" aliases="none">
+          <maml:name>ToolName</maml:name>
+          <maml:description>
+            <maml:para>Tool to show the version of.</maml:para>
+          </maml:description>
+          <dev:type>
+            <maml:name>String</maml:name>
+            <maml:uri />
+          </dev:type>
+          <dev:defaultValue>null</dev:defaultValue>
+        </command:parameter>
       </command:syntaxItem>
     </command:syntax>
     <command:parameters>
@@ -2171,6 +2183,19 @@
           <maml:uri />
         </dev:type>
         <dev:defaultValue>False</dev:defaultValue>
+      </command:parameter>
+      <command:parameter required="false" variableLength="true" globbing="false"
+        pipelineInput="False" position="named" aliases="none">
+        <maml:name>ToolName</maml:name>
+        <maml:description>
+          <maml:para>Tool to show the version of.</maml:para>
+        </maml:description>
+        <command:parameterValue required="false" variableLength="false">String</command:parameterValue>
+        <dev:type>
+          <maml:name>String</maml:name>
+          <maml:uri />
+        </dev:type>
+        <dev:defaultValue>null (When null, it returns the version of containerd, buildkit, and nerdctl)</dev:defaultValue>
       </command:parameter>
     </command:parameters>
     <command:returnValues>
@@ -2189,6 +2214,10 @@
             Installed       Boolean     Specifies whether the tool is installed or not. 
             Version         String      Installed version. 
             LatestVersion   String      Latest available version
+            Path            String      Path to the binary
+            BuildctlPath    String      Path to the buildctl binary
+            Daemon          String      containerd or buildkitd
+            DaemonStatus    String      Status of the tool service
           </maml:para>
         </maml:description>
       </command:returnValue>

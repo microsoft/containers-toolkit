@@ -13,8 +13,8 @@ List container tools (Containerd, BuildKit, and nerdctl) install status.
 
 ## SYNTAX
 
-```
-Show-ContainerTools [-Latest] [<CommonParameters>]
+```PowerShell
+Show-ContainerTools [-Latest] [-ToolName <String>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION

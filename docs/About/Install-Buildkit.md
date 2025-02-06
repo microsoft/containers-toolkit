@@ -15,13 +15,13 @@ Downloads and installs BuildKit.
 
 ### Install (Default)
 
-```
+```PowerShell
 Install-Buildkit [-Version <String>] [-InstallPath <String>] [-DownloadPath <String>] [-OSArchitecture <string>] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ### Setup
 
-```
+```PowerShell
 Install-Buildkit [-Version <String>] [-InstallPath <String>] [-DownloadPath <String>] [-Setup]
  [-WinCNIPath <String>] [-OSArchitecture <string>]  [-Force] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
