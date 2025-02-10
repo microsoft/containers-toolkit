@@ -72,16 +72,38 @@ $HASH_FUNCTIONS_STR = $HASH_FUNCTIONS -join '|' # SHA1|SHA256|SHA384|SHA512|MD5
 $NERDCTL_CHECKSUM_FILE_PATTERN = "(?<hashfunction>(?:^({0})))" -f ($HASH_FUNCTIONS -join '|')
 $NERDCTL_FILTER_SCRIPTBLOCK_STR = { (("{0}" -match "$NERDCTL_CHECKSUM_FILE_PATTERN") -and "{0}" -notmatch ".*.asc$") }.ToString()
 
-function Get-LatestToolVersion($repository) {
+
+Set-Variable -Option AllScope -scope Global -Visibility Public -Name "CONTAINERD_REPO" -Value "containerd/containerd" -Force
+Set-Variable -Option AllScope -scope Global -Visibility Public -Name "BUILDKIT_REPO" -Value "moby/buildkit" -Force
+Set-Variable -Option AllScope -scope Global -Visibility Public -Name "NERDCTL_REPO" -Value "containerd/nerdctl" -Force
+Set-Variable -Option AllScope -scope Global -Visibility Public -Name "WINCNI_PLUGIN_REPO" -Value "microsoft/windows-container-networking" -Force
+Set-Variable -Option AllScope -scope Global -Visibility Public -Name "CLOUDNATIVE_CNI_REPO" -Value "containernetworking/plugins" -Force
+
+
+function Get-LatestToolVersion($tool) {
+    # Get the repository based on the tool
+    $repository = switch ($tool.ToLower()) {
+        "containerd" { $CONTAINERD_REPO }
+        "buildkit" { $BUILDKIT_REPO }
+        "nerdctl" { $NERDCTL_REPO }
+        "wincniplugin" { $WINCNI_PLUGIN_REPO }
+        "cloudnativecni" { $CLOUDNATIVE_CNI_REPO }
+        Default { Throw "Couldn't get latest $tool version. Invalid tool name: '$tool'." }
+    }
+
+    # Get the latest release version URL string
+    $uri = "https://api.github.com/repos/$repository/releases/latest"
+
+    Write-Debug "Getting the latest $tool version from $uri"
+
+    # Get the latest release version
     try {
-        $uri = "https://api.github.com/repos/$repository/releases/latest"
         $response = Invoke-WebRequest -Uri $uri -UseBasicParsing
         $version = ($response.content | ConvertFrom-Json).tag_name
         return $version.TrimStart("v")
     }
     catch {
-        $tool = ($repository -split "/")[1]
-        Throw "Could not get $tool latest version. $($_.Exception.Message)"
+        Throw "Couldn't get $tool latest version from $uri. $($_.Exception.Message)"
     }
 }
 
@@ -889,7 +911,7 @@ function Invoke-ExecutableCommand {
     return $p
 }
 
-
+Export-ModuleMember -Variable CONTAINERD_REPO, BUILDKIT_REPO, NERDCTL_REPO, WINCNI_PLUGIN_REPO, CLOUDNATIVE_CNI_REPO
 Export-ModuleMember -Function Get-LatestToolVersion
 Export-ModuleMember -Function Get-DefaultInstallPath
 Export-ModuleMember -Function Test-EmptyDirectory
