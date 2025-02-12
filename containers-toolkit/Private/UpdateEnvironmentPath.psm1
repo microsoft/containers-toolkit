@@ -41,14 +41,15 @@ function Update-EnvironmentPath {
             }
 
             # Check if the path needs to be changed
+            $pathFound = "$Path" -in ($parsedPathString -split ";")
             switch ($Action) {
                 "Add" {
-                    $pathChanged = $parsedPathString -notlike "*$Tool*"
+                    $pathChanged = (-not $pathFound)
                     $toAction = $Path
                     $ActionVerb = "Adding"
                 }
                 "Remove" {
-                    $pathChanged = $parsedPathString -like "*$Tool*"
+                    $pathChanged = $pathFound
                     $toAction = $Tool
                     $ActionVerb = "Removing"
                 }
@@ -109,11 +110,11 @@ function AddFeatureToPath ($PathString, $ToolPath) {
     if (!$PathString) {
         Throw 'Env path cannot be null or an empty string'
     }
-    return "$PathString;$ToolPath"
+    return (ParsePathString -PathString "$ToolPath;$PathString")
 }
 
 function RemoveFeatureFromPath ($PathString, $Tool) {
-    $pathString = ParsePathString -Path $pathString
+    $pathString = ParsePathString -PathString $pathString
     $parsedString = $pathString -split ";" |  Where-Object { ($_ -notlike "*$tool*") }
 
     if (!$parsedString) {

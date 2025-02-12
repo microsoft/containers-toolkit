@@ -24,7 +24,7 @@ function Show-ContainerTools {
         $installedTools += (Get-InstalledVersion -Feature $tool -Latest:$Latest)
     }
 
-    $registerCommands = (Get-Command -Name "*-*Service" | Where-Object { $_.Source -eq 'Containers-Toolkit' }).Name -join ', '
+    $registerCommands = (Get-Command -Name "*-*Service" -Module 'Containers-Toolkit').Name -join ', '
     $message = "For unregistered services/daemons, check the tool's help or register the service using `n`t$registerCommands"
     Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
     return $installedTools
@@ -131,7 +131,7 @@ function Install-ContainerTools {
                     $completedInstalls += $task.Name
                 }
                 catch {
-                    Write-Error "$($task.Name) Installation failed. $_"
+                    Write-Error "$($task.Name) installation failed. $_"
                     $failedInstalls += $task.Name
                 }
             }

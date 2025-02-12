@@ -164,10 +164,10 @@ function Get-ReleaseAssets {
                     # Filter assets by OS (windows) and architecture
                     # In the "zip|tar.gz" regex, we do not add the "$" at the end to allow for checksum files to be included
                     # The checksum files end with eg: ".tar.gz.sha256sum"
-            ($_.name -match "(windows(.+)$OSArch)") -or
+                    ($_.name -match "(windows(.+)$OSArch)") -or
 
                     # nerdctl checksum files are named "SHA256SUMS".
-            (& ([ScriptBlock]::Create($NERDCTL_FILTER_SCRIPTBLOCK_STR -f $_.name)))
+                    (& ([ScriptBlock]::Create($NERDCTL_FILTER_SCRIPTBLOCK_STR -f $_.name)))
                 )
             } |
             ForEach-Object {
@@ -205,12 +205,26 @@ function Get-InstallationFile {
     begin {
         function Receive-File {
             param($params)
-            try {
-                Invoke-WebRequest -Uri $params.Uri -OutFile $params.DownloadPath -UseBasicParsing -MaximumRetryCount 3 -RetryIntervalSec 60
-            }
-            catch {
-                Throw "Couldn't download `"$($params.Feature)`" release assets. `"$($params.Uri)`".`n$($_.Exception.Message)"
-            }
+
+            $MaximumRetryCount = 3
+            $RetryIntervalSec = 60
+            $lastError = $null  # Store the last exception
+
+            do {
+                try {
+                    Invoke-WebRequest -Uri $params.Uri -OutFile $params.DownloadPath -UseBasicParsing
+                    return
+                }
+                catch {
+                    $lastError = $_  # Store the last error for proper exception handling
+                    Write-Warning "Failed to download `"$($params.Feature)`" release assets. Retrying... ($MaximumRetryCount retries left)"
+                    Start-Sleep -Seconds $RetryIntervalSec
+                    $MaximumRetryCount -= 1
+                }
+            } until ($MaximumRetryCount -eq 0)
+
+            # Throw the last encountered error after all retries fail
+            Throw "Couldn't download `"$($params.Feature)`" release assets from `"$($params.Uri)`".`n$($lastError.Exception.Message)"
         }
 
         function DownloadAssets {
@@ -252,10 +266,10 @@ function Get-InstallationFile {
             }
 
             # Verify that both the archive and checksum files were downloaded
-            if (-not (Test-Path $archiveFile -ErrorAction SilentlyContinue)) {
+            if (-not (Test-Path $archiveFile)) {
                 Throw "Archive file not found in the release assets: `'$archiveFile`""
             }
-            if (-not (Test-Path $checksumFile -ErrorAction SilentlyContinue)) {
+            if (-not (Test-Path $checksumFile)) {
                 Throw "Checksum file not found in the release assets: `'$checksumFile`""
             }
 
@@ -274,7 +288,7 @@ function Get-InstallationFile {
             }
 
             # Remove the checksum file after verification
-            if (Test-Path -Path $checksumFile -ErrorAction SilentlyContinue) {
+            if (Test-Path -Path $checksumFile) {
                 Remove-Item -Path $checksumFile -Force -ErrorAction SilentlyContinue
             }
 
@@ -282,7 +296,7 @@ function Get-InstallationFile {
                 Write-Error "Checksum verification failed for $archiveFile. The file will be deleted."
 
                 # Remove the checksum file after verification
-                if (Test-Path -Path $archiveFile -ErrorAction SilentlyContinue) {
+                if (Test-Path -Path $archiveFile) {
                     Remove-Item -Path $archiveFile -Force -ErrorAction SilentlyContinue
                 }
                 Throw "Checksum verification failed. One or more files are corrupted."
@@ -306,7 +320,7 @@ function Get-InstallationFile {
 
                 # Buildkit checksum files are named ending with ".provenance.json" or ".sbom.json"
                 # We only need the ".sbom.json" file
-                ($_.asset_name -match ".*sbom.json$") -or
+                ($_.asset_name -match ".sbom.json$") -or
 
                 # nerdctl checksum files are named "SHA256SUMS". Check file names that have such a format.
                 (& ([ScriptBlock]::Create($NERDCTL_FILTER_SCRIPTBLOCK_STR -f $_.asset_name)))
@@ -428,11 +442,11 @@ function Test-CheckSum {
 
     Write-Debug "Checksum verification...`n`tSource file: $DownloadedFile`n`tChecksum file: $ChecksumFile"
 
-    if (-not (Test-Path -Path $downloadedFile -ErrorAction Continue)) {
+    if (-not (Test-Path -Path $downloadedFile)) {
         Throw "Couldn't find source file: `"$downloadedFile`"."
     }
 
-    if (-not (Test-Path -Path $ChecksumFile -ErrorAction Continue)) {
+    if (-not (Test-Path -Path $ChecksumFile)) {
         Throw "Couldn't find checksum file: `"$ChecksumFile`"."
     }
 
@@ -688,7 +702,10 @@ function Install-RequiredFeature {
         [string] $InstallPath,
         [string[]] $SourceFile,
         [string] $EnvPath,
-        [boolean] $cleanup
+        [boolean] $cleanup,
+
+        # Use by WinCNI plugin to avoid updating the environment path
+        [boolean] $UpdateEnvPath = $true
     )
     # Create the directory to untar to
     Write-Information -InformationAction Continue -MessageData "Extracting $Feature to $InstallPath"
@@ -716,12 +733,14 @@ function Install-RequiredFeature {
     }
 
     # Add to env path
-    Add-FeatureToPath -Feature $Feature -Path $EnvPath
+    if ($UpdateEnvPath -and -not [string]::IsNullOrWhiteSpace($envPath)) {
+        Add-FeatureToPath -Feature $feature -Path $envPath
+    }
 
     # Clean up
     if ($CleanUp) {
         Write-Output "Cleanup to remove downloaded files"
-        if (Test-Path -Path $SourceFile) {
+        if (Test-Path -Path $SourceFile -ErrorAction SilentlyContinue) {
             Remove-Item -Path $SourceFile -Force -ErrorAction Ignore
         }
     }

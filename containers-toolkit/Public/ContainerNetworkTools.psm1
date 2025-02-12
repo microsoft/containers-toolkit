@@ -43,13 +43,14 @@ function Install-WinCNIPlugin {
     )
 
     begin {
+        $ToolName = 'WinCNIPlugin'
         if (!$WinCNIPath) {
             $containerdPath = Get-DefaultInstallPath -Tool "containerd"
             $WinCNIPath = "$containerdPath\cni"
         }
         $WinCNIPath = $WinCNIPath -replace '(\\bin)$', ''
 
-        # Check if Containerd is alread installed
+        # Check if WinCNI plugins are installed
         $isInstalled = -not (Test-EmptyDirectory -Path $WinCNIPath)
 
         $plugin = "Windows CNI plugins"
@@ -86,10 +87,6 @@ function Install-WinCNIPlugin {
 
             New-Item -Path $WinCNIPath -ItemType Directory -Force -ErrorAction Ignore | Out-Null
 
-            # NOTE: We download plugins from https://github.com/microsoft/windows-container-networking
-            # instead of  https://github.com/containernetworking/plugins/releases.
-            # The latter causes an error in nerdctl: "networking setup error has occurred. incompatible CNI versions"
-
             Write-Debug ("Downloading Windows CNI plugins from {0}" -f $SourceRepo)
 
             # File filter for Windows CNI plugins
@@ -104,7 +101,7 @@ function Install-WinCNIPlugin {
 
             # Download file from repo
             $downloadParams = @{
-                ToolName = "WinCNIPlugin"
+                ToolName = "$ToolName"
                 Repository = $SourceRepo
                 Version = $WinCNIVersion
                 OSArchitecture = $OSArchitecture
@@ -123,25 +120,15 @@ function Install-WinCNIPlugin {
             )
             $sourceFile = Get-InstallationFile -FileParameters $downloadParamsProperties
 
-            if (-not (Test-Path -Path $sourceFile)) {
-                Throw "Couldn't find the downloaded file $sourceFile"
+            # Untar and install tool
+            $params = @{
+                Feature     = "$ToolName"
+                InstallPath = "$WinCNIPath\bin"
+                SourceFile  = $sourceFile
+                cleanup     = $true
+                UpdateEnvPath = $false
             }
-
-            $WinCNIBin = "$WinCNIPath\bin"
-            if (-not (Test-Path -Path $WinCNIBin)) {
-                New-Item -Path $WinCNIBin -ItemType Directory -Force -ErrorAction Ignore | Out-Null
-            }
-
-            # Expand archive file
-            $cmdOutput = Invoke-ExecutableCommand -executable "tar.exe" -arguments "-xf `"$sourceFile`" -C `"$WinCNIBin`"" -timeout (60 * 2)
-            if ($cmdOutput.ExitCode -ne 0) {
-                Throw "Failed to expand archive `"$sourceFile`" at `"$WinCNIBin`". Exit code: $($cmdOutput.ExitCode). $($cmdOutput.StandardError.ReadToEnd())"
-            }
-
-            if (Test-Path -Path $sourceFile) {
-                # Remove the downloaded file
-                Remove-Item -Path "$sourceFile" -Force -ErrorAction SilentlyContinue
-            }
+            Install-RequiredFeature @params
 
             Write-Output "CNI plugin version $WinCNIVersion ($sourceRepo) successfully installed at $WinCNIPath"
         }

@@ -144,19 +144,10 @@ Describe "CommonToolUtilities.psm1" {
 
     Context "Get-InstallationFile" -Tag "Get-InstallationFile" {
         BeforeEach {
-            Mock Get-Module -ParameterFilter { $Name -eq 'ThreadJob' } { }
-            Mock Import-Module -ParameterFilter { $Name -eq 'ThreadJob' } { }
             Mock Invoke-WebRequest -ModuleName "CommonToolUtilities" { }
             Mock Invoke-RestMethod -ModuleName "CommonToolUtilities" {
                 return (Get-Content -Path "$PSScriptRoot\TestData\release-assets.json" -Raw | ConvertFrom-Json -Depth 3 )
             }
-            # -ParameterFilter { $Uri -match "https://api.github.com/repos/containerd/nerdctl/releases" }
-
-            $sampleJob = New-MockObject -Type 'ThreadJob.ThreadJob' -Properties @{ JobStateInfo = 'Completed' }
-            Mock Start-ThreadJob -ModuleName "CommonToolUtilities" -MockWith { return $sampleJob }
-            Mock Wait-Job -ModuleName "CommonToolUtilities"
-            Mock Receive-Job -ModuleName "CommonToolUtilities"
-            Mock Remove-Job -ModuleName "CommonToolUtilities"
             Mock Test-Checksum -ModuleName "CommonToolUtilities" -MockWith { return $true }
 
             $Script:TestFileName = "nerdctl-2.0.0-rc.1-windows-amd64.tar.gz"
@@ -262,9 +253,11 @@ Describe "CommonToolUtilities.psm1" {
         It "Should throw an error if download fails" {
             $errorMessage = "Response status code does not indicate success: 404 (Not Found)."
             Mock Invoke-WebRequest { Throw $errorMessage } -ModuleName "CommonToolUtilities"
+            Mock Start-Sleep -ModuleName "CommonToolUtilities"
 
             { Get-InstallationFile -FileParameters $Script:MockFiles } | Should -Throw "Failed to download asset*"
-            $Error[1].Exception.Message | Should -BeLike "Failed to download assets for `"v2.0.0-rc.1`". Couldn`'t download `"v2.0.0-rc.1`" release assets.*"
+            Should -Invoke Invoke-WebRequest -Times 3 -Scope It -ModuleName "CommonToolUtilities"
+            $Error[1].Exception.Message | Should -BeLike "Failed to download assets for `"v2.0.0-rc.1`". Couldn`'t download `"v2.0.0-rc.1`" release assets*"
         }
     }
 
