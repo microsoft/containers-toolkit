@@ -18,12 +18,16 @@ Defaults to 'patch'
 [CmdletBinding()]
 param (
     [Parameter(Mandatory = $false)]
+    [ValidateScript({ Test-Path $_ -PathType Leaf })]
+    [String]$ManifestPath = (Get-ChildItem -Recurse -Filter "containers-toolkit.psd1").FullName,
+
+    [Parameter(Mandatory = $false)]
     [ValidateSet('major', 'minor', 'patch')]
     [String]$ReleaseType = 'patch'
 )
 
-function Get-NewVersion ($ReleaseType) {
-    [version]$currentVersion = (Get-Module -ListAvailable -Name $Script:ManifestPath).Version
+function Get-NewVersion ($ManifestPath, $ReleaseType) {
+    [version]$currentVersion = (Get-Module -ListAvailable -Name $ManifestPath).Version
 
     $Major = $currentVersion.Major
     $Minor = $currentVersion.Minor
@@ -54,4 +58,4 @@ function Get-NewVersion ($ReleaseType) {
     return (New-Object Version -ArgumentList $major, $minor, $build).ToString()
 }
 
-Get-NewVersion -ReleaseType $ReleaseType
+Get-NewVersion -ManifestPath $ManifestPath -ReleaseType $ReleaseType

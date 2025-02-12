@@ -22,8 +22,8 @@ The new version number to update the module manifest file to.
 Pre-release version string. Defaults to empty string.
 Examples of supported Prerelease string are: -alpha, -alpha1, -BETA, -update20171020
 
-.PARAMETER ReleaseNotes
-Release notes for the new version. Defaults to empty string.
+.PARAMETER ReleaseNotesPath
+Path to the release notes. Defaults to empty string.
 #>
 
 [CmdletBinding()]
@@ -39,13 +39,13 @@ param (
     [String]$Prerelease,
 
     [Parameter(Mandatory = $false)]
-    [String]$ReleaseNotes
+    [String]$ReleaseNotesPath
 )
 
-$Script:ManifestPath = $ManifestPath
-$Script:Version = $Version
-$Script:ReleaseNotes = $ReleaseNotes
-$Script:Prerelease = $Prerelease
+Set-Variable -Name ManifestPath -Value $ManifestPath -Scope Script -Force
+Set-Variable -Name Version -Value $Version -Scope Script -Force
+Set-Variable -Name ReleaseNotesPath -Value $ReleaseNotesPath -Scope Script -Force
+Set-Variable -Name Prerelease -Value $Prerelease -Scope Script -Force
 
 
 function Update-CTKModuleManifest {
@@ -56,23 +56,33 @@ function Update-CTKModuleManifest {
     param()
 
     begin {
-        $WhatIfMessage = "Module version will be updated to version $Script:Version"
+        $moduleVersion = "$Version-$Prerelease"
+        $WhatIfMessage = "Module version will be updated to version $Version"
     }
 
     process {
-        if ($PSCmdlet.ShouldProcess($Script:ManifestPath, $WhatIfMessage)) {
-            $Params = @{
-                Path          = $manifestPath
-                ModuleVersion = $Script:Version
-                LicenseUri    = "https://github.com/microsoft/containers-toolkit/blob/v$Script:Version/LICENSE"
-                ReleaseNotes  = $Script:ReleaseNotes
-                Prerelease    = $Script:Prerelease
-            }
+        if ($PSCmdlet.ShouldProcess($ManifestPath, $WhatIfMessage)) {
+            Write-Information -MessageData "Updating module version to '$moduleVersion' in manifest file '$ManifestPath'" -InformationAction Continue
 
-            Update-ModuleManifest @Params
+            # Get release notes
+            $ReleaseNotes = if ($ReleaseNotesPath) { Get-Content -Path $ReleaseNotesPath -Raw } else { '' }
+            $ReleaseNotes = if ($ReleaseNotesPath) { Get-Content -Path $ReleaseNotesPath -Raw } else { '' }
+
+            $ModuleTags = @("Windows Containers", "Containers-Toolkit", "containerd", "buildkit", "nerdctl", "cni")
+            $params = @{
+                Path          = $manifestPath
+                ModuleVersion = $Version
+                LicenseUri    = "https://github.com/microsoft/containers-toolkit/blob/v$moduleVersion/LICENSE"
+                ReleaseNotes  = $ReleaseNotes
+                Prerelease    = $Prerelease
+                Tags          = $ModuleTags
+            }
+            Update-ModuleManifest @params
 
             # Test the manifest script is valid
             Test-ModuleManifest -Path $manifestPath | Out-Null
+
+            return $moduleVersion
         }
         else {
             # Code that should be processed if doing a WhatIf operation
