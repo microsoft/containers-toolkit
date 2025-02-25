@@ -25,7 +25,7 @@ param (
     [String]$Algorithm = "SHA256"
 )
 
-
+Write-Host "Generating hash for file '$SourceFile' using algorithm '$Algorithm'..."
 $fileName = Split-Path -Path $SourceFile -Leaf
 
 # Compute archived file Hash
