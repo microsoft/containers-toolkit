@@ -19,6 +19,7 @@ The hash algorithm to use. Defaults to SHA256.
 
 [CmdletBinding()]
 param (
+    [Parameter(Mandatory = $true)]
     [ValidateScript({ Test-Path $_ -PathType Leaf })]
     [String]$SourceFile,
     [String]$Algorithm = "SHA256"
@@ -32,6 +33,6 @@ $file_hash = Get-FileHash $SourceFile -Algorithm $Algorithm | Select-Object -Exp
 
 # Dump to file
 $sha_filename = "$SourceFile.$Algorithm"
-Set-Content -Path $sha_filename -Value "$file_hash`t$fileName"
+Set-Content -Path $sha_filename -Value "$file_hash  $fileName"
 
 Write-Host "Created hash file '$sha_filename'"
