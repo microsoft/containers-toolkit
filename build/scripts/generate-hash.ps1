@@ -12,6 +12,9 @@ Generates a hash for the specified file.
 
 .PARAMETER SourcePath
 The path to the file/folder to generate a hash for.
+    1. To generate a hash for a file, specify the full path to the file.
+    2. To generate a hash for all files in a folder, specify the full path to the folder and
+       use the wildcard '*'. E.g. 'C:\path\to\folder\*'.
 
 .PARAMETER ReleaseTag
 The release tag to use for the output file name.
@@ -37,7 +40,7 @@ Write-Host "Generating hash: { Source: '$SourcePath', Algorithm '$Algorithm' }..
 $sha_filename = "containers-toolkit-$ReleaseTag.$Algorithm"
 
 # Compute file Hash and dump to file
-Get-FileHash -Algorithm SHA256 "$SourcePath*" -ErrorAction Continue | `
+Get-FileHash -Algorithm $Algorithm "$SourcePath" -ErrorAction Continue | `
     ForEach-Object { "$($_.Hash)  $($_.Path | Split-Path -Leaf)" } | `
     Tee-Object -FilePath $sha_filename
 
