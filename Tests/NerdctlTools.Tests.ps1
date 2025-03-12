@@ -36,8 +36,9 @@ Describe "NerdctlTools.psm1" {
         BeforeAll {
             $Script:nerdctlRepo = 'https://github.com/containerd/nerdctl/releases/download'
             $Script:TestDownloadPath = "$HOME\Downloads\nerdctl-7.9.8-windows-amd64.tar.gz"
+            $mockExecutablePath = "$TestDrive\Program Files\nerdctl\nerdctl.exe"
 
-            Mock Get-NerdctlLatestVersion { return '7.9.8' } -ModuleName 'NerdctlTools'
+            Mock Get-LatestToolVersion { return '7.9.8' } -ModuleName 'NerdctlTools'
             Mock Uninstall-Nerdctl -ModuleName "NerdctlTools"
             Mock Get-InstallationFile -ModuleName 'NerdctlTools' -MockWith { return $Script:TestDownloadPath }
             Mock Install-RequiredFeature -ModuleName 'NerdctlTools'
@@ -49,9 +50,11 @@ Describe "NerdctlTools.psm1" {
             Mock Install-WinCNIPlugin -ModuleName 'NerdctlTools'
             Mock Install-Nerdctl -ModuleName 'NerdctlTools'
             Mock Remove-Item -ModuleName 'NerdctlTools'
+            Mock Test-Path -ModuleName 'NerdctlTools' -MockWith { return $false } -ParameterFilter {
+                $Path -eq "$mockExecutablePath"
+            }
 
             # Mock for Invoke-ExecutableCommand- "nerdctl --version"
-            $mockExecutablePath = "$TestDrive\Program Files\nerdctl\nerdctl.exe"
             $mockConfigStdOut = New-MockObject -Type 'System.IO.StreamReader' -Methods @{ ReadToEnd = { return "nerdctl version v7.9.8" } }
             $mockProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{
                 StandardOutput = $mockConfigStdOut
@@ -76,6 +79,8 @@ Describe "NerdctlTools.psm1" {
         }
 
         It "Should use defaults" {
+            Mock Get-NerdctlLatestVersion -ModuleName 'NerdctlTools' -MockWith { return 'latest' }
+
             Install-Nerdctl -Force -Confirm:$false
 
             Should -Invoke Get-NerdctlLatestVersion -ModuleName 'NerdctlTools' -Times 1 -Exactly -Scope It
@@ -106,6 +111,7 @@ Describe "NerdctlTools.psm1" {
             # Mocks
             $MockDownloadPath = 'TestDrive:\Downloads\nerdctl-1.2.3-windows-amd64.tar.gz'
             Mock Get-InstallationFile -ModuleName 'NerdctlTools' -MockWith { return $MockDownloadPath }
+            Mock Get-LatestToolVersion { return '1.2.3' } -ModuleName 'NerdctlTools'
 
             # Test
             Install-Nerdctl -Version '1.2.3' -InstallPath 'TestDrive:\nerdctl' -DownloadPath 'TestDrive:\Downloads' -Dependencies 'containerd' -OSArchitecture "arm64" -Force -Confirm:$false
@@ -130,8 +136,6 @@ Describe "NerdctlTools.psm1" {
         }
 
         It "Should not reinstall tool if version already exists and force is not specified" {
-            Mock Test-EmptyDirectory -ModuleName 'ContainerdTools' -MockWith { return $false }
-
             # Mock for Get-ChildItem - "nerdctl.exe"
             Mock Get-ChildItem -ModuleName 'NerdctlTools' -ParameterFilter {
                 $Path -eq "$Env:ProgramFiles\nerdctl" -and
@@ -139,20 +143,28 @@ Describe "NerdctlTools.psm1" {
                 $Filter -eq "nerdctl.exe"
             } -MockWith { return @{FullName = "$mockExecutablePath" } }
 
+            # Mock Test-Path: return true so that the tool is considered installed
+            Mock Test-Path -ModuleName 'NerdctlTools' -MockWith { return $true } -ParameterFilter {
+                $Path -eq "$mockExecutablePath"
+            }
+
             Install-Nerdctl -Confirm:$false
-            Should -Invoke Uninstall-Nerdctl -ModuleName 'NerdctlTools' -Times 0
-            Should -Invoke Install-RequiredFeature -ModuleName 'NerdctlTools' -Times 0
+            Should -Invoke Uninstall-Nerdctl -ModuleName 'NerdctlTools' -Times 0 -Scope It
+            Should -Invoke Install-RequiredFeature -ModuleName 'NerdctlTools' -Times 0 -Scope It
         }
 
         It "Should uninstall tool if it is already installed" {
-            Mock Test-EmptyDirectory -ModuleName 'NerdctlTools' -MockWith { return $false }
-
             # Mock for Get-ChildItem - "nerdctl.exe"
             Mock Get-ChildItem -ModuleName 'NerdctlTools' -ParameterFilter {
                 $Path -eq "$Env:ProgramFiles\nerdctl" -and
                 $Recurse -eq $true
                 $Filter -eq "nerdctl.exe"
             } -MockWith { return @{FullName = "$mockExecutablePath" } }
+
+            # Mock Test-Path: return true so that the tool is considered installed
+            Mock Test-Path -ModuleName 'NerdctlTools' -MockWith { return $true } -ParameterFilter {
+                $Path -eq "$mockExecutablePath"
+            }
 
             Install-Nerdctl -Force -Confirm:$false
 
@@ -163,7 +175,6 @@ Describe "NerdctlTools.psm1" {
         }
 
         It "Should throw an error if uninstallation fails" {
-            Mock Test-EmptyDirectory -ModuleName 'NerdctlTools' -MockWith { return $false }
             Mock Uninstall-Nerdctl -ModuleName 'NerdctlTools' -MockWith { throw 'Error' }
 
             # Mock for Get-ChildItem - "nerdctl.exe"
@@ -172,6 +183,11 @@ Describe "NerdctlTools.psm1" {
                 $Recurse -eq $true
                 $Filter -eq "nerdctl.exe"
             } -MockWith { return @{FullName = "$mockExecutablePath" } }
+
+            # Mock Test-Path: return true so that the tool is considered installed
+            Mock Test-Path -ModuleName 'NerdctlTools' -MockWith { return $true } -ParameterFilter {
+                $Path -eq "$mockExecutablePath"
+            }
 
             { Install-Nerdctl -Confirm:$false -Force } | Should -Throw "nerdctl installation failed. Error"
         }

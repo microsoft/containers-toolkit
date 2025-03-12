@@ -146,6 +146,7 @@ function Test-ToolReinstall {
 
     #  If tool is not installed, the tool is a new installation.
     if (-not $isInstalled) {
+        Write-Debug "$tool is not installed. Proceeding with installation."
         return $false
     }
 
