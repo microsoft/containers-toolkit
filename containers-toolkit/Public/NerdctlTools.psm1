@@ -86,8 +86,11 @@ function Install-Nerdctl {
     )
 
     begin {
+        $tool = 'nerdctl'
+
         # Check if Containerd is alread installed
-        $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
+        $nerdctlexe = (Get-ChildItem -Path $InstallPath -Recurse -Filter "nerdctl.exe" | Select-Object -First 1).FullName
+        $isInstalled = ($null -ne $nerdctlexe)
 
         $toInstall = @("nerdctl")
 
@@ -108,10 +111,25 @@ function Install-Nerdctl {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            # Check if tool already exists at specified location
-            if ($isInstalled) {
-                $errMsg = "nerdctl already exists at $InstallPath or the directory is not empty"
+            $latestVersion = Get-NerdctlLatestVersion
+
+            # Get nerdctl version to install
+            if (!$Version) {
+                # Get default version
+                $Version = $latestVersion
+            }
+            $Version = $Version.TrimStart('v')
+
+            # Check if we need to reinstall
+            $reinstall = Test-ToolReinstall $tool $Version $nerdctlexe
+            if ($reinstall) {
+                $errMsg = "$tool already exists at $InstallPath."
                 Write-Warning $errMsg
+
+                if (!$Force) {
+                    Write-Warning "Installation cancelled. $errMsg Please uninstall the existing version using 'Uninstall-Nerdctl' or use -Force to reinstall."
+                    return
+                }
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
@@ -122,23 +140,17 @@ function Install-Nerdctl {
                 }
             }
 
-            # Get nerdctl version to install
-            if (!$Version) {
-                $Version = Get-NerdctlLatestVersion
-            }
-            $Version = $Version.TrimStart('v')
-
             Write-Output "Downloading and installing nerdctl v$version at $InstallPath"
 
             # Download files
             $downloadParams = @{
-                ToolName = "nerdctl"
-                Repository = "$NERDCTL_REPO"
-                Version = $version
-                OSArchitecture = $OSArchitecture
-                DownloadPath = $DownloadPath
+                ToolName           = "nerdctl"
+                Repository         = "containerd/nerdctl"
+                Version            = $version
+                OSArchitecture     = $OSArchitecture
+                DownloadPath       = $DownloadPath
                 ChecksumSchemaFile = $null
-                FileFilterRegEx = $null
+                FileFilterRegEx    = $null
             }
             $downloadParamsProperties = [FileDownloadParameters]::new(
                 $downloadParams.ToolName,

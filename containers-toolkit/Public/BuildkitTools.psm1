@@ -56,8 +56,11 @@ function Install-Buildkit {
     )
 
     begin {
+        $tool = 'Buildkit'
+
         # Check if Buildkit is alread installed
-        $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
+        $blktdexe = (Get-ChildItem -Path $InstallPath -Recurse -Filter "buildkitd.exe" | Select-Object -First 1).FullName
+        $isInstalled = ($null -ne $blktdexe)
 
         $WhatIfMessage = "Buildkit will be installed at $InstallPath"
         if ($isInstalled) {
@@ -71,37 +74,46 @@ function Install-Buildkit {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            # Check if tool already exists at specified location
-            if ($isInstalled) {
-                $errMsg = "Buildkit already exists at $InstallPath or the directory is not empty"
-                Write-Warning $errMsg
-
-                # Uninstall if tool exists at specified location. Requires user consent
-                try {
-                    Uninstall-Buildkit -Path "$InstallPath" -Force:$Force -Confirm:$false | Out-Null
-                }
-                catch {
-                    Throw "Buildkit installation failed. $_"
-                }
-            }
+            $latestVersion = Get-BuildkitLatestVersion
 
             # Get Buildkit version to install
             if (!$Version) {
-                $Version = Get-BuildkitLatestVersion
+                # Get default version
+                $Version = $latestVersion
             }
             $Version = $Version.TrimStart('v')
+
+            # Check if we need to reinstall
+            $reinstall = Test-ToolReinstall $tool $Version $blktdexe
+            if ($reinstall) {
+                $errMsg = "$tool already exists at $InstallPath."
+                Write-Warning $errMsg
+
+                if (!$Force) {
+                    Write-Warning "Installation cancelled. $errMsg Please uninstall the existing version using 'Uninstall-Buildkit' or use -Force to reinstall."
+                    return
+                }
+
+                # Uninstall if tool exists at specified location. Requires user consent
+                try {
+                    Uninstall-Buildkit -Path "$InstallPath" -Confirm:$false -Force:$Force | Out-Null
+                }
+                catch {
+                    Throw "nerdctl installation failed. $_"
+                }
+            }
 
             Write-Output "Downloading and installing Buildkit v$Version at $InstallPath"
 
             # Download files
             $downloadParams = @{
-                ToolName = "Buildkit"
-                Repository = "$BUILDKIT_REPO"
-                Version = $Version
-                OSArchitecture = $OSArchitecture
-                DownloadPath = $DownloadPath
+                ToolName           = "Buildkit"
+                Repository         = "moby/buildkit"
+                Version            = $Version
+                OSArchitecture     = $OSArchitecture
+                DownloadPath       = $DownloadPath
                 ChecksumSchemaFile = "$ModuleParentPath\Private\schemas\in-toto.sbom.schema.json"
-                FileFilterRegEx = $null
+                FileFilterRegEx    = $null
             }
             $downloadParamsProperties = [FileDownloadParameters]::new(
                 $downloadParams.ToolName,

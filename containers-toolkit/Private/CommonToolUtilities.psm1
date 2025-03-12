@@ -88,7 +88,7 @@ function Get-LatestToolVersion($tool) {
         "nerdctl" { $NERDCTL_REPO }
         "wincniplugin" { $WINCNI_PLUGIN_REPO }
         "cloudnativecni" { $CLOUDNATIVE_CNI_REPO }
-        Default { Throw "Couldn't get latest $tool version. Invalid tool name: '$tool'." }
+        Default { Throw "Couldn't get $tool latest version. Invalid tool name: '$tool'." }
     }
 
     # Get the latest release version URL string
@@ -105,6 +105,74 @@ function Get-LatestToolVersion($tool) {
     catch {
         Throw "Couldn't get $tool latest version from $uri. $($_.Exception.Message)"
     }
+}
+
+function Test-IsLatestVersion($Tool, $Version) {
+    $targetVersion = [System.Version]$Version
+
+    # Get the latest version of the tool
+    $latestVersion = Get-LatestToolVersion -Tool $Tool
+    Write-Debug "Latest $Tool version: $latestVersion"
+    $latestVersion = [System.Version](Get-LatestToolVersion -Tool $Tool)
+
+    $isLatest = ($targetVersion -eq $latestVersion)
+    if (-not $isLatest) {
+        Write-Warning "A newer version of $tool is available. { Target Version: $targetVersion, Latest Version: $latestVersion }"
+    }
+    return $isLatest
+}
+
+function Test-ToolReinstall {
+    param(
+        [string]$tool,
+        [string]$targetVersion,
+        [string]$executable
+    )
+
+    Write-Debug "Tool: $tool, Target Version: $targetVersion, Executable: $executable"
+
+    # Check if the target version is the latest version
+    if ($targetVersion -eq 'latest') {
+        $targetVersion = Get-LatestToolVersion -Tool $tool
+    }
+    else {
+        # Check if a newer version is available
+        Test-IsLatestVersion -Tool "$tool" -Version $targetVersion | Out-Null
+    }
+
+    # Check if the tool is already installed
+    Write-Debug "$tool executable: $executable"
+    $isInstalled = ($executable -and (Test-Path -Path $executable))
+
+    #  If tool is not installed, the tool is a new installation.
+    if (-not $isInstalled) {
+        Write-Debug "$tool is not installed. Proceeding with installation."
+        return $false
+    }
+
+    # Check if the installed version is the same as the target version
+    $cmdOutput = Invoke-ExecutableCommand -Executable "$executable" -Arguments "--version"
+    if ($cmdOutput.ExitCode -ne 0) {
+        Write-Warning "Failed to get nerdctl version: $($cmdOutput.StandardError.ReadToEnd())"
+        return $true
+    }
+
+    # Extract version from the output
+    #     containerd github.com/containerd/containerd/v2 v2.0.2 c507a0257ea6462fbd6f5ba4f5c74facb04021f4
+    #     buildkitd github.com/moby/buildkit v0.19.0 3637d1b15a13fc3cdd0c16fcf3be0845ae68f53d
+    #     nerdctl version v7.9.8
+    $installedVersion = $cmdOutput.StandardOutput.ReadToEnd().Trim()
+    $installedVersion = ($installedVersion.Split(' ')[2]).TrimStart('v')
+    Write-Debug "{ Target Version: $targetVersion, Installed Version: $installedVersion }"
+
+    # Compare the installed version with the target version
+    if ($targetVersion -eq $installedVersion) {
+        Write-Warning "Installed $tool version is the same as the requested version, '$installedVersion'."
+    } else {
+        Write-Warning "$tool version '$installedVersion' is installed."
+    }
+
+    return $true
 }
 
 function Test-EmptyDirectory($path) {
@@ -536,6 +604,9 @@ function Test-FileChecksum {
                 $found = $true
                 return
             }
+            else {
+                Write-Debug "File name does not match. {checksum file: $filename, downloaded file: $downloadedFileName}"
+            }
         }
 
         if (-not $found) {
@@ -913,6 +984,8 @@ function Invoke-ExecutableCommand {
 
 Export-ModuleMember -Variable CONTAINERD_REPO, BUILDKIT_REPO, NERDCTL_REPO, WINCNI_PLUGIN_REPO, CLOUDNATIVE_CNI_REPO
 Export-ModuleMember -Function Get-LatestToolVersion
+Export-ModuleMember -Function Test-IsLatestVersion
+Export-ModuleMember -Function Test-ToolReinstall
 Export-ModuleMember -Function Get-DefaultInstallPath
 Export-ModuleMember -Function Test-EmptyDirectory
 Export-ModuleMember -Function Get-InstallationFile
