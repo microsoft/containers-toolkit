@@ -156,6 +156,7 @@ Describe "ContainerNetworkTools.psm1" {
             Mock Get-HnsNetwork -ModuleName 'ContainerNetworkTools'
             Mock New-HNSNetwork -ModuleName 'ContainerNetworkTools'
             Mock Restart-Service -ModuleName 'ContainerNetworkTools'
+            Mock Install-WinCNIPlugin -ModuleName 'ContainerNetworkTools'
         }
 
         It "Should use defaults" {
@@ -168,7 +169,7 @@ Describe "ContainerNetworkTools.psm1" {
                 $Gateway -eq '99.2.0.8'
                 $AddressPrefix -eq '99.2.0.0/16'
             }
-            $MockConfFilePath = "TestDrive:\Program Files\Containerd\cni\conf\0-containerd-nat.conf"
+            $MockConfFilePath = "C:\Program Files\Containerd\cni\conf\0-containerd-nat.conf"
             $MockConfFilePath | Should -Exist
             $MockConfFilePath | Should -FileContentMatch "`"cniVersion`": `"1.0.0`""
         }
@@ -191,26 +192,14 @@ Describe "ContainerNetworkTools.psm1" {
             $MockConfFilePath | Should -FileContentMatch "`"cniVersion`": `"2.5.7`""
         }
 
-        It "Should install missing WinCNI plugins if user consents" {
+        It "Should install missing WinCNI plugins if plugins are missing" {
             Mock Test-EmptyDirectory -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
             Mock New-Item -ModuleName 'ContainerNetworkTools'
-            Mock Install-WinCNIPlugin -ModuleName 'ContainerNetworkTools'
 
-            $mockedConsent = [ActionConsent]::Yes.value__
-            Mock Get-Host -ModuleName "ContainerNetworkTools" -MockWith { return [UITest]::new($mockedConsent) }
-
-            Initialize-NatNetwork
-            Should -Invoke Install-WinCNIPlugin -ModuleName 'ContainerNetworkTools'
-        }
-
-        It "Should throw an error if WinCNI plugins do not exist and user does not consent to install them" {
-            Mock Test-EmptyDirectory -ModuleName 'ContainerNetworkTools' -MockWith { return $true }
-
-            $mockedConsent = [ActionConsent]::No.value__
-            Mock Get-Host -ModuleName "ContainerNetworkTools" -MockWith { return [UITest]::new($mockedConsent) }
-
-            $ENV:PESTER = $true
-            { Initialize-NatNetwork } | Should -Throw "Windows CNI plugins have not been installed*"
+            Initialize-NatNetwork -Force
+            Should -Invoke Install-WinCNIPlugin -ModuleName 'ContainerNetworkTools' -ParameterFilter {
+                $WinCNIPath -eq "$Env:ProgramFiles\Containerd\cni"
+            }
         }
 
         It "Should throw error if HostNetworkingService and HNS module are not installed" {
