@@ -12,6 +12,9 @@ using module "..\Private\CommonToolUtilities.psm1"
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
+$WINCNI_PLUGIN_REPO = "microsoft/windows-container-networking"
+$CLOUDNATIVE_CNI_REPO = "containernetworking/plugins"
+
 function Get-WinCNILatestVersion {
     param (
         [String]$repo = "microsoft/windows-container-networking"

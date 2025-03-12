@@ -14,10 +14,14 @@ Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 function Show-ContainerTools {
     param (
         [Parameter(HelpMessage = "Show latest release version")]
-        [Switch]$Latest
+        [Switch]$Latest,
+
+        [Parameter(HelpMessage = "Tool to show")]
+        [ValidateSet("containerd", "buildkit", "nerdctl")]
+        [String[]]$ToolName
     )
 
-    $tools = @("containerd", "buildkit", "nerdctl")
+    $tools = if ($ToolName) { $ToolName } else { @("containerd", "buildkit", "nerdctl") }
 
     $installedTools = @()
     foreach ($tool in $tools) {
@@ -173,21 +177,27 @@ To register containerd and buildkitd services and create a NAT network, see help
 }
 
 function Get-InstalledVersion($feature, $Latest) {
-    $executable = $null
+    $sourceLocation = $null
     $daemon = $null
+    $buildctlPath = $null
     switch ($feature) {
         "buildkit" {
-            $bktdExecutable = (Get-Command "build*.exe" | Where-Object { $_.Source -like "*buildkit*" }) | Select-Object Name
-            if ($bktdExecutable) {
-                $executable = ($bktdExecutable[0]).Name
+            $blktCommandInfo = Get-Command "build*.exe" | Where-Object { $_.Source -like "*buildkit*" }
+            if ($null -ne $blktCommandInfo) {
+                # Get buildkitd executable
+                $buldkitdCommandInfo = $blktCommandInfo | Where-Object { $_.Name -like "buildkitd.exe" }
+                $sourceLocation = $buldkitdCommandInfo.Source
             }
+            $daemon = 'buildkitd'
 
-            if ($null -ne ($bktdExecutable | Where-Object { $_.Name -contains "buildkitd.exe" })) {
-                $daemon = 'buildkitd'
-            }
+            $buildctlPath = ($blktCommandInfo | Where-Object { $_.Name -like "buildctl.exe" }).Source
         }
         Default {
-            $executable = (Get-Command "$feature.exe" -ErrorAction Ignore).Name
+            $commandInfo = Get-Command "$feature.exe" -ErrorAction Ignore
+
+            if ($null -ne $commandInfo) {
+                $sourceLocation = $commandInfo.Source
+            }
 
             if ($feature -eq 'containerd') {
                 $daemon = 'containerd'
@@ -199,15 +209,20 @@ function Get-InstalledVersion($feature, $Latest) {
         Tool      = $feature
         Installed = $False
     }
-    if ($executable) {
-        $result = getToolVersion -Executable $executable
+    if ($sourceLocation) {
+        $result = getToolVersion -Executable $sourceLocation
         Add-Member -InputObject $result -Name 'Tool' -Value $feature -MemberType 'NoteProperty'
-        $result = $result | Select-Object Tool, Installed, Version
+        Add-Member -InputObject $result -Name 'Path' -Value $sourceLocation -MemberType 'NoteProperty'
+        $result = $result | Select-Object Tool, Path, Installed, Version
 
         if ($daemon) {
             Add-Member -InputObject $result -Name 'Daemon' -Value $daemon -MemberType 'NoteProperty'
             Add-Member -InputObject $result -Name 'DaemonStatus' -MemberType 'NoteProperty' `
                 -Value (getDaemonStatus -Daemon $daemon)
+        }
+
+        if ($buildctlPath) {
+            $result | Add-Member -Name 'BuildctlPath' -Value $buildctlPath -MemberType 'NoteProperty'
         }
     }
 
@@ -223,9 +238,16 @@ function Get-InstalledVersion($feature, $Latest) {
 }
 
 function getToolVersion($executable) {
+    $toolName = [System.IO.Path]::GetFileNameWithoutExtension([System.IO.Path]::GetFileName($executable))
+
     $installedVersion = $null
     try {
-        $version = & $executable -v
+        $cmdOutput = Invoke-ExecutableCommand -Executable $executable -Arguments '--version'
+        if ($cmdOutput.ExitCode -ne 0) {
+            Throw "Couldn't get $toolName version. $($cmdOutput.StandardError.ReadToEnd())"
+        }
+
+        $version = $cmdOutput.StandardOutput.ReadToEnd()
 
         $pattern = "(\d+\.)(\d+\.)(\*|\d+)"
         $installedVersion = ($version | Select-String -Pattern $pattern).Matches.Value

@@ -81,14 +81,13 @@ function Install-Nerdctl {
         $OSArchitecture = $env:PROCESSOR_ARCHITECTURE,
 
         [Switch]
-        [parameter(HelpMessage = "Installs nerdctl (and its dependecies if specified) even if the tool already exists at the specified path")]
+        [parameter(HelpMessage = "Installs nerdctl (and its dependencies if specified) even if the tool already exists at the specified path")]
         $Force
     )
 
     begin {
-        # Check if Containerd is alread installed
+        # Check if nerdctl is already installed
         $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
-
         $toInstall = @("nerdctl")
 
         $dependencies = Get-NerdctlDependencies -Dependencies $dependencies
@@ -98,17 +97,16 @@ function Install-Nerdctl {
 
         $WhatIfMessage = "nerdctl will be installed at $installPath"
         if ($isInstalled) {
-            $WhatIfMessage = "nerdctl will be uninstalled from and reinstalled at $installPath"
+            $WhatIfMessage = "nerdctl will be uninstalled and reinstalled at $InstallPath"
         }
         if ($dependencies) {
-            <# Action when this condition is true #>
             $WhatIfMessage = "nerdctl and its dependencies (Containerd, Buildkit, WinCNIPlugin) will be installed"
         }
     }
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            # Check if tool already exists at specified location
+            # Check if nerdctl already exists at specified location
             if ($isInstalled) {
                 $errMsg = "nerdctl already exists at $InstallPath or the directory is not empty"
                 Write-Warning $errMsg
@@ -122,23 +120,23 @@ function Install-Nerdctl {
                 }
             }
 
-            # Get nerdctl version to install
+            # Get nerdctl version to install if not specified
             if (!$Version) {
                 $Version = Get-NerdctlLatestVersion
             }
             $Version = $Version.TrimStart('v')
 
-            Write-Output "Downloading and installing nerdctl v$version at $InstallPath"
+            Write-Output "Downloading and installing nerdctl v$Version at $InstallPath"
 
             # Download files
             $downloadParams = @{
-                ToolName = "nerdctl"
-                Repository = "$NERDCTL_REPO"
-                Version = $version
-                OSArchitecture = $OSArchitecture
-                DownloadPath = $DownloadPath
+                ToolName           = "nerdctl"
+                Repository         = "$NERDCTL_REPO"
+                Version            = $Version
+                OSArchitecture     = $OSArchitecture
+                DownloadPath       = $DownloadPath
                 ChecksumSchemaFile = $null
-                FileFilterRegEx = $null
+                FileFilterRegEx    = $null
             }
             $downloadParamsProperties = [FileDownloadParameters]::new(
                 $downloadParams.ToolName,
