@@ -12,7 +12,7 @@ $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 function Get-NerdctlLatestVersion {
-    $latestVersion = Get-LatestToolVersion -Repository "containerd/nerdctl"
+    $latestVersion = Get-LatestToolVersion -Tool "nerdctl"
     return $latestVersion
 }
 
@@ -81,12 +81,12 @@ function Install-Nerdctl {
         $OSArchitecture = $env:PROCESSOR_ARCHITECTURE,
 
         [Switch]
-        [parameter(HelpMessage = "Installs nerdctl (and its dependecies if specified) even if the tool already exists at the specified path")]
+        [parameter(HelpMessage = "Installs nerdctl (and its dependencies if specified) even if the tool already exists at the specified path")]
         $Force
     )
 
     begin {
-        # Check if Containerd is alread installed
+        # Check if nerdctl is already installed
         $isInstalled = -not (Test-EmptyDirectory -Path "$InstallPath")
 
         $toInstall = @("nerdctl")
@@ -101,14 +101,13 @@ function Install-Nerdctl {
             $WhatIfMessage = "nerdctl will be uninstalled from and reinstalled at '$installPath'"
         }
         if ($dependencies) {
-            <# Action when this condition is true #>
             $WhatIfMessage = "nerdctl and its dependencies (Containerd, Buildkit, WinCNIPlugin) will be installed"
         }
     }
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            # Check if tool already exists at specified location
+            # Check if nerdctl already exists at specified location
             if ($isInstalled) {
                 $errMsg = "nerdctl already exists at '$InstallPath' or the directory is not empty."
                 Write-Warning $errMsg
@@ -122,7 +121,7 @@ function Install-Nerdctl {
                 }
             }
 
-            # Get nerdctl version to install
+            # Get nerdctl version to install if not specified
             if (!$Version) {
                 $Version = Get-NerdctlLatestVersion
             }
@@ -133,7 +132,7 @@ function Install-Nerdctl {
             # Download files
             $downloadParams = @{
                 ToolName           = "nerdctl"
-                Repository         = "containerd/nerdctl"
+                Repository         = "$NERDCTL_REPO"
                 Version            = $version
                 OSArchitecture     = $OSArchitecture
                 DownloadPath       = $DownloadPath
