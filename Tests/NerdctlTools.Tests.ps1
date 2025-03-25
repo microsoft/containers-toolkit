@@ -157,6 +157,9 @@ Describe "NerdctlTools.psm1" {
             Mock Remove-Item -ModuleName 'NerdctlTools'
             Mock Remove-FeatureFromPath -ModuleName 'NerdctlTools'
             Mock Uninstall-ProgramFiles -ModuleName 'NerdctlTools'
+
+            $mockProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ ExitCode = 0 }
+            Mock Invoke-ExecutableCommand -ModuleName "NerdctlTools" -MockWith { return $mockProcess }
         }
 
         It "Should successfully uninstall nerdctl" {
@@ -167,10 +170,9 @@ Describe "NerdctlTools.psm1" {
                 -ParameterFilter { $Path -eq 'TestDrive:\Custom\nerdctl\' }
 
             # Should not purge program data
-            Should -Invoke Uninstall-ProgramFiles -Times 0 -Scope It -ModuleName "NerdctlTools" `
-                -ParameterFilter { $Path -eq "$ENV:ProgramData\nerdctl" }
-            Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "NerdctlTools" `
-                -ParameterFilter { $Feature -eq "nerdctl" }
+            Should -Invoke Uninstall-ProgramFiles -Times 0 -Scope It -ModuleName "NerdctlTools"
+            Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "NerdctlTools"
+            Should -Invoke Invoke-ExecutableCommand -Time 0 -Scope It -ModuleName "NerdctlTools"
         }
 
         It "Should successfully uninstall nerdctl from default path" {
@@ -190,6 +192,10 @@ Describe "NerdctlTools.psm1" {
                 -ParameterFilter { $Path -eq "$ENV:ProgramData\nerdctl" }
             Should -Invoke Remove-FeatureFromPath -Times 1 -Scope It -ModuleName "NerdctlTools" `
                 -ParameterFilter { $Feature -eq "nerdctl" }
+            Should -Invoke Invoke-ExecutableCommand -Time 1 -Scope It -ModuleName "NerdctlTools" -ParameterFilter {
+                $executable -eq "TestDrive:\Program Files\nerdctl\nerdctl.exe" -and
+                $arguments -eq "system prune --all"
+            }
         }
 
         It "Should do nothing if user does not consent to uninstalling nerdctl" {

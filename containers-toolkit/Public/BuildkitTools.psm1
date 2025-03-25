@@ -207,11 +207,11 @@ function Register-BuildkitdService {
         SupportsShouldProcess = $true
     )]
     param(
-        [parameter(HelpMessage = "Windows CNI plugin path")]
-        [String]$WinCNIPath,
+        [parameter(HelpMessage = "Windows CNI plugin path. Defaults to `$ENV:ProgramFiles\Containerd\cni")]
+        [String]$WinCNIPath= "$ENV:ProgramFiles\Containerd\cni",
 
-        [parameter(HelpMessage = "Buildkit path")]
-        [String]$BuildKitPath,
+        [parameter(HelpMessage = "Buildkit path. Defaults to `$ENV:ProgramFiles\Buildkit")]
+        [String]$BuildKitPath= "$ENV:ProgramFiles\Buildkit",
 
         [parameter(HelpMessage = "Specify to start Buildkitd service after registration is complete")]
         [Switch]$Start,
@@ -264,6 +264,9 @@ function Register-BuildkitdService {
             Write-Output "Configuring buildkitd service"
 
             $buildkitdExecutable = "$BuildKitPath\bin\buildkitd.exe"
+            Write-Debug "Buildkitd path: $buildkitdExecutable"
+
+            # Add buildkitd to Windows Defender exclusion list
             Add-MpPreference -ExclusionProcess $buildkitdExecutable
 
             if (!$WinCNIPath) {
@@ -273,9 +276,11 @@ function Register-BuildkitdService {
 
             $cniBinDir = "$WinCNIPath\bin"
             $cniConfPath = "$WinCNIPath\conf\0-containerd-nat.conf"
+            Write-Debug "CNI bin dir: $cniBinDir"
+            Write-Debug "CNI conf path: $cniConfPath"
 
             # Register buildkit service
-            $command = "buildkitd.exe --register-service --debug --containerd-worker=true --containerd-cni-config-path=`"$cniConfPath`" --containerd-cni-binary-dir=`"$cniBinDir`" --service-name buildkitd"
+            $command = "$buildkitdExecutable --register-service --debug --containerd-worker=true --containerd-cni-config-path=`"$cniConfPath`" --containerd-cni-binary-dir=`"$cniBinDir`" --service-name buildkitd"
             if (Test-ConfFileEmpty -Path $cniConfPath) {
 
                 $consent = $force
@@ -285,7 +290,7 @@ function Register-BuildkitdService {
 
                 if ($consent) {
                     Write-Warning "Containerd conf file not found at $cniConfPath. Buildkit service will be registered without Containerd cni configurations."
-                    $command = "buildkitd.exe --register-service --debug --containerd-worker=true --service-name buildkitd"
+                    $command = "$buildkitdExecutable --register-service --debug --containerd-worker=true --service-name buildkitd"
                 }
                 else {
                     Write-Error "Failed to register buildkit service. Containerd conf file not found at $cniConfPath.`n`t1. Ensure that the required CNI plugins are installed or you can install them using 'Install-WinCNIPlugin'.`n`t2. Create the file to resolve this issue .`n`t3. Rerun this command  'Register-BuildkitdService'"
@@ -293,7 +298,11 @@ function Register-BuildkitdService {
                 }
             }
 
-            $arguments = ($command -split " " | Select-Object -Skip 1) -join " "
+            # remove the executable extension from the command
+            $escapedPath = [regex]::Escape($buildkitdExecutable)
+            $arguments = ($command -replace "$escapedPath", "").Trim()
+
+            # Register the service
             $output = Invoke-ExecutableCommand -Executable $buildkitdExecutable -Arguments $arguments
             if ($output.ExitCode -ne 0) {
                 Throw "Failed to register buildkitd service. $($output.StandardError.ReadToEnd())"
