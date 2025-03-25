@@ -13,7 +13,7 @@ Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 
 function Get-ContainerdLatestVersion {
-    $latestVersion = Get-LatestToolVersion -Repository "containerd/containerd"
+    $latestVersion = Get-LatestToolVersion -Tool "containerd"
     return $latestVersion
 }
 
@@ -85,7 +85,7 @@ function Install-Containerd {
             # Download files
             $downloadParams = @{
                 ToolName           = "Containerd"
-                Repository         = "containerd/containerd"
+                Repository         = "$CONTAINERD_REPO"
                 Version            = $version
                 OSArchitecture     = $OSArchitecture
                 DownloadPath       = $DownloadPath

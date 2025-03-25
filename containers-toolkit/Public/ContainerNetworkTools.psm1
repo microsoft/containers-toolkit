@@ -13,7 +13,15 @@ $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
 function Get-WinCNILatestVersion {
-    $latestVersion = Get-LatestToolVersion -Repository "microsoft/windows-container-networking"
+    param (
+        [String]$repo = "microsoft/windows-container-networking"
+    )
+    $tool = switch ($repo.ToLower()) {
+        $WINCNI_PLUGIN_REPO { "wincniplugin" }
+        $CLOUDNATIVE_CNI_REPO { "cloudnativecni" }
+        Default { Throw "Invalid repository. Supported repositories are $WINCNI_PLUGIN_REPO and $CLOUDNATIVE_CNI_REPO" }
+    }
+    $latestVersion = Get-LatestToolVersion -Tool $tool
     return $latestVersion
 }
 
@@ -80,7 +88,7 @@ function Install-WinCNIPlugin {
             # Get Windows CNI plugins version to install
             if (!$WinCNIVersion) {
                 # Get default version
-                $WinCNIVersion = Get-WinCNILatestVersion
+                $WinCNIVersion = Get-WinCNILatestVersion -Repo $SourceRepo
             }
             $WinCNIVersion = $WinCNIVersion.TrimStart('v')
             Write-Output "Downloading CNI plugin version $WinCNIVersion at $WinCNIPath"
@@ -389,8 +397,7 @@ function Install-MissingPlugin {
         $consent = ([ActionConsent](Get-Host).UI.PromptForChoice($title, $question, $choices, 1)) -eq [ActionConsent]::Yes
 
         if (-not $consent) {
-            $downloadPath = "https://github.com/microsoft/windows-container-networking"
-            Throw "Windows CNI plugins have not been installed. To install, run the command `"Install-WinCNIPlugin`" or download from $downloadPath."
+            Throw "Windows CNI plugins have not been installed. To install, run the command `"Install-WinCNIPlugin`"."
         }
     }
 

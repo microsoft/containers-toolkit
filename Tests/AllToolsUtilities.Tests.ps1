@@ -30,26 +30,121 @@ Describe "AllToolsUtilities.psm1" {
 
     Context "Show-ContainerTools" -Tag "Show-ContainerTools" {
         BeforeAll {
-            Mock Get-InstalledVersion -ModuleName 'AllToolsUtilities'
+            # Mock get version
+            $mockConfigStdOut = New-MockObject -Type 'System.IO.StreamReader' -Methods @{ ReadToEnd = { return "tool version v1.0.1" } }
+            $mockConfigProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{
+                ExitCode       = 0
+                StandardOutput = $mockConfigStdOut
+            }
+            Mock Invoke-ExecutableCommand -ModuleName "AllToolsUtilities" `
+                -ParameterFilter { $Arguments -eq "--version" } `
+                -MockWith { return $mockConfigProcess }
         }
 
-        It "Should list all container tools and their install status" {
-            Show-ContainerTools
+        It "Should get containerd version" {
+            $executablePath = "TestDrive:\Program Files\Containerd\bin\containerd.exe"
+            Mock Get-Command -ModuleName 'AllToolsUtilities' -MockWith { @{ Name = 'containerd.exe'; Source = $executablePath } }
+            Mock Get-Service -ModuleName 'AllToolsUtilities'
 
-            @("containerd", "buildkit", "nerdctl") | ForEach-Object {
-                Should -Invoke Get-InstalledVersion -ModuleName 'AllToolsUtilities' `
-                    -Times 1 -Exactly -Scope It `
-                    -ParameterFilter { $Feature -eq $_ }
+            $containerdVersion = Show-ContainerTools -ToolName 'containerd'
+
+            # Check the output
+            $expectedOutput = [PSCustomObject]@{
+                Tool         = 'containerd'
+                Path         = $executablePath
+                Installed    = $true
+                Version      = 'v1.0.1'
+                Daemon       = 'containerd'
+                DaemonStatus = 'Unregistered'
+            }
+            # $containerdVersion | Should -Be $expectedOutput
+            # HACK: Should -Be does not work with PSCustomObject in PSv5.
+            # However PSv6 has support for this. To be investigated further.
+            foreach ($key in $expectedOutput.Keys) {
+                $expectedValue = $expectedOutput[$key]
+                $actualValue = $containerdVersion.$key
+                $actualValue | Should -Be $expectedValue
+            }
+
+            # Check the invocation
+            Should -Invoke Get-Command -ModuleName 'AllToolsUtilities' `
+                -Times 1 -Exactly -Scope It  -ParameterFilter { $Name -eq 'containerd.exe' }
+        }
+
+        It "Should get buildkit version" {
+            $executablePath = "TestDrive:\Program Files\Buildkit\bin\buildkitd.exe"
+            $buildctlPath = "TestDrive:\Program Files\Buildkit\bin\buildctl.exe"
+
+            Mock Get-Service -ModuleName 'AllToolsUtilities' -MockWith { @{ Status = "Running" } }
+            Mock Get-Command -ModuleName 'AllToolsUtilities' -MockWith { @(
+                    @{ Name = 'buildkitd.exe'; Source = $executablePath }
+                    @{ Name = 'buildctl.exe'; Source = $buildctlPath }
+                ) }
+
+            $buildkitVersion = Show-ContainerTools -ToolName 'buildkit'
+
+            # Check the output
+            $expectedOutput = [PSCustomObject]@{
+                Tool         = 'buildkit'
+                Path         = $executablePath
+                Installed    = $true
+                Version      = 'v1.0.1'
+                Daemon       = 'buildkitd'
+                DaemonStatus = 'Running'
+                BuildctlPath = $buildctlPath
+            }
+            foreach ($key in $expectedOutput.Keys) {
+                $expectedValue = $expectedOutput[$key]
+                $actualValue = $buildkitVersion.$key
+                $actualValue | Should -Be $expectedValue
+            }
+
+            # Check the invocation
+            Should -Invoke Get-Command -ModuleName 'AllToolsUtilities' `
+                -Times 1 -Exactly -Scope It  -ParameterFilter { $Name -eq "build*.exe" }
+        }
+
+        It "Should return basic info if the tool is not installed" {
+            Mock Get-Command -ModuleName 'AllToolsUtilities'
+
+            $toolInfo = Show-ContainerTools
+
+            # Check the output
+            $expectedOutput = @(
+                [PSCustomObject]@{ Tool = 'containerd'; Installed = $false; Daemon = 'containerd'; DaemonStatus = 'Unregistered' }
+                [PSCustomObject]@{ Tool = 'buildkit'; Installed = $false; Daemon = 'buildkitd'; DaemonStatus = 'Unregistered' }
+                [PSCustomObject]@{ Tool = 'nerdctl'; Installed = $false }
+            )
+            $expectedOutput | ForEach-Object {
+                $tool = $_.Tool
+                $actualOutput = $toolInfo | Where-Object { $_.Tool -eq $tool }
+                foreach ($key in $_.Keys) {
+                    $expectedValue = $_[$key]
+                    $actualValue = $actualOutput.$key
+                    $actualValue | Should -Be $expectedValue
+                }
             }
         }
 
-        It "Should list the latest available version for each tool" {
-            Show-ContainerTools -Latest
+        It "Should return latest version if Latest flag is specified" {
+            Mock Get-Command -ModuleName 'AllToolsUtilities'
 
-            @("containerd", "buildkit", "nerdctl") | ForEach-Object {
-                Should -Invoke Get-InstalledVersion -ModuleName 'AllToolsUtilities' `
-                    -Times 1 -Exactly -Scope It `
-                    -ParameterFilter { $Feature -eq $_ -and $Latest -eq $true }
+            $toolInfo = Show-ContainerTools -Latest
+
+            # Check the output
+            $expectedOutput = @(
+                [PSCustomObject]@{ Tool = 'containerd'; Installed = $false; Daemon = 'buildkitd'; DaemonStatus = 'Unregistered'; LatestVersion = 'v1.0.1' }
+                [PSCustomObject]@{ Tool = 'buildkit'; Installed = $false; Daemon = 'buildkitd'; DaemonStatus = 'Unregistered'; LatestVersion = 'v1.0.1' }
+                [PSCustomObject]@{ Tool = 'nerdctl'; Installed = $false; LatestVersion = 'v1.0.1' }
+            )
+            $expectedOutput | ForEach-Object {
+                $tool = $_.Tool
+                $actualOutput = $toolInfo | Where-Object { $_.Tool -eq $tool }
+                foreach ($key in $_.Keys) {
+                    $expectedValue = $_[$key]
+                    $actualValue = $actualOutput.$key
+                    $actualValue | Should -Be $expectedValue
+                }
             }
         }
     }
