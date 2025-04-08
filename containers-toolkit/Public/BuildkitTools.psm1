@@ -96,7 +96,7 @@ function Install-Buildkit {
             # Download files
             $downloadParams = @{
                 ToolName           = "Buildkit"
-                Repository         = "moby/buildkit"
+                Repository         = "$BUILDKIT_REPO"
                 Version            = $Version
                 OSArchitecture     = $OSArchitecture
                 DownloadPath       = $DownloadPath
@@ -367,7 +367,7 @@ function Uninstall-Buildkit {
         # that contains the buildkit binaries, buildkit/bin
         $path = $path.TrimEnd("\")
         if (-not $Purge -and (-not $path.EndsWith("\bin"))) {
-            $path = $path.TrimEnd("\").Trim() + "\bin"
+            $path = $path.Trim() + "\bin"
         }
 
         $WhatIfMessage = "Buildkit will be uninstalled from '$path' and buildkitd service will be stopped and unregistered."

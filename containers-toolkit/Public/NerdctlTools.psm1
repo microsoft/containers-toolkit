@@ -86,7 +86,7 @@ function Install-Nerdctl {
     )
 
     begin {
-        # Check if Containerd is alread installed
+        # Check if nerdctl is already installed
         $isInstalled = -not (Test-EmptyDirectory -Path "$InstallPath")
 
         $toInstall = @("nerdctl")
@@ -127,13 +127,13 @@ function Install-Nerdctl {
             }
             $Version = $Version.TrimStart('v')
 
-            Write-Output "Downloading and installing nerdctl v$Version at $InstallPath"
+            Write-Output "Downloading and installing nerdctl v$version at $InstallPath"
 
             # Download files
             $downloadParams = @{
                 ToolName           = "nerdctl"
                 Repository         = "$NERDCTL_REPO"
-                Version            = $Version
+                Version            = $version
                 OSArchitecture     = $OSArchitecture
                 DownloadPath       = $DownloadPath
                 ChecksumSchemaFile = $null
