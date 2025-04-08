@@ -235,11 +235,21 @@ function Uninstall-Nerdctl {
             }
 
             if (!$consent) {
-                Throw "$tool uninstallation cancelled."
+                Write-Warning "$tool uninstallation cancelled."
+                return
             }
 
             Write-Warning "Uninstalling preinstalled $tool at the path '$path'.`n$WhatIfMessage"
             try {
+                if ($Purge) {
+                    # Remove all unused images, not just dangling ones
+                    $cmdOutput = Invoke-ExecutableCommand -Executable "$path\nerdctl.exe" -Arguments "system prune --all"
+                    if ($cmdOutput.ExitCode -ne 0) {
+                        Write-Warning "Couldn't prune images. $($cmdOutput.StandardError.ReadToEnd())"
+                    }
+                }
+
+                # Uninstall nerdctl
                 Uninstall-NerdctlHelper -Path "$path" -Purge:$Purge
             }
             catch {

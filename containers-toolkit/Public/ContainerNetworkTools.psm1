@@ -293,12 +293,15 @@ function Uninstall-WinCNIPlugin {
     begin {
         $tool = 'WinCNIPlugin'
 
+        # Get the default path
         if (!$Path) {
-            $ContainerdPath = Get-DefaultInstallPath -Tool "containerd"
-            $Path = "$ContainerdPath\cni"
+            $path = Get-DefaultInstallPath -Tool "containerd"
         }
 
-        $Path = $Path -replace '(\\bin\\?)$', ''
+        # Only delete the /cni dir
+        if (-not $path.EndsWith("\cni")) {
+            $path = Join-Path -Path "$path" -ChildPath "cni"
+        }
 
         $WhatIfMessage = "Windows CNI plugins will be uninstalled from $path"
     }
@@ -317,7 +320,8 @@ function Uninstall-WinCNIPlugin {
             }
 
             if (!$consent) {
-                Throw "Windows CNI plugins uninstallation cancelled."
+                Write-Warning "$tool uninstallation cancelled."
+                return
             }
 
             Write-Warning "Uninstalling preinstalled Windows CNI plugin at the path $path"
@@ -340,7 +344,7 @@ function Uninstall-WinCNIPluginHelper {
     param(
         [ValidateNotNullOrEmpty()]
         [parameter(HelpMessage = "Windows CNI plugin path")]
-        [String]$Path="$ENV:ProgramFiles\Containerd\cni"
+        [String]$Path
     )
 
     Write-Output "Uninstalling Windows CNI plugin"
@@ -350,7 +354,7 @@ function Uninstall-WinCNIPluginHelper {
     }
 
     # Remove the folder where WinCNI plugins are installed
-    Remove-Item $Path -Recurse -Force -ErrorAction Ignore
+    Remove-Item $Path -Recurse -Force -ErrorAction Continue
 
     Write-Output "Successfully uninstalled Windows CNI plugin."
 }
