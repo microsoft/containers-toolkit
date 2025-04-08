@@ -427,7 +427,7 @@ function Set-DefaultCNIConfig {
     }
 }
 "@
-            $CNIConfig | Set-Content "$cniConfDir\0-containerd-nat.conf" -Force
+            $CNIConfig | Set-Content -Path "$cniConfDir\0-containerd-nat.conf" -Force
         }
         else {
             # Code that should be processed if doing a WhatIf operation

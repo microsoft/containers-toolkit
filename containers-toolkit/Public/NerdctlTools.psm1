@@ -98,7 +98,7 @@ function Install-Nerdctl {
 
         $WhatIfMessage = "nerdctl will be installed at '$installPath'"
         if ($isInstalled) {
-            $WhatIfMessage = "nerdctl will be uninstalled from and reinstalled at '$installPath'"
+            $WhatIfMessage = "nerdctl will be uninstalled and reinstalled at '$InstallPath'"
         }
         if ($dependencies) {
             $WhatIfMessage = "nerdctl and its dependencies (Containerd, Buildkit, WinCNIPlugin) will be installed"

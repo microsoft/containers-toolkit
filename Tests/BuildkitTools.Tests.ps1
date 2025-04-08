@@ -169,21 +169,8 @@ Describe "BuildkitTools.psm1" {
 
     Context "Register-BuildkitdService" -Tag "Register-BuildkitdService" {
         BeforeAll {
-            # Clean up any existing test files
-            Get-ChildItem -Path "$TestDrive" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
-            Get-ChildItem -Path "TestDrive:\" -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force
-
             $MockBuildKitPath = "C:\Program Files\Buildkit"
             $expectedExecutablePath = "$MockBuildKitPath\bin\buildkitd.exe"
-            # New-Item -Path "$MockBuildKitPath\bin\buildkitd.exe" -ItemType 'File' -Force | Out-Null
-
-            # Create mock .conf file
-            $MockWinCNIPath = "$TestDrive\Program Files\Containerd\cni"
-            $MockCniBinDir = "$MockWinCNIPath\bin"
-            $MockCniConfDir = "$MockWinCNIPath\conf"
-            $MockCniConfPath = "$MockCniConfDir\0-containerd-nat.conf"
-            New-Item -Path "$MockCniConfDir" -ItemType 'Directory' -Force | Out-Null
-            Set-Content -Path "$MockCniConfPath" -Value 'Nat config data here' -Force
 
             Mock Test-Path -ModuleName "BuildkitTools" { return $true }
             Mock Add-MpPreference -ModuleName "BuildkitTools"
@@ -212,9 +199,8 @@ Describe "BuildkitTools.psm1" {
             $expectedCommandArguments = "--register-service --debug --containerd-worker=true --service-name buildkitd"
 
             Should -Invoke Invoke-ExecutableCommand -Times 1 -Scope It -ModuleName "BuildkitTools" -ParameterFilter {
-                ($Executable -eq $expectedExecutablePath ) 
-                # -and
-                # ($Arguments -eq $expectedCommandArguments)
+                ($Executable -eq $expectedExecutablePath ) -and
+                ($Arguments -eq $expectedCommandArguments)
             }
             Should -Invoke Start-BuildkitdService -Times 0 -Scope It -ModuleName "BuildkitTools"
         }

@@ -157,6 +157,8 @@ Describe "ContainerNetworkTools.psm1" {
             Mock New-HNSNetwork -ModuleName 'ContainerNetworkTools'
             Mock Restart-Service -ModuleName 'ContainerNetworkTools'
             Mock Install-WinCNIPlugin -ModuleName 'ContainerNetworkTools'
+            Mock Set-Content -ModuleName 'ContainerNetworkTools' -ParameterFilter {
+                $Path -eq "$ENV:ProgramFiles\Containerd\cni\conf\0-containerd-nat.conf" }
         }
 
         It "Should use defaults" {
@@ -169,9 +171,14 @@ Describe "ContainerNetworkTools.psm1" {
                 $Gateway -eq '99.2.0.8'
                 $AddressPrefix -eq '99.2.0.0/16'
             }
+
+            # NOTE: Since we are running as non-admin, we are not able to write to the default path
+            # "C:\Program Files\Containerd\cni\conf\0-containerd-nat.conf". Instead, we test that
+            # Set-Content is called with the correct parameters.
             $MockConfFilePath = "C:\Program Files\Containerd\cni\conf\0-containerd-nat.conf"
-            $MockConfFilePath | Should -Exist
-            $MockConfFilePath | Should -FileContentMatch "`"cniVersion`": `"1.0.0`""
+            Should -Invoke Set-Content -ModuleName 'ContainerNetworkTools' -ParameterFilter {
+                $Path -eq $MockConfFilePath
+            }
         }
 
         It "Should use user-specified values" {
