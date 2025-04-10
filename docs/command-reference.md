@@ -175,6 +175,7 @@ Does the following:
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
 | Path | String | Path where Containerd is installed | The Containerd path in the environment path variable or `$Env:ProgramFiles\containerd` |
+| Purge | Switch | Delete all Containerd program files and program data |  |
 | Force | Switch | Bypass confirmation to uninstall Containerd |  |
 | WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
@@ -279,6 +280,7 @@ Does the following:
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
 | Path | String | Path where BuildKit is installed | The BuildKit path in the environment path variable or `$Env:ProgramFiles\BuildKit` |
+| Purge | Switch | Delete all Buildkit program files and program data |  |
 | Force | Switch | Bypass confirmation to uninstall BuildKit |  |
 | WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 
@@ -330,6 +332,7 @@ Deletes the nerdctl directory and removes it from the environment variables.
 | Name | Type | Description | Default |
 | -------- | ------- | ------- | ------- |
 | Path | String | Path where nerdctl is installed | The nerdctl path in the environment path variable or `$Env:ProgramFiles\BuildKit` |
+| Purge | Switch | Delete all nerdctl program files and program data |  |
 | Force | Switch | Bypass confirmation to uninstall nerdctl |  |
 | WhatIf | Switch | Shows what would happen if the cmdlet runs. The cmdlet isn't run. |  |
 

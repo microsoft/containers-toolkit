@@ -32,8 +32,10 @@ function Install-Containerd {
         [parameter(HelpMessage = "Path to download files. Defaults to user's Downloads folder")]
         [string]$DownloadPath = "$HOME\Downloads",
 
+        [Parameter(ParameterSetName = 'Setup')]
         [Parameter(HelpMessage = "Register and start Containerd Service")]
-        [switch]$Setup,
+        [Alias("Setup")]
+        [switch]$RegisterService,
 
         [Parameter(HelpMessage = 'OS architecture to download files for. Default is $env:PROCESSOR_ARCHITECTURE')]
         [ValidateSet('amd64', '386', "arm", "arm64")]
@@ -299,7 +301,7 @@ function Uninstall-Containerd {
         [parameter(HelpMessage = "Containerd path")]
         [String]$Path = "$ENV:ProgramFiles\Containerd",
 
-        [parameter(HelpMessage = "Remove all program data for Containerd")]
+        [parameter(HelpMessage = "Delete all Containerd program files and program data")]
         [Switch] $Purge,
 
         [parameter(HelpMessage = "Bypass confirmation to uninstall Containerd")]

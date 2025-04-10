@@ -9,18 +9,18 @@ schema: 2.0.0
 
 ## SYNOPSIS
 
-Downloads and installs Windows CNI plugin.
+Downloads and installs CNI plugin.
 
 ## SYNTAX
 
 ```
-Install-WinCNIPlugin [[-WinCNIVersion] <String>] [[-WinCNIPath] <String>] [-OSArchitecture <string>] [-SourceRepo <string>] [-Force] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+Install-WinCNIPlugin [[-WinCNIVersion] <String>] [[-WinCNIPath] <String>] [-SourceRepo <String>]
+ [-OSArchitecture <String>] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 
-Downloads Windows CNI plugin from [windows-container-networking](https://github.com/microsoft/windows-container-networking/releases) and installs it in the specified location.
+Downloads CNI plugin from [microsoft/windows-container-networking](https://github.com/microsoft/windows-container-networking/releases) or [containernetworking/plugin](https://github.com/containernetworking/plugins) and installs it in the specified location.
 
 ## EXAMPLES
 
@@ -42,28 +42,9 @@ PS C:\> Install-WinCNIPlugin -WinCNIVersion "0.2.0"
 
 ## PARAMETERS
 
-### -Confirm
-
-Prompts for confirmation before running the cmdlet. For more information, see the following articles:
-
-- [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference)
-- [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact)
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -Force
 
-Installs Windows CNI plugins even if the tool already exists at the specified path.
+Force CNI plugins uninstallation (if it exists) without any confirmation prompts.
 
 ```yaml
 Type: SwitchParameter
@@ -84,12 +65,12 @@ Default is `$env:PROCESSOR_ARCHITECTURE`
 
 ```yaml
 Type: String
-Parameter Sets: Setup
+Parameter Sets: (All)
 Aliases:
 
 Required: False
 Position: Named
-Default value:  $env:PROCESSOR_ARCHITECTURE
+Default value: $env:PROCESSOR_ARCHITECTURE
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -101,7 +82,7 @@ Defaults to 'microsoft/windows-container-networking'
 
 ```yaml
 Type: String
-Parameter Sets: "microsoft/windows-container-networking", "containernetworking/plugins"
+Parameter Sets: (All)
 Aliases:
 
 Required: False
@@ -122,14 +103,15 @@ Aliases:
 
 Required: False
 Position: 1
-Default value: Path where containerd is installed or `$Env:ProgramFiles\Containerd`
+Default value: $Env:ProgramFiles\Containerd
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -WinCNIVersion
 
-Windows CNI plugin version to use. Defaults to latest version.
+Windows CNI plugin version to use.
+Defaults to latest version.
 
 ```yaml
 Type: String
@@ -138,19 +120,19 @@ Aliases:
 
 Required: False
 Position: 0
-Default value: Latest version
+Default value: latest
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -WhatIf
+### -Confirm
 
-Shows what would happen if the cmdlet runs. The cmdlet isn't run.
+Prompts for confirmation before running the cmdlet.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: Setup
-Aliases:
+Parameter Sets: (All)
+Aliases: cf
 
 Required: False
 Position: Named
@@ -158,6 +140,27 @@ Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
+
+### -WhatIf
+
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## RELATED LINKS
 
