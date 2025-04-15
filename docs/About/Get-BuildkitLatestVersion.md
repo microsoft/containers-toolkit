@@ -29,10 +29,8 @@ This returns a string of the latest release version of BuildKit, e.g., v1.2.0.
 
 ```powershell
 PS C:\> Get-BuildkitLatestVersion
-```
 
-```Output
-v1.2.0
+    v1.2.0
 ```
 
 ## PARAMETERS
