@@ -19,9 +19,11 @@
         "/\\$[\\w]+(:\\w)?/g", // PowerShell variables
         "/-\\w+\\b/g", // FIXME: PowerShell Cmdlets/function parameter names
         "/\\b\\w+[./]\\w+\\b/g", // paths //  FIXME: (Note: Does not work for \ in paths)
+        "about_CommonParameters",
         "about_Preference_Variables",
         "CIDR",
         "Containers[\\s\\.\\-]ToolKit/gi",
+        "CommonParameters",
         "/Cmdlet/gi",
         "cni",
         "/Containerd/gi",
@@ -39,9 +41,9 @@
         "PowerShell",
         "/PSCustomObject/gi",
         "subnet",
+        "/uninstall.*/gi",
         "/unregisters/gi",
         "WinCNIPlugin",
-        // Parameter names
         "ToolName",
         "DownloadPath",
         "InstallPath",

@@ -1,6 +1,6 @@
 ## PR description
 
-### Github issue/ discussion ()
+### Github issue/ discussion
 
 _related Isuue/discussion(s)_
 
@@ -20,7 +20,7 @@ _What issues will/should be addressed in followup PRs. Link any of these issues 
 
 _How to test the changes_
 
-### Relevant links ()
+### Relevant links
 
 _Any links from your research that will help explain the changes_
 
