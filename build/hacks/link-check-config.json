@@ -1,0 +1,6 @@
+
+{
+    "ignorePatterns": [
+        "*/command-reference.md"
+    ]
+}

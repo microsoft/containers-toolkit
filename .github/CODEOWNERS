@@ -9,6 +9,6 @@ docs/   @tinamor
 
 # Tools
 containers-toolkit//Public/BuildkitTools.psm1             @profnandaa @billywr @danielGithinji
-containers-toolkit/Public/ontainerdTools.psm1             @charitykathure
+containers-toolkit/Public/ContainerdTools.psm1            @charitykathure
 containers-toolkit/Public/ContainerNetworkTools.psm1      @iankingori
 containers-toolkit/Public/NerdctlTools.psm1               @tinamor

@@ -4,3 +4,6 @@
 
 # Tests
 /TestResults
+
+# Node modules
+/node_modules

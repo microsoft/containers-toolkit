@@ -1,39 +1,34 @@
-## PR description
 
-### Github issue/ discussion ()
+## PR Description
 
-_related Isuue/discussion(s)_
+_What does this PR achieve or fix?_
 
-### Background information
+    - _Related isuue/discussion(s): Link to the issue or discussion that this PR addresses._
+    - _Background information: From the reviewer's perspective, what context do they need to understand this PR?_
+    _Additional information: What does this PR achieve/fix._
 
-_From the perspective of the reviewer, what context do they need to know to understand this PR?_
+### TODOs Not Included in This PR
 
-### What does this PR do
+_What issues will/should be addressed in follow-up PRs? Link any existing related issues._
 
-_What does this PR achieve/fix._
-
-### TODOs not included in this PR
-
-_What issues will/should be addressed in followup PRs. Link any of these issues if they exist_
-
-### Testing information
+### Testing Information
 
 _How to test the changes_
 
-### Relevant links ()
+### Relevant Links
 
-_Any links from your research that will help explain the changes_
+Any links from your research that help explain the changes
 
 ## Checklist
 
-As part of our commitment to engineering excellence, **before** submitting this PR, please make sure:
+As part of our commitment to engineering excellence, **before** submitting this PR, please ensure:
 
-- [ ] You've tested this code in both Desktop & Server environments and AMD & ARM64 enviroments (**functional testing**).
-- [ ] You've added **unit tests** for new code.
-- [ ] You've added/updated documentation in the [cmdlet docs](../docs/About/), [command-reference.md](../docs/command-reference.md)  and the [modules help files](../containers-toolkit/en-US/containers-toolkit-help.xml).
-- [ ] You've reviewed the PR/code best practices defined in the [CONTRIBUTING.md](../CONTRIBUTING.md).
+- [ ] You have tested this code in both Desktop and Server environments, as well as AMD64 and ARM64 environments (**functional testing**).
+- [ ] You have added **unit tests** for new code.
+- [ ] You have added or updated documentation in the [cmdlet docs](../docs/About/), [command-reference.md](../docs/command-reference.md), and the [modules help files](../containers-toolkit/en-US/containers-toolkit-help.xml).
+- [ ] You have reviewed the PR/code best practices defined in the [CONTRIBUTING.md](../CONTRIBUTING.md).
 
-In addition, **after** this PR has been reviewed, please agree to:
+In addition, **after** this PR has been reviewed, please ensure:
 
-- [ ] If changes have been made to your PR in the process of addressing comments, please make sure to test again the _final_ version in both AMD and ARM64 environments.
-- [ ] Validate your changes have not introduced any regressions.
+- [ ] If you make changes while addressing review comments, you test the _final_ version again in both AMD64 and ARM64 environments.
+- [ ] You validate that your changes have not introduced any regressions.

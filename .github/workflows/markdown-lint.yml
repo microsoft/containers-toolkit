@@ -16,7 +16,8 @@ on:
     paths:
       - "docs/**"
       - "README.md"
-      - en-US/**"
+      - "en-US/**"
+      - "**/markdown-lint.yml"
 
 permissions:
   contents: read
@@ -24,58 +25,102 @@ permissions:
 jobs:
   markdown-check:
     runs-on: windows-latest
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          check-latest: true
+
       - name: Install npm dependencies
-        run: npm install -g markdown-link-check textlint textlint-rule-spelling dictionary-en textlint-filter-rule-comments
+        run: npm install markdown-link-check textlint textlint-rule-spelling dictionary-en textlint-filter-rule-comments --save-dev
 
       - name: Markdown link check
+        id: link-check
+        continue-on-error: true
         shell: pwsh
         run: |
-          # Check all markdown files in the repository
           $mlc_error_file = "link-errors.txt"
-          Remove-Item -Path $mlc_error_file -Recurse -Force -ErrorAction SilentlyContinue
-          Get-ChildItem -Path "README.md", ".\docs\" -Filter "*.md" -Recurse | `
-              ForEach-Object { & markdown-link-check $_.FullName -q 2>>$mlc_error_file }
+          Remove-Item -Path $mlc_error_file -Force -ErrorAction SilentlyContinue
+          
+          # Get markdown files to validate the links
+          # We split the two commands because `-Recurse` check for "README.md" in the entire directory tree,
+          # which includes node_modules, and we want to exclude that.
+          $mdFiles = (Get-ChildItem -Path ".\docs\" -Recurse -Filter "*.md") + (Get-ChildItem -Path ".\README.md" -Filter "*.md")
+
+          # Run markdown-link-check on all markdown files in the repository
+          $CONFIG_FILE = ".\build\hacks\link-check-config.json"
+          $mdFiles | ForEach-Object {
+            Write-Host "Validating links in $($_.FullName)" -ForegroundColor Cyan
+            npx markdown-link-check $_.FullName -q -c "$CONFIG_FILE" 2>>$mlc_error_file
+          }
 
           # Check if the error file exists
           if (-not (Test-Path "$mlc_error_file")) {
-              return
+              echo "Markdown link check file not found" >> $env:GITHUB_OUTPUT
+              exit 0
           }
 
           # Check if the error file file contains errors
-          if (Select-String -Path "$mlc_error_file" -Pattern "ERROR: ") {
-              $errormsg = "Broken links found. Please check the output for more information."
-              $Link_Check_Summary = ":x: [Markdown Link Check] $errormsg"
-              echo $Link_Check_Summary >> $env:GITHUB_STEP_SUMMARY
-              throw $errormsg
-          }
-          else {
-              $Link_Check_Summary = ":white_check_mark: [Markdown Link Check] All links are valid."
-              echo $Link_Check_Summary >> $env:GITHUB_STEP_SUMMARY
+          $hasErrors = Select-String -Path "$mlc_error_file" -Pattern "ERROR: " -Quiet
+
+          # No errors found
+          if (-not $hasErrors) {
+              echo ":white_check_mark: [Markdown Link Check] All links are valid." >> $env:GITHUB_STEP_SUMMARY
+              exit 0
           }
 
+          # Errors found
+          $errorMessage = "Broken links found."
+          echo ":exclamation: [Markdown Link Check] $errorMessage" >> $env:GITHUB_STEP_SUMMARY
+          echo $((Get-Content $mlc_error_file -Raw) -replace "`r", "" -replace "`n", "`n`t") >> $env:GITHUB_STEP_SUMMARY
+
+          throw "$errorMessage"
+
       - name: Markdown spell check
+        id: spell-check
+        continue-on-error: true
         shell: pwsh
         run: |
           # Run spell check on all markdown files in the repository
           $sc_error_file = "sc-errors.txt"
-          Remove-Item -Path $sc_error_file -Recurse -Force -ErrorAction SilentlyContinue
-          npx textlint README.md docs/**/*.md >>$sc_error_file
+          Remove-Item -Path $sc_error_file -Force -ErrorAction SilentlyContinue
 
-          # Check if the error file exists
+          # Run textlint on markdown files in the repository
+          npx textlint "README.md" "docs/**/*.md" >> $sc_error_file
+
           if (-not (Test-Path "$sc_error_file")) {
-              return
+              exit 0
           }
 
           # Check if the error file file contains errors. If the file is empty, it means no errors were found.
-          if ([string]::IsNullOrWhiteSpace((Get-Content -Path $sc_error_file))) {
-              $Spell_Check_Summary = ":white_check_mark: [Markdown Spell Check] No spelling errors found."
+          $isFileEmpty = ([string]::IsNullOrWhiteSpace((Get-Content -Path $sc_error_file)))
+
+          # No errors found
+          if ($isFileEmpty) {
+              echo ":white_check_mark: [Markdown Spell Check] No spelling errors found." >> $env:GITHUB_STEP_SUMMARY
+              exit 0
           }
-          else {
-              $Spell_Check_Summary = ":x: [Markdown Spell Check] Spelling errors found. Please check the output for more information."
-              cat $sc_error_file
-          }
-          echo $Spell_Check_Summary >> $env:GITHUB_STEP_SUMMARY
+
+          # Errors found
+          $errorMessage = "Spelling errors found."
+          echo ":exclamation: [Markdown Spell Check] $errorMessage">> $env:GITHUB_STEP_SUMMARY
+          echo $((Get-Content $sc_error_file -Raw) -replace "`r", "" -replace "`n", "`n`t") >> $env:GITHUB_STEP_SUMMARY
+          throw "$errorMessage"
+
+      - name: Check if validation failed
+        if: always()
+        shell: bash
+        run: |
+          link_status="${{ steps.link-check.outcome }}"
+          spell_status="${{ steps.spell-check.outcome }}"
+
+          if [[ "$link_status" == "success" && "$spell_status" == "success" ]]; then
+            echo ":white_check_mark: Markdown validation passed." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          error_message="Markdown validation failed"
+          echo ":x: $error_message. Please check the output for more information." >> "$GITHUB_STEP_SUMMARY"
+          exit 1

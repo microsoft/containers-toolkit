@@ -26,7 +26,9 @@ on:
     paths-ignore:
       - "docs/**"
       - "*.md"
-      - en-US/**"
+      - "en-US/**"
+      - "package.json"
+      - "package-lock.json"
 
 env:
   MODULE_DIR: .\Containers-Toolkit
@@ -114,6 +116,15 @@ jobs:
           $ErrorActionPreference = 'Continue'
           ${{ env.BUILD_SCRIPTS_DIR }}\run-tests.ps1
 
+          # Get failed tests
+          Write-Host "Getting failed tests from ${{ env.PESTER_RESULTS_DIR }}\Test-Results.xml"
+          $results = (Select-Xml -Path "${{ env.PESTER_RESULTS_DIR }}\Test-Results.xml" -XPath "//test-case").Node
+          $failedTests = $results | Where-Object { ($_.success -eq $false) -and ($_.result -ne "Ignored") }
+          if ($failedTests.Count -gt 0) {
+            $failedTestsName = ($failedTests | ForEach-Object { $_.name }) -join "`n"
+            Write-Host "Failed tests:`n$failedTestsName" -Foregroundcolor Red
+            echo "$failedTestsName" >> $env:GITHUB_STEP_SUMMARY
+          }
       - name: Publish Pester results
         uses: actions/upload-artifact@v4
         with:
@@ -133,6 +144,7 @@ jobs:
   test-coverage:
     needs: pester
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - name: Download coverage results artifact
         uses: actions/download-artifact@v4
@@ -158,12 +170,6 @@ jobs:
         with:
           name: coveragereport # Artifact name
           path: coveragereport # Directory containing files to upload
-
-      - name: Publish coverage summary
-        uses: marocchino/sticky-pull-request-comment@v2
-        continue-on-error: true
-        with:
-          path: coveragereport/SummaryGithub.md
 
       - name: Post results
         run: |
