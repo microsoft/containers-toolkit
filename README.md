@@ -54,7 +54,7 @@ Install-Module -Name containers-toolkit -RequiredVersion "__NEW_VERSION__"
 1. Download source files
 
     ```PowerShell
-    Invoke-WebRequest -Uri "https://github.com/microsoft/containers-toolkit/releases/download/__NEW_VERSION__/containers-toolkit-__NEW_VERSION__.tar.gz" -OutFile "containers-toolkit.tar.gz"
+    Invoke-WebRequest -Uri "https://github.com/microsoft/containers-toolkit/releases/download/v__NEW_VERSION__/containers-toolkit-v__NEW_VERSION__.tar.gz" -OutFile "containers-toolkit.tar.gz"
     ```
 
 1. Verify the signature

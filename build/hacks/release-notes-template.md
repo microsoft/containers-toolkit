@@ -39,7 +39,7 @@ Update-Module -Name Containers-Toolkit -RequiredVersion "__NEW_VERSION__"
 See instructions in the [Installing and importing Containers-Toolkit module](../../README.md#download-source-files) section.
 
 ```PowerShell
-Invoke-WebRequest -Uri "https://github.com/microsoft/containers-toolkit/releases/download/__NEW_VERSION__/containers-toolkit-__NEW_VERSION__.tar.gz" -OutFile "containers-toolkit.tar.gz"
+Invoke-WebRequest -Uri "https://github.com/microsoft/containers-toolkit/releases/download/v__NEW_VERSION__/containers-toolkit-v__NEW_VERSION__.tar.gz" -OutFile "containers-toolkit.tar.gz"
 tar -xvf containers-toolkit.tar.gz -C $ENV:USERPROFILE\Documents\WindowsPowerShell\Modules
 ```
 
