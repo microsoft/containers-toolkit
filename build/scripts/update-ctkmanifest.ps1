@@ -56,7 +56,7 @@ function Update-CTKModuleManifest {
     param()
 
     begin {
-        $moduleVersion = "$Version-$Prerelease"
+        $moduleVersion = if ([string]::IsNullOrEmpty($Prerelease)) { $Version } else { "$Version-$Prerelease" }
         $WhatIfMessage = "Module version will be updated to version $Version"
     }
 
