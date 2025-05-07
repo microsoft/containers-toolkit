@@ -45,7 +45,9 @@ You can find documentation for these functions here: [Containers-Toolkit Documen
 
 ### Install Containers-Toolkit module from PowerShell Gallery
 
-> COMING SOON: We are currently working on publishing this module to PS Gallery to make it easier to import the module
+```PowerShell
+Install-Module -Name containers-toolkit -RequiredVersion "__NEW_VERSION__"
+```
 
 ### Download signed source files
 

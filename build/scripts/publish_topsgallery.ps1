@@ -30,7 +30,10 @@ param (
     [String]$ApiKey,
 
     [Parameter(Mandatory = $false)]
-    [String]$ReleaseNotesPath
+    [String]$ReleaseNotesPath,
+
+    [Parameter(Mandatory = $true)]
+    [uri]$LicenseUri
 )
 
 $ErrorActionPreference = "Stop"
@@ -43,6 +46,7 @@ $ReleaseNotes = if ($ReleaseNotesPath) { Get-Content -Path $ReleaseNotesPath -Ra
 $params = @{
     Path        = "$ModulePath"
     NuGetApiKey = "$ApiKey"
+    LicenseUri = $LicenseUri
     ReleaseNotes = $ReleaseNotes
 }
 
