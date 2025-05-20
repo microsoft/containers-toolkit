@@ -9,6 +9,7 @@
 
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\UpdateEnvironmentPath.psm1" -Force
+Import-Module -Name "$ModuleParentPath\Private\logger.psm1" -Force
 
 class ContainerTool {
     [ValidateNotNullOrEmpty()][string]$Feature
@@ -925,3 +926,4 @@ Export-ModuleMember -Function Invoke-ServiceAction
 Export-ModuleMember -Function Test-ConfFileEmpty
 Export-ModuleMember -Function Uninstall-ProgramFiles
 Export-ModuleMember -Function Test-CheckSum
+Export-ModuleMember -Function Write-CTK*
