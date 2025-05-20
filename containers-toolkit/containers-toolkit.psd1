@@ -68,6 +68,7 @@ Note that the HostNetworkingService module is available only when the Hyper-V Wi
     # Modules to import as nested modules of the module specified in RootModule/ModuleToProcess
     NestedModules     = @(
         'Private\CommonToolUtilities.psm1',
+        'Private\Logger.psm1',
         'Private\UpdateEnvironmentPath.psm1',
         'Public\AllToolsUtilities.psm1',
         'Public\BuildkitTools.psm1',
@@ -124,6 +125,7 @@ Note that the HostNetworkingService module is available only when the Hyper-V Wi
     # List of all files packaged with this module
     FileList          = @(
         './Private/CommonToolUtilities.psm1',
+        './Private/Logger.psm1',
         './Private/UpdateEnvironmentPath.psm1',
         './Public/AllToolsUtilities.psm1',
         './Public/BuildkitTools.psm1',
