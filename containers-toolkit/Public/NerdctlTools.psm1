@@ -1,4 +1,4 @@
-﻿###########################################################################
+###########################################################################
 #                                                                         #
 #   Copyright (c) Microsoft Corporation. All rights reserved.             #
 #                                                                         #
@@ -7,6 +7,7 @@
 ###########################################################################
 
 using module "..\Private\CommonToolUtilities.psm1"
+using module "..\Private\logger.psm1"
 
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
@@ -41,14 +42,18 @@ function Install-NerdctlDependencies {
         [string]$OsArch,
         [Switch]$Force
     )
+    if (!$Dependencies) {
+        return
+    }
 
+    [Logger]::Info("Installing nerdctl dependencies: $toinstall")
     foreach ($dependency in $Dependencies) {
         $InstallCommand = "Install-$dependency"
         try {
             & $InstallCommand -OSArchitecture $OsArch -Force:$Force -Confirm:$false
         }
         catch {
-            Write-Error "Installation failed for $dependency. $_"
+            [Logger]::Error("Installation failed for $dependency. $_")
         }
     }
 }
@@ -109,7 +114,7 @@ function Install-Nerdctl {
             # Check if nerdctl already exists at specified location
             if ($isInstalled) {
                 $errMsg = "nerdctl already exists at $InstallPath or the directory is not empty"
-                Write-Warning $errMsg
+                [Logger]::Warning($errMsg)
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
@@ -126,7 +131,7 @@ function Install-Nerdctl {
             }
             $Version = $Version.TrimStart('v')
 
-            Write-Output "Downloading and installing nerdctl v$Version at $InstallPath"
+            [Logger]::Info("Downloading and installing nerdctl v$Version at $InstallPath")
 
             # Download files
             $downloadParams = @{
@@ -159,11 +164,10 @@ function Install-Nerdctl {
             }
             Install-RequiredFeature @params
 
-            Write-Output "nerdctl v$version successfully installed at $InstallPath"
-            Write-Output "For nerdctl usage: run 'nerdctl -h'`n"
+            [Logger]::Info("nerdctl v$version successfully installed at $InstallPath")
+            [Logger]::Info("For nerdctl usage: run 'nerdctl -h'`n")
 
             # Install dependencies
-            Write-Output "Installing nerdctl dependencies: $toinstall"
             Install-NerdctlDependencies -Dependencies $dependencies -OsArch $OSArchitecture -Force:$true
         }
         else {
@@ -215,7 +219,7 @@ function Uninstall-Nerdctl {
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             if (Test-EmptyDirectory -Path $path) {
-                Write-Output "$tool does not exist at $Path or the directory is empty"
+                [Logger]::Info("$tool does not exist at $Path or the directory is empty")
                 return
             }
 
@@ -228,7 +232,7 @@ function Uninstall-Nerdctl {
                 Throw "$tool uninstallation cancelled."
             }
 
-            Write-Warning "Uninstalling preinstalled $tool at the path $path"
+            [Logger]::Warning("Uninstalling preinstalled $tool at the path $path")
             try {
                 Uninstall-NerdctlHelper -Path $path
             }
@@ -252,7 +256,7 @@ function Uninstall-NerdctlHelper {
     )
 
     if (Test-EmptyDirectory -Path $Path) {
-        Write-Error "nerdctl does not exist at $Path or the directory is empty."
+        [Logger]::Error("nerdctl does not exist at $Path or the directory is empty.")
         return
     }
 
@@ -265,7 +269,7 @@ function Uninstall-NerdctlHelper {
     # Remove from env path
     Remove-FeatureFromPath -Feature "nerdctl"
 
-    Write-Output "Successfully uninstalled nerdctl."
+    [Logger]::Info("Successfully uninstalled nerdctl.")
 }
 
 Export-ModuleMember -Function Get-NerdctlLatestVersion
