@@ -6,6 +6,9 @@
 #                                                                         #
 ###########################################################################
 
+$ModuleParentPath = Split-Path -Parent $PSScriptRoot
+Import-Module -Name "$ModuleParentPath\Private\logger.psm1" -Force
+
 function Update-EnvironmentPath {
     [CmdletBinding(
         SupportsShouldProcess = $true
@@ -57,7 +60,7 @@ function Update-EnvironmentPath {
             }
 
             if ($pathChanged) {
-                Write-Information -InformationAction Continue -MessageData "$ActionVerb $toAction in $PathType Environment Path"
+                Write-CTKInfo "$ActionVerb $toAction in $PathType Environment Path"
 
                 # Get the updated path
                 $updatedPath = switch ($Action) {
@@ -68,7 +71,7 @@ function Update-EnvironmentPath {
 
                 # For tests, we do not want to update the environment path
                 if ($env:pester) {
-                    Write-Debug "Skipping environment path update for tests"
+                    Write-CTKDebug "Skipping environment path update for tests"
                     return $updatedPath
                 }
 
