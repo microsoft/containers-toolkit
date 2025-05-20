@@ -37,7 +37,7 @@ function New-LogMessage {
         "INFO" {
             $EventID = 1000
             $eventType = [System.Diagnostics.EventLogEntryType]::Information
-            Write-Host $parsedMessage
+            Write-Information $parsedMessage -InformationAction Continue
         }
         "WARNING" {
             $EventID = 4000
