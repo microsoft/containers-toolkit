@@ -8,6 +8,7 @@
 
 
 using module "..\containers-toolkit\Private\CommonToolUtilities.psm1"
+using module ..\containers-toolkit\Private\Logger.psm1
 
 Describe "ContainerNetworkTools.psm1" {
     BeforeAll {
@@ -17,6 +18,10 @@ Describe "ContainerNetworkTools.psm1" {
         Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1" -Force
         Import-Module -Name "$RootPath\Tests\TestData\MockClasses.psm1" -Force
+
+        # Mock functions
+        Mock New-EventLog -ModuleName 'Logger'
+        Mock Write-EventLog -ModuleName 'Logger'
     }
 
     AfterEach {

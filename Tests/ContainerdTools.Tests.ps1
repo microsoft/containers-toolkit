@@ -6,6 +6,7 @@
 #                                                                         #
 ###########################################################################
 
+using module ..\containers-toolkit\Private\Logger.psm1
 
 Describe "ContainerdTools.psm1" {
     BeforeAll {
@@ -28,6 +29,8 @@ Describe "ContainerdTools.psm1" {
         # Mock functions
         function Test-ServiceRegistered { }
         Mock Test-ServiceRegistered -ModuleName 'ContainerdTools' -MockWith { return $true }
+        Mock New-EventLog -ModuleName 'Logger'
+        Mock Write-EventLog -ModuleName 'Logger'
     }
 
     AfterEach {

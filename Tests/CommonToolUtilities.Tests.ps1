@@ -8,6 +8,7 @@
 
 
 using module "..\containers-toolkit\Private\CommonToolUtilities.psm1"
+using module ..\containers-toolkit\Private\Logger.psm1
 
 $Script:SampleSha256Sum = @'
 6b8ff12339733a6SSaMpLeSHAe2ff9f8d333c9e898  nerdctl-2.0.0-linux-amd64.tar.gz
@@ -74,6 +75,10 @@ Describe "CommonToolUtilities.psm1" {
 
         $ProgramFiles = "TestDrive:\Program Files"
         New-Item -Path $ProgramFiles -ItemType Directory -Force | Out-Null
+
+        # Mock functions
+        Mock New-EventLog -ModuleName 'Logger'
+        Mock Write-EventLog -ModuleName 'Logger'
     }
 
     AfterAll {
