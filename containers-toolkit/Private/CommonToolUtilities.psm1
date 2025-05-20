@@ -95,7 +95,7 @@ function Get-LatestToolVersion($tool) {
     # Get the latest release version URL string
     $uri = "https://api.github.com/repos/$repository/releases/latest"
 
-    Write-Debug "Getting the latest $tool version from $uri"
+    Write-CTKDebug "Getting the latest $tool version from $uri"
 
     # Get the latest release version
     try {
@@ -134,7 +134,7 @@ function Get-ReleaseAssets {
     function Invoke-GitHubApi {
         param($uri)
         try {
-            Write-Debug "Invoking GitHub API. URI: $uri"
+            Write-CTKDebug "Invoking GitHub API. URI: $uri"
             $response = Invoke-RestMethod -Uri "$uri" -Headers @{ "User-Agent" = "PowerShell" }
             return $response
         }
@@ -143,7 +143,7 @@ function Get-ReleaseAssets {
         }
     }
 
-    Write-Debug "Getting release assets:`n`trepo: $repo`n`trelease version: $version`n`trelease architecture: $OSArch "
+    Write-CTKDebug "Getting release assets:`n`trepo: $repo`n`trelease version: $version`n`trelease architecture: $OSArch "
     $baseApiUrl = "https://api.github.com/repos/$repo"
     if ($version -eq "latest") {
         $apiUrl = "$baseApiUrl/releases/latest"
@@ -165,13 +165,13 @@ function Get-ReleaseAssets {
         }
 
         if ($releaseTag.Count -gt 1) {
-            Write-Warning "Found multiple release tags for the provided version: '$version'. Using the first tag."
+            Write-CTKWarning "Found multiple release tags for the provided version: '$version'. Using the first tag."
         }
 
         $releaseTagName = $releaseTag | Select-Object -First 1 -ExpandProperty name
 
         # Get the release with the specified tag
-        Write-Debug "Release tag: $releaseTagName"
+        Write-CTKDebug "Release tag: $releaseTagName"
         $apiUrl = "$baseApiUrl/releases/tags/$releaseTagName"
     }
     $response = Invoke-GitHubApi -Uri "$apiUrl"
@@ -194,7 +194,7 @@ function Get-ReleaseAssets {
                 )
             } |
             ForEach-Object {
-                Write-Debug ("Asset name: {0}" -f $_.Name)
+                Write-CTKDebug ("Asset name: {0}" -f $_.Name)
                 [PSCustomObject]@{
                     "asset_name"         = $_.name
                     "asset_download_url" = $_.browser_download_url
@@ -211,7 +211,7 @@ function Get-ReleaseAssets {
     }
 
     if ($archReleaseAssets.Count -lt 2) {
-        Write-Warning "Some assets may be missing for the release. Expected at least 2 assets, found $($archReleaseAssets.Count)."
+        Write-CTKWarning "Some assets may be missing for the release. Expected at least 2 assets, found $($archReleaseAssets.Count)."
     }
 
     # Return the assets for the release. Includes the archive file for the binaries and the checksum files.
@@ -240,7 +240,7 @@ function Get-InstallationFile {
                 }
                 catch {
                     $lastError = $_  # Store the last error for proper exception handling
-                    Write-Warning "Failed to download `"$($params.Feature)`" release assets. Retrying... ($MaximumRetryCount retries left)"
+                    Write-CTKWarning "Failed to download `"$($params.Feature)`" release assets. Retrying... ($MaximumRetryCount retries left)"
                     Start-Sleep -Seconds $RetryIntervalSec
                     $MaximumRetryCount -= 1
                 }
@@ -278,12 +278,12 @@ function Get-InstallationFile {
                     DownloadPath = $destPath
                 }
 
-                Write-Debug "Downloading asset $($asset_params.asset_name)...`n`tVersion: $version`n`tURI: $($downloadParams.Uri)`n`tDestination path: $($downloadParams.DownloadPath)"
+                Write-CTKDebug "Downloading asset $($asset_params.asset_name)...`n`tVersion: $version`n`tURI: $($downloadParams.Uri)`n`tDestination path: $($downloadParams.DownloadPath)"
                 try {
                     Receive-File -Params $downloadParams
                 }
                 catch {
-                    Write-Error "Failed to download $($downloadParams.Feature) release assets. $($_.Exception.Message)"
+                    Write-CTKError "Failed to download $($downloadParams.Feature) release assets. $($_.Exception.Message)"
                     Throw $_  # Re-throw the exception to halt execution if a download fails
                 }
             }
@@ -306,7 +306,7 @@ function Get-InstallationFile {
                 }
             }
             catch {
-                Write-Error "Checksum verification process failed: $($_.Exception.Message)"
+                Write-CTKError "Checksum verification process failed: $($_.Exception.Message)"
                 Throw $_  # Re-throw the exception if checksum verification fails
             }
 
@@ -316,7 +316,7 @@ function Get-InstallationFile {
             }
 
             if (-not $isValidChecksum) {
-                Write-Error "Checksum verification failed for $archiveFile. The file will be deleted."
+                Write-CTKError "Checksum verification failed for $archiveFile. The file will be deleted."
 
                 # Remove the checksum file after verification
                 if (Test-Path -Path $archiveFile) {
@@ -352,7 +352,7 @@ function Get-InstallationFile {
         else {
             # Use the provided regex to filter the archive and checksum files
             $fileFilterRegEx = $fileParameters.FileFilterRegEx -replace "<__VERSION__>", "v?$($releaseAssets.version.TrimStart('v'))"
-            Write-Debug "File filter: `"$fileFilterRegEx`""
+            Write-CTKDebug "File filter: `"$fileFilterRegEx`""
             $filteredAssets = $releaseAssets.release_assets | Where-Object { $_.asset_name -match $fileFilterRegEx }
         }
 
@@ -381,7 +381,7 @@ function Get-InstallationFile {
             }
 
             if (-not $checksumAsset) {
-                Write-Error "Checksum file for $assetFileName not found. Skipping download."
+                Write-CTKError "Checksum file for $assetFileName not found. Skipping download."
                 $failedDownloads += $asset.asset_name
                 continue
             }
@@ -404,17 +404,17 @@ function Get-InstallationFile {
 
         # Download the archive and verify checksum
         $archiveFiles = $failedDownloads = @()
-        Write-Debug "Assets to download count: $($assetsToDownload.ReleaseAssets.Count)"
+        Write-CTKDebug "Assets to download count: $($assetsToDownload.ReleaseAssets.Count)"
         foreach ($asset in $assetsToDownload) {
             try {
-                Write-Debug "Downloading $($asset.FeatureName) assets..."
+                Write-CTKDebug "Downloading $($asset.FeatureName) assets..."
                 $archiveFile = DownloadAssets @asset
 
-                Write-Debug "Downloaded archive file: `"$archiveFile`""
+                Write-CTKDebug "Downloaded archive file: `"$archiveFile`""
                 $archiveFiles += $archiveFile
             }
             catch {
-                Write-Error "Failed to download assets for `"$($asset.FeatureName)`". $_"
+                Write-CTKError "Failed to download assets for `"$($asset.FeatureName)`". $_"
                 $failedDownloads += $asset.FeatureName
             }
         }
@@ -433,7 +433,7 @@ function Get-InstallationFile {
     }
 
     end {
-        Write-Information "File download and verification process completed."
+        Write-CTKInfo "File download and verification process completed."
     }
 }
 
@@ -463,7 +463,7 @@ function Test-CheckSum {
         [System.Array]$ExtractDigestArguments
     )
 
-    Write-Debug "Checksum verification...`n`tSource file: $DownloadedFile`n`tChecksum file: $ChecksumFile"
+    Write-CTKDebug "Checksum verification...`n`tSource file: $DownloadedFile`n`tChecksum file: $ChecksumFile"
 
     if (-not (Test-Path -Path $downloadedFile)) {
         Throw "Couldn't find source file: `"$downloadedFile`"."
@@ -474,8 +474,8 @@ function Test-CheckSum {
     }
 
     if ($JSON) {
-        Write-Debug "Checksum file format: JSON"
-        Write-Debug "SchemaFile: $SchemaFile"
+        Write-CTKDebug "Checksum file format: JSON"
+        Write-CTKDebug "SchemaFile: $SchemaFile"
         return (
             Test-JSONChecksum `
                 -DownloadedFile $downloadedFile `
@@ -486,7 +486,7 @@ function Test-CheckSum {
         )
     }
 
-    Write-Debug "Checksum file format: Text"
+    Write-CTKDebug "Checksum file format: Text"
     return Test-FileChecksum -DownloadedFile $DownloadedFile -ChecksumFile $ChecksumFile
 }
 
@@ -514,7 +514,7 @@ function Test-FileChecksum {
             Throw "Invalid hash function. Supported hash functions: $($HASH_FUNCTIONS -join ', ')"
         }
         $algorithm = $matches.hashfunction
-        Write-Debug "Algorithm: $algorithm"
+        Write-CTKDebug "Algorithm: $algorithm"
         $downloadedChecksum = Get-FileHash -Path $DownloadedFile -Algorithm $algorithm
 
         # checksum is stored in a file named SHA256SUMS
@@ -548,13 +548,13 @@ function Test-FileChecksum {
     }
     finally {
         # Delete checksum file
-        Write-Debug "Deleting checksum file $checksumFile"
+        Write-CTKDebug "Deleting checksum file $checksumFile"
         if (Test-Path -Path $checksumFile) {
             Remove-Item -Path $checksumFile -Force -ErrorAction Ignore
         }
     }
 
-    Write-Debug "Checksum verification status. {success: $isValid}"
+    Write-CTKDebug "Checksum verification status. {success: $isValid}"
     return $isValid
 }
 
@@ -579,16 +579,16 @@ function Test-JSONChecksum {
 
     # Validate the checksum file
     $isJsonValid = ValidateJSONChecksumFile -ChecksumFilePath $checksumFile -SchemaFile $SchemaFile
-    Write-Debug "Checksum JSON file validation status. {success: $isJsonValid}"
+    Write-CTKDebug "Checksum JSON file validation status. {success: $isJsonValid}"
 
     if ($null -eq $ExtractDigestScriptBlock) {
-        Write-Debug "Using default JSON checksum extraction script block"
+        Write-CTKDebug "Using default JSON checksum extraction script block"
         $ExtractDigestScriptBlock = ${function:GenericExtractDigest}
         $ExtractDigestArguments = @($DownloadedFile, $checksumFile)
     }
 
     # Invoke the script block to extract the file digest
-    Write-Debug "Extracting file digest from $checksumFile"
+    Write-CTKDebug "Extracting file digest from $checksumFile"
     $extractedFileDigest = & $ExtractDigestScriptBlock @ExtractDigestArguments
 
     # Since Invoke() returns a collection, we need to extract the first item
@@ -619,13 +619,13 @@ function Test-JSONChecksum {
     }
     finally {
         # Delete checksum checksumFile
-        Write-Debug "Deleting checksum file $checksumFile"
+        Write-CTKDebug "Deleting checksum file $checksumFile"
         if (Test-Path -Path $checksumFile) {
             Remove-Item -Path $checksumFile -Force -ErrorAction Ignore
         }
     }
 
-    Write-Debug "Checksum verification status. {success: $isValid}"
+    Write-CTKDebug "Checksum verification status. {success: $isValid}"
     return $isValid
 }
 
@@ -637,7 +637,7 @@ function ValidateJSONChecksumFile {
         [String]$SchemaFile
     )
 
-    Write-Debug "Validating JSON checksum file...`n`tChecksum file path: $ChecksumFilePath`n`tSchema file: $SchemaFile"
+    Write-CTKDebug "Validating JSON checksum file...`n`tChecksum file path: $ChecksumFilePath`n`tSchema file: $SchemaFile"
 
     # Check if the schema file exists
     if (-not (Test-Path -Path $SchemaFile)) {
@@ -668,7 +668,7 @@ function GenericExtractDigest {
         [String]$ChecksumFile
     )
 
-    Write-Debug "Extracting digest from $checksumFile using default script block for in-toto SBOM format"
+    Write-CTKDebug "Extracting digest from $checksumFile using default script block for in-toto SBOM format"
 
     # Read the JSON file and get the checksum
     $jsonContent = Get-Content -Path $ChecksumFile -Raw | ConvertFrom-Json
@@ -731,7 +731,7 @@ function Install-RequiredFeature {
         [boolean] $UpdateEnvPath = $true
     )
     # Create the directory to untar to
-    Write-Information -InformationAction Continue -MessageData "Extracting $Feature to $InstallPath"
+    Write-CTKInfo "Extracting $Feature to $InstallPath"
     if (!(Test-Path $InstallPath)) {
         New-Item -ItemType Directory -Force -Path $InstallPath | Out-Null
     }
@@ -743,10 +743,10 @@ function Install-RequiredFeature {
             Throw "Couldn't find source file: `"$file`"."
         }
 
-        Write-Debug "Expand archive:`n`tSource file: $file`n`tDestination Path: $InstallPath"
+        Write-CTKDebug "Expand archive:`n`tSource file: $file`n`tDestination Path: $InstallPath"
         $cmdOutput = Invoke-ExecutableCommand -executable "tar.exe" -arguments "-xf `"$file`" -C `"$InstallPath`"" -timeout  (60 * 2)
         if ($cmdOutput.ExitCode -ne 0) {
-            Write-Error "Failed to expand archive `"$file`" at `"$InstallPath`". Exit code: $($cmdOutput.ExitCode). $($cmdOutput.StandardError.ReadToEnd())"
+            Write-CTKError "Failed to expand archive `"$file`" at `"$InstallPath`". Exit code: $($cmdOutput.ExitCode). $($cmdOutput.StandardError.ReadToEnd())"
             $failed += $file
         }
     }
@@ -829,7 +829,7 @@ function Invoke-StartService($service) {
             # Waiting for the service to come to a steady state
             (Get-Service -Name $service -ErrorAction Ignore).WaitForStatus('Running', '00:00:30')
 
-            Write-Debug "Success: { Service: $service, Action: 'Start' }"
+            Write-CTKDebug "Success: { Service: $service, Action: 'Start' }"
         }
         catch {
             Throw "Couldn't start $service service. $_"
@@ -845,7 +845,7 @@ function Invoke-StopService($service) {
             # Waiting for the service to come to a steady state
             (Get-Service -Name $service -ErrorAction Ignore).WaitForStatus('Stopped', '00:00:30')
 
-            Write-Debug "Success: { Service: $service, Action: 'Stop' }"
+            Write-CTKDebug "Success: { Service: $service, Action: 'Stop' }"
         }
         catch {
             Throw "Couldn't stop $service service. $_"
@@ -869,10 +869,10 @@ function Uninstall-ProgramFiles($path) {
     catch {
         $errMsg = $_
         if ($errMsg -match "denied") {
-            Write-Error "Failed to delete directory: '$path'. Access to path denied. To resolve this issue, see https://github.com/microsoft/containers-toolkit/blob/main/docs/docs/FAQs.md#resolving-uninstallation-error-access-to-path-denied"
+            Write-CTKError "Failed to delete directory: '$path'. Access to path denied. To resolve this issue, see https://github.com/microsoft/containers-toolkit/blob/main/docs/docs/FAQs.md#resolving-uninstallation-error-access-to-path-denied"
         }
         else {
-            Write-Error "Failed to delete directory: '$path'. $_"
+            Write-CTKError "Failed to delete directory: '$path'. $_"
         }
     }
 }
@@ -888,7 +888,7 @@ function Invoke-ExecutableCommand {
         [Int32] $timeout = 15
     )
 
-    Write-Debug "Executing '$executable $arguments'"
+    Write-CTKDebug "Executing '$executable $arguments'"
 
     $pinfo = New-Object System.Diagnostics.ProcessStartInfo
     $pinfo.FileName = $executable
@@ -903,10 +903,10 @@ function Invoke-ExecutableCommand {
     $p.WaitForExit($timeout * 1000) | Out-Null
 
     if (-not $p.HasExited) {
-        Write-Debug "Execution did not complete in $timeout seconds."
+        Write-CTKDebug "Execution did not complete in $timeout seconds."
     }
     else {
-        Write-Debug "Command execution completed. Exit code: $($p.ExitCode)"
+        Write-CTKDebug "Command execution completed. Exit code: $($p.ExitCode)"
     }
 
     return $p
