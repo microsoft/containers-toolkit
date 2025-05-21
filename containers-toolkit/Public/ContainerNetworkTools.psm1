@@ -1,4 +1,4 @@
-﻿###########################################################################
+###########################################################################
 #                                                                         #
 #   Copyright (c) Microsoft Corporation. All rights reserved.             #
 #                                                                         #
@@ -74,7 +74,7 @@ function Install-WinCNIPlugin {
             # Check if tool already exists at specified location
             if ($isInstalled) {
                 $errMsg = "Windows CNI plugins already exists at $WinCNIPath or the directory is not empty"
-                Write-Warning $errMsg
+                [Logger]::Warning($errMsg)
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
@@ -91,11 +91,11 @@ function Install-WinCNIPlugin {
                 $WinCNIVersion = Get-WinCNILatestVersion -Repo $SourceRepo
             }
             $WinCNIVersion = $WinCNIVersion.TrimStart('v')
-            Write-Output "Downloading CNI plugin version $WinCNIVersion at $WinCNIPath"
+            [Logger]::Info("Downloading CNI plugin version $WinCNIVersion at $WinCNIPath")
 
             New-Item -Path $WinCNIPath -ItemType Directory -Force -ErrorAction Ignore | Out-Null
 
-            Write-Debug ("Downloading Windows CNI plugins from {0}" -f $SourceRepo)
+            [Logger]::Debug(("Downloading Windows CNI plugins from {0}" -f $SourceRepo))
 
             # File filter for Windows CNI plugins
             $fileFilterRegEx = $null
@@ -138,7 +138,7 @@ function Install-WinCNIPlugin {
             }
             Install-RequiredFeature @params
 
-            Write-Output "CNI plugin version $WinCNIVersion ($sourceRepo) successfully installed at $WinCNIPath"
+            [Logger]::Info("CNI plugin version $WinCNIVersion ($sourceRepo) successfully installed at $WinCNIPath")
         }
         else {
             # Code that should be processed if doing a WhatIf operation
@@ -195,7 +195,7 @@ function Initialize-NatNetwork {
             if (!$force) {
                 if (!$ENV:PESTER) {
                     if (-not $PSCmdlet.ShouldContinue('', "Are you sure you want to initialises a NAT network?`n`t`tHNS module will be imported and missing dependencies (Windows CNI Plugins) will be installed if missing.")) {
-                        Write-Error "NAT network initialisation cancelled."
+                        [Logger]::Error("NAT network initialisation cancelled.")
                         return
                     }
                 }
@@ -209,16 +209,16 @@ function Initialize-NatNetwork {
                 Throw "Could not import HNS module. $_"
             }
 
-            Write-Information -MessageData "Creating NAT network" -InformationAction Continue
+            [Logger]::Info("Creating NAT network")
 
             # Install missing WinCNI plugins
             if (!$isInstalled) {
                 if ($force) {
-                    Write-Warning "Windows CNI plugins have not been installed. Installing Windows CNI plugins at '$WinCNIPath'"
+                    [Logger]::Warning("Windows CNI plugins have not been installed. Installing Windows CNI plugins at '$WinCNIPath'")
                     Install-WinCNIPlugin -WinCNIPath $WinCNIPath -WinCNIVersion $WinCNIVersion -Force:$force
                 }
                 else {
-                    Write-Warning "Couldn't initialize NAT network. CNI plugins have not been installed. To install, run the command `"Install-WinCNIPlugin`"."
+                    [Logger]::Warning("Couldn't initialize NAT network. CNI plugins have not been installed. To install, run the command `"Install-WinCNIPlugin`".")
                     return
                 }
             }
@@ -226,7 +226,7 @@ function Initialize-NatNetwork {
             # Check of NAT exists
             $natInfo = Get-HnsNetwork -ErrorAction Ignore | Where-Object { $_.Name -eq $networkName }
             if ($null -ne $natInfo) {
-                Write-Warning "$networkName already exists. To view existing networks, use `"Get-HnsNetwork`". To remove the existing network use the `"Remove-HNSNetwork`" command."
+                [Logger]::Warning("$networkName already exists. To view existing networks, use `"Get-HnsNetwork`". To remove the existing network use the `"Remove-HNSNetwork`" command.")
                 return
             }
 
@@ -244,7 +244,7 @@ function Initialize-NatNetwork {
             $networkIdentifier = $gateway -replace "\.\d*$", ".0"
             $subnet = "$networkIdentifier/$CIDR"
 
-            Write-Debug "Creating NAT network with Gateway $gateway and Subnet mask $subnet"
+            [Logger]::Debug("Creating NAT network with Gateway $gateway and Subnet mask $subnet")
 
             # Set default WinCNI version of null
             if (!$WinCNIVersion) {
@@ -270,7 +270,7 @@ function Initialize-NatNetwork {
                 }
                 Set-DefaultCNIConfig @params
 
-                Write-Output "Successfully created new NAT network called '$($hnsNetwork.Name)' with Gateway $($hnsNetwork.Subnets.GatewayAddress), and Subnet Mask $($hnsNetwork.Subnets.AddressPrefix)"
+                [Logger]::Info("Successfully created new NAT network called '$($hnsNetwork.Name)' with Gateway $($hnsNetwork.Subnets.GatewayAddress), and Subnet Mask $($hnsNetwork.Subnets.AddressPrefix)")
             }
             catch {
                 Throw "Could not create a new NAT network $networkName with Gateway $gateway and Subnet mask $subnet. $_"
@@ -313,7 +313,7 @@ function Uninstall-WinCNIPlugin {
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             if (Test-EmptyDirectory -Path $path) {
-                Write-Output "Windows CNI plugins does not exist at $Path or the directory is empty"
+                [Logger]::Info("Windows CNI plugins does not exist at $Path or the directory is empty")
                 return
             }
 
@@ -327,7 +327,7 @@ function Uninstall-WinCNIPlugin {
                 Throw "Windows CNI plugins uninstallation cancelled."
             }
 
-            Write-Warning "Uninstalling preinstalled Windows CNI plugin at the path $path"
+            [Logger]::Warning("Uninstalling preinstalled Windows CNI plugin at the path $path")
             try {
                 Uninstall-WinCNIPluginHelper -Path $path
             }
@@ -350,16 +350,16 @@ function Uninstall-WinCNIPluginHelper {
         [String]$Path
     )
 
-    Write-Output "Uninstalling Windows CNI plugin"
+    [Logger]::Info("Uninstalling Windows CNI plugin")
     if (Test-EmptyDirectory -Path $Path) {
-        Write-Error "Windows CNI plugin does not exist at $Path or the directory is empty."
+        [Logger]::Error("Windows CNI plugin does not exist at $Path or the directory is empty.")
         return
     }
 
     # Remove the folder where WinCNI plugins are installed
     Remove-Item $Path -Recurse -Force -ErrorAction Ignore
 
-    Write-Output "Successfully uninstalled Windows CNI plugin."
+    [Logger]::Info("Successfully uninstalled Windows CNI plugin.")
 }
 
 function Import-HNSModule {
