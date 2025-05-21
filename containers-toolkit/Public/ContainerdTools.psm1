@@ -1,4 +1,4 @@
-﻿###########################################################################
+###########################################################################
 #                                                                         #
 #   Copyright (c) Microsoft Corporation. All rights reserved.             #
 #                                                                         #
@@ -7,6 +7,7 @@
 ###########################################################################
 
 using module "..\Private\CommonToolUtilities.psm1"
+using module "..\Private\logger.psm1"
 
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
@@ -63,7 +64,7 @@ function Install-Containerd {
             # Check if tool already exists at specified location
             if ($isInstalled) {
                 $errMsg = "Containerd already exists at $InstallPath or the directory is not empty"
-                Write-Warning $errMsg
+                [Logger]::Warning($errMsg)
 
                 # Uninstall if tool exists at specified location. Requires user consent
                 try {
@@ -80,7 +81,7 @@ function Install-Containerd {
                 $Version = Get-ContainerdLatestVersion
             }
             $Version = $Version.TrimStart('v')
-            Write-Output "Downloading and installing Containerd v$version at $InstallPath"
+            [Logger]::Info("Downloading and installing Containerd v$version at $InstallPath")
 
             # Download files
             $downloadParams = @{
@@ -116,7 +117,7 @@ function Install-Containerd {
             }
             Install-RequiredFeature @params
 
-            Write-Output "Containerd v$version successfully installed at $InstallPath `n"
+            [Logger]::Info("Containerd v$version successfully installed at $InstallPath `n")
 
             $showCommands = $true
             try {
@@ -126,16 +127,16 @@ function Install-Containerd {
                 }
             }
             catch {
-                Write-Warning "Failed to setup Containerd service. $_"
+                [Logger]::Warning("Failed to setup Containerd service. $_")
             }
 
             if ($showCommands) {
                 $commands = (Get-command -Name '*containerd*' | Where-Object { $_.Source -like 'Containers-Toolkit' -and $_.Name -ne 'Install-Containerd' }).Name
                 $message = "Other useful Containerd commands: $($commands -join ', ').`nTo learn more about each command, run Get-Help <command-name>, e.g., 'Get-Help Register-ContainerdService'"
-                Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
+                [Logger]::Info($message)
             }
 
-            Write-Output "For containerd usage: run 'containerd -h'`n"
+            [Logger]::Info("For containerd usage: run 'containerd -h'`n")
         }
         else {
             # Code that should be processed if doing a WhatIf operation
@@ -222,7 +223,7 @@ function Register-ContainerdService {
 
             # Check containerd service is already registered
             if (Test-ServiceRegistered -Service 'containerd') {
-                Write-Warning ( -join @("Containerd service already registered. To re-register the service, "
+                [Logger]::Warning( -join @("Containerd service already registered. To re-register the service, "
                         "stop the service by running 'Stop-Service containerd' or 'Stop-ContainerdService', then "
                         "run 'containerd --unregister-service'. Wait for containerd service to be deregistered, "
                         "then re-reun this command."))
@@ -235,17 +236,17 @@ function Register-ContainerdService {
             }
 
             if (!$consent) {
-                Write-Error "containerd service registration cancelled."
+                [Logger]::Error("containerd service registration cancelled.")
                 return
             }
 
-            Write-Output "Configuring containerd service"
+            [Logger]::Info("Configuring containerd service")
 
             Add-MpPreference -ExclusionProcess $containerdExecutable
 
             # Get default containerd config and write to file
             $containerdConfigFile = "$ContainerdPath\config.toml"
-            Write-Debug "Containerd config file: $containerdConfigFile"
+            [Logger]::Debug("Containerd config file: $containerdConfigFile")
 
             $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "config default"
             $output.StandardOutput.ReadToEnd() | Out-File -FilePath $containerdConfigFile -Encoding ascii -Force
@@ -256,7 +257,7 @@ function Register-ContainerdService {
                 Throw "Config file is empty. '$containerdConfigFile'"
             }
 
-            Write-Output "Review containerd configutations at $containerdConfigFile"
+            [Logger]::Info("Review containerd configutations at $containerdConfigFile")
 
             # Register containerd service
             $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "--register-service --log-level debug --service-name containerd --log-file `"$env:TEMP\containerd.log`""
@@ -270,17 +271,17 @@ function Register-ContainerdService {
             }
 
             Set-Service containerd -StartupType Automatic
-            Write-Output "Successfully registered Containerd service."
+            [Logger]::Info("Successfully registered Containerd service.")
 
             if ($Start) {
                 Start-ContainerdService
-                Write-Output "Successfully started Containerd service."
+                [Logger]::Info("Successfully started Containerd service.")
             }
             else {
-                Write-Information -InformationAction Continue -MessageData "To start containerd service, run 'Start-Service containerd' or 'Start-ContainerdService'"
+                [Logger]::Info("To start containerd service, run 'Start-Service containerd' or 'Start-ContainerdService'")
             }
 
-            Write-Debug $(Get-Service 'containerd' -ErrorAction SilentlyContinue | Format-Table -AutoSize | Out-String)
+            [Logger]::Debug($(Get-Service 'containerd' -ErrorAction SilentlyContinue | Format-Table -AutoSize | Out-String))
         }
         else {
             # Code that should be processed if doing a WhatIf operation
@@ -315,7 +316,7 @@ function Uninstall-Containerd {
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             if (Test-EmptyDirectory -Path $path) {
-                Write-Output "$tool does not exist at $Path or the directory is empty"
+                [Logger]::Info("$tool does not exist at $Path or the directory is empty")
                 return
             }
 
@@ -328,7 +329,7 @@ function Uninstall-Containerd {
                 Throw "$tool uninstallation cancelled."
             }
 
-            Write-Warning "Uninstalling preinstalled $tool at the path $path"
+            [Logger]::Warning("Uninstalling preinstalled $tool at the path $path")
             try {
                 Uninstall-ContainerdHelper -Path $path
             }
@@ -352,7 +353,7 @@ function Uninstall-ContainerdHelper {
     )
 
     if (Test-EmptyDirectory -Path $Path) {
-        Write-Error "Containerd does not exist at $Path or the directory is empty."
+        [Logger]::Error("Containerd does not exist at $Path or the directory is empty.")
         return
     }
 
@@ -378,12 +379,12 @@ function Uninstall-ContainerdHelper {
     # Remove from env path
     Remove-FeatureFromPath -Feature "containerd"
 
-    Write-Output "Successfully uninstalled Containerd."
+    [Logger]::Info("Successfully uninstalled Containerd.")
 }
 
 function Unregister-Containerd ($containerdPath) {
     if (!(Test-ServiceRegistered -Service 'Containerd')) {
-        Write-Warning "Containerd service does not exist as an installed service."
+        [Logger]::Warning("Containerd service does not exist as an installed service.")
         return
     }
 
