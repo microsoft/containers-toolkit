@@ -8,6 +8,7 @@
 
 
 using module "..\Private\CommonToolUtilities.psm1"
+using module "..\Private\logger.psm1"
 
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
