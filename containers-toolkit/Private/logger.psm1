@@ -1,10 +1,6 @@
 class Logger {
     static [string] $EventSource = "Containers-Toolkit"
     static [string] $EventLogName = "Application"
-    static [string] $LogFile
-    static [bool] $Quiet
-    static [string] $MinLevel
-
     static [hashtable] $LogLevelRank = @{
         "DEBUG"   = 1
         "INFO"    = 2
@@ -48,18 +44,36 @@ class Logger {
     # If set, only DEBUG messages are logged to the terminal.
     # If not set, all messages are logged to the terminal and to the event log.
     static [bool] GetQuiet() {
+        $defaultQuiet = $false
         try {
             $quietValue = $env:SKIP_CTK_LOGGING
-            return if ($quietValue) { [bool]::Parse($quietValue) } else { $false }
+            if ($quietValue) { return [bool]::Parse($quietValue) }
         }
         catch {
-            return $false
+            # return defaultQuiet
         }
+        return $defaultQuiet
+    }
+
+    # Set format log from environment variable: CTK_FORMAT_LOG
+    # Use to determine if the logs displayed in the terminal should be formatted.
+    # If set to true, the logs will be formatted. If not set, the logs will not be formatted.
+    static [bool] ShouldFormat() {
+        $defaultFormat = $false
+        try {
+            $formatValue = $env:CTK_FORMAT_LOG
+            if ($formatValue) { return [bool]::Parse($formatValue) }
+        }
+        catch {
+            # return defaultFormat
+        }
+
+        return $defaultFormat
     }
 
     # Check if the log level is greater than or equal to the minimum log level
     static [bool] ShouldLog([string] $Level) {
-        return [Logger]::LogLevelRank[$Level.ToUpper()] -ge [Logger]::LogLevelRank[[Logger]::MinLevel]
+        return [Logger]::LogLevelRank[$Level.ToUpper()] -ge [Logger]::LogLevelRank[[Logger]::GetMinLevel()]
     }
 
     # Format the message for logging
@@ -146,14 +160,69 @@ class Logger {
         }
     }
 
+    # Write log messages to a file
+    static [void] WriteToFile([string] $Message) {
+        $LogFilePath = [Logger]::GetLogFile()
+        if (-not $LogFilePath) {
+            return
+        }
+
+        try {
+            Add-Content -Path $LogFilePath -Value $Message
+        }
+        catch {
+            Write-Warning "Failed to write to log file: $_"
+        }
+    }
+
+    # Write log messages to the console
+    static [void] WriteToConsole([string] $Level, [string] $Message, [string] $parsedMessage) {
+        if ([Logger]::ShouldFormat()) {
+            switch ($Level) {
+                "FATAL" {
+                    [Console]::Error.WriteLine($parsedMessage)
+                    Write-Error "FATAL: $message" -ErrorAction Stop
+                }
+                "ERROR" {
+                    # HACK: We still use Write-Error for users who may need to access the error using $Error or Get-Error.
+                    # This is a workaround because we want to use a custom log format.
+                    # Write-Error prefixes the message with "Write-Error" which is not neat and consistent with other log levels.
+                    # SilentlyContinue is used to avoid writing to the console.
+                    Write-Error $message -ErrorAction SilentlyContinue
+                    [Console]::Error.WriteLine($parsedMessage)
+                }
+                default { [Console]::WriteLine($parsedMessage) }
+            }
+            return
+        }
+
+        # Write unformatted messages to the console
+        switch ($Level) {
+            "FATAL" {
+                # `-ErrorAction Stop` to make it a terminating error
+                # This will stop the script execution and throw an exception,
+                # even when a command is called with -ErrorAction SilentlyContinue.
+                # Needs to be handled by the caller with a try-catch block.
+                Write-Error $message -ErrorAction Stop
+            }
+            "ERROR" {
+                Write-Error $message -ErrorAction Continue
+            }
+            "WARNING" {
+                Write-Warning $message
+            }
+            "INFO" {
+                Write-Information $message -InformationAction Continue
+            }
+            "DEBUG" {
+                Write-Debug $message
+            }
+        }
+    }
+
     # Write log messages to the console and/or event log (or file)
     # This is the main logging function that handles all log levels
     static [void] Write([string] $Level, [object] $Message) {
-        # Set values
-        [Logger]::MinLevel = [Logger]::GetMinLevel()
-        [Logger]::LogFile = [Logger]::GetLogFile()
-        [Logger]::Quiet = [Logger]::GetQuiet()
-
         $Level = $Level.ToUpper()
 
         # Minimum log level filtering: Only log messages that are at least as severe as the minimum level
@@ -173,22 +242,16 @@ class Logger {
         }
 
         # Log to file if CTK_LOG_FILE is set
-        if ([Logger]::LogFile) {
-            Add-Content -Path [Logger]::LogFile -Value $parsedMessage
-        }
+        [Logger]::WriteToFile($parsedMessage)
 
         # If true, only DEBUG messages are logged to the terminal
         # else, all messages are logged to the terminal and to the event log.
-        if ([Logger]::Quiet -and $Level -ne "DEBUG") {
+        if ([Logger]::GetQuiet() -and $Level -ne "DEBUG") {
             return
         }
 
         # Console output
-        switch ($Level) {
-            "FATAL" { [Console]::Error.WriteLine($parsedMessage); throw $Message }
-            "ERROR" { [Console]::Error.WriteLine($parsedMessage) }
-            default { [Console]::WriteLine($parsedMessage) }
-        }
+        [Logger]::WriteToConsole($Level, $formatedMessage, $parsedMessage)
     }
 
     static [void] Fatal([object] $Message) { [Logger]::Write("FATAL", $Message) }
