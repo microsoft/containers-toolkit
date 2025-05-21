@@ -203,7 +203,7 @@ class Logger {
                 # This will stop the script execution and throw an exception,
                 # even when a command is called with -ErrorAction SilentlyContinue.
                 # Needs to be handled by the caller with a try-catch block.
-                Write-Error $message -ErrorAction Stop
+                Write-Error "FATAL: $message" -ErrorAction Stop
             }
             "ERROR" {
                 Write-Error $message -ErrorAction Continue
