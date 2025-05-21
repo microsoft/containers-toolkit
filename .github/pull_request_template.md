@@ -17,7 +17,7 @@ _How to test the changes_
 
 ### Relevant Links
 
-Any links from your research that help explain the changes
+_Any links from your research that help explain the changes_
 
 ## Checklist
 

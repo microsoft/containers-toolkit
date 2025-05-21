@@ -14,21 +14,20 @@ Downloads and installs Containerd.
 ## SYNTAX
 
 ```
-Install-Containerd [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>] [-Setup] [-OSArchitecture <string>] [-Force]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Install-Containerd [[-Version] <String>] [[-InstallPath] <String>] [[-DownloadPath] <String>]
+ [-RegisterService] [-OSArchitecture <String>] [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
 
-Downloads Containerd files from [Containerd releases](https://github.com/containerd/containerd/releases) and installs it the provided path. Once installation is complete, the downloaded files are deleted to save on disk space.
-
-Once Containerd is installed and added to the environment path, we can get the path where it is installed using:
+Downloads Containerd files from [Containerd releases](https://github.com/containerd/containerd/releases) and installs it the provided path. After installation is complete, the downloaded files are deleted to save on disk space.
+We can get the path where it is installed using:
 
 ```PowerShell
 ((Get-Command -Name containerd.exe).Source | Split-Path -Parent).TrimEnd("\bin")
 ```
 
-**NOTE:** If Containerd already exists at the specified install path, it will be uninstalled and the specified version will be installed.
+**NOTE:** If `-Force` is specified and Containerd is already present at the specified install path, it will be uninstalled and replaced with the specified version. Otherwise, the installation will be skipped.
 
 ## EXAMPLES
 
@@ -46,32 +45,12 @@ Installs Containerd version 1.7.7 at 'C:\Test\Path\containerd' and adds 'C:\Test
 
 ```powershell
 PS C:\> Install-Containerd -Version "1.7.7" -InstallPath 'C:\Test\Path\Containerd'
-```
 
 ## PARAMETERS
 
-### -Confirm
-
-Prompts for confirmation before running the cmdlet. For more information, see the following articles:
-
-- [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-7.4#confirmpreference)
-- [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute?view=powershell-7.4#confirmimpact)
-
-```yaml
-Type: SwitchParameter
-Parameter Sets: (All)
-Aliases:
-
-Required: False
-Position: Named
-Default value: False
-Accept pipeline input: False
-Accept wildcard characters: False
-```
-
 ### -DownloadPath
 
-Path to download files. Defaults to user's Downloads folder
+Path to download files. Defaults to `$HOME\Downloads`
 
 ```yaml
 Type: String
@@ -96,14 +75,14 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -InstallPath
 
-Path to install Containerd. Defaults to Defaults to `$ENV:ProramFiles\containerd`
+Path to install Containerd. Defaults to Defaults to `$ENV:ProgramFiles\containerd`
 
 ```yaml
 Type: String
@@ -112,36 +91,35 @@ Aliases:
 
 Required: False
 Position: 1
-Default value:  $ENV:ProramFiles\containerd
+Default value:  $ENV:ProgramFiles\containerd
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
 ### -OSArchitecture
 
-OS architecture to download files for.
-Default is `$env:PROCESSOR_ARCHITECTURE`
+OS architecture to download files for. Default is `$env:PROCESSOR_ARCHITECTURE`
 
 ```yaml
 Type: String
-Parameter Sets: Setup
+Parameter Sets: (All)
 Aliases:
 
 Required: False
 Position: Named
-Default value:  $env:PROCESSOR_ARCHITECTURE
+Default value: $env:PROCESSOR_ARCHITECTURE
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -Setup
+### -RegisterService
 
-Register and start Containerd Service once Containerd installation is done
+Register and start the Containerd Service.
 
 ```yaml
 Type: SwitchParameter
 Parameter Sets: (All)
-Aliases:
+Aliases: Setup
 
 Required: False
 Position: Named
@@ -152,7 +130,7 @@ Accept wildcard characters: False
 
 ### -Version
 
-Containerd version to install. Defaults to latest version
+ContainerD version to use. Defaults to latest version
 
 ```yaml
 Type: String
@@ -161,19 +139,19 @@ Aliases:
 
 Required: False
 Position: 0
-Default value: Latest version
+Default value: latest
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -WhatIf
+### -Confirm
 
-Shows what would happen if the cmdlet runs. The cmdlet isn't run.
+Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: Setup
-Aliases:
+Parameter Sets: (All)
+Aliases: cf
 
 Required: False
 Position: Named
@@ -181,6 +159,26 @@ Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
+
+### -WhatIf
+
+Shows what would happen if the cmdlet runs. The cmdlet is not run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: None
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## RELATED LINKS
 

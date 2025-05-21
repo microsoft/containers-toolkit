@@ -40,11 +40,16 @@ function Install-Buildkit {
         [string]$DownloadPath = "$HOME\Downloads",
 
         [Parameter(ParameterSetName = 'Setup')]
-        [switch]$Setup,
+        [Parameter(HelpMessage = "Register the buildkitd service.")]
+        [Alias("Setup")]
+        [switch]$RegisterService,
 
         [Parameter(ParameterSetName = 'Setup')]
-        [string]$WinCNIPath,
+        [Parameter(HelpMessage = "Path to Windows CNI plugin. Defaults to `$ENV:ProgramFiles\Containerd\cni")]
+        [string]$WinCNIPath="$ENV:ProgramFiles\Containerd\cni",
 
+        [Parameter(ParameterSetName = 'Install')]
+        [Parameter(ParameterSetName = 'Setup')]
         [Parameter(HelpMessage = 'OS architecture to download files for. Default is $env:PROCESSOR_ARCHITECTURE')]
         [ValidateSet('amd64', '386', "arm", "arm64")]
         [string]$OSArchitecture = $env:PROCESSOR_ARCHITECTURE,
@@ -59,13 +64,13 @@ function Install-Buildkit {
         # Check if Buildkit is alread installed
         $isInstalled = -not (Test-EmptyDirectory -Path $InstallPath)
 
-        $WhatIfMessage = "Buildkit will be installed at $InstallPath"
+        $WhatIfMessage = "Buildkit will be installed at '$InstallPath'"
         if ($isInstalled) {
-            $WhatIfMessage = "Buildkit will be uninstalled from and reinstalled at $InstallPath"
+            $WhatIfMessage = "Buildkit will be uninstalled from and reinstalled at '$InstallPath'"
         }
         if ($Setup) {
             <# Action when this condition is true #>
-            $WhatIfMessage = "Buildkit will be installed at $InstallPath and buildkitd service will be registered and started"
+            $WhatIfMessage = "Buildkit will be installed at '$InstallPath' and buildkitd service will be registered and started"
         }
     }
 
@@ -73,7 +78,7 @@ function Install-Buildkit {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
             # Check if tool already exists at specified location
             if ($isInstalled) {
-                $errMsg = "Buildkit already exists at $InstallPath or the directory is not empty"
+                $errMsg = "Buildkit already exists at '$InstallPath' or the directory is not empty."
                 Write-Warning $errMsg
 
                 # Uninstall if tool exists at specified location. Requires user consent
@@ -95,13 +100,13 @@ function Install-Buildkit {
 
             # Download files
             $downloadParams = @{
-                ToolName = "Buildkit"
-                Repository = "$BUILDKIT_REPO"
-                Version = $Version
-                OSArchitecture = $OSArchitecture
-                DownloadPath = $DownloadPath
+                ToolName           = "Buildkit"
+                Repository         = "$BUILDKIT_REPO"
+                Version            = $Version
+                OSArchitecture     = $OSArchitecture
+                DownloadPath       = $DownloadPath
                 ChecksumSchemaFile = "$ModuleParentPath\Private\schemas\in-toto.sbom.schema.json"
-                FileFilterRegEx = $null
+                FileFilterRegEx    = $null
             }
             $downloadParamsProperties = [FileDownloadParameters]::new(
                 $downloadParams.ToolName,
@@ -129,7 +134,7 @@ function Install-Buildkit {
             # Register Buildkitd service
             $showCommands = $true
             try {
-                if ($Setup) {
+                if ($RegisterService) {
                     Register-BuildkitdService -BuildKitPath $InstallPath -WinCNIPath $WinCNIPath -Start -Force:$true
                     $showCommands = $false
                 }
@@ -145,7 +150,7 @@ function Install-Buildkit {
             }
 
             # Show buildkit binaries help
-            Get-ChildItem -Path "C:\Program Files\buildkit\bin" | ForEach-Object {
+            (Get-command -Name "buildctl", "buildkitd" -ErrorAction SilentlyContinue) | ForEach-Object {
                 $executable = $_.Name
                 # Remove extension from executable
                 $commandName = $executable -replace ".exe", ""
@@ -207,11 +212,11 @@ function Register-BuildkitdService {
         SupportsShouldProcess = $true
     )]
     param(
-        [parameter(HelpMessage = "Windows CNI plugin path")]
-        [String]$WinCNIPath,
+        [parameter(HelpMessage = "Windows CNI plugin path. Defaults to `$ENV:ProgramFiles\Containerd\cni")]
+        [String]$WinCNIPath= "$ENV:ProgramFiles\Containerd\cni",
 
-        [parameter(HelpMessage = "Buildkit path")]
-        [String]$BuildKitPath,
+        [parameter(HelpMessage = "Buildkit path. Defaults to `$ENV:ProgramFiles\Buildkit")]
+        [String]$BuildKitPath= "$ENV:ProgramFiles\Buildkit",
 
         [parameter(HelpMessage = "Specify to start Buildkitd service after registration is complete")]
         [Switch]$Start,
@@ -264,6 +269,9 @@ function Register-BuildkitdService {
             Write-Output "Configuring buildkitd service"
 
             $buildkitdExecutable = "$BuildKitPath\bin\buildkitd.exe"
+            Write-Debug "Buildkitd path: $buildkitdExecutable"
+
+            # Add buildkitd to Windows Defender exclusion list
             Add-MpPreference -ExclusionProcess $buildkitdExecutable
 
             if (!$WinCNIPath) {
@@ -273,9 +281,11 @@ function Register-BuildkitdService {
 
             $cniBinDir = "$WinCNIPath\bin"
             $cniConfPath = "$WinCNIPath\conf\0-containerd-nat.conf"
+            Write-Debug "CNI bin dir: $cniBinDir"
+            Write-Debug "CNI conf path: $cniConfPath"
 
             # Register buildkit service
-            $command = "buildkitd.exe --register-service --debug --containerd-worker=true --containerd-cni-config-path=`"$cniConfPath`" --containerd-cni-binary-dir=`"$cniBinDir`" --service-name buildkitd"
+            $command = "$buildkitdExecutable --register-service --debug --containerd-worker=true --containerd-cni-config-path=`"$cniConfPath`" --containerd-cni-binary-dir=`"$cniBinDir`" --service-name buildkitd"
             if (Test-ConfFileEmpty -Path $cniConfPath) {
 
                 $consent = $force
@@ -285,7 +295,7 @@ function Register-BuildkitdService {
 
                 if ($consent) {
                     Write-Warning "Containerd conf file not found at $cniConfPath. Buildkit service will be registered without Containerd cni configurations."
-                    $command = "buildkitd.exe --register-service --debug --containerd-worker=true --service-name buildkitd"
+                    $command = "$buildkitdExecutable --register-service --debug --containerd-worker=true --service-name buildkitd"
                 }
                 else {
                     Write-Error "Failed to register buildkit service. Containerd conf file not found at $cniConfPath.`n`t1. Ensure that the required CNI plugins are installed or you can install them using 'Install-WinCNIPlugin'.`n`t2. Create the file to resolve this issue .`n`t3. Rerun this command  'Register-BuildkitdService'"
@@ -293,7 +303,11 @@ function Register-BuildkitdService {
                 }
             }
 
-            $arguments = ($command -split " " | Select-Object -Skip 1) -join " "
+            # remove the executable extension from the command
+            $escapedPath = [regex]::Escape($buildkitdExecutable)
+            $arguments = ($command -replace "$escapedPath", "").Trim()
+
+            # Register the service
             $output = Invoke-ExecutableCommand -Executable $buildkitdExecutable -Arguments $arguments
             if ($output.ExitCode -ne 0) {
                 Throw "Failed to register buildkitd service. $($output.StandardError.ReadToEnd())"
@@ -339,7 +353,10 @@ function Uninstall-Buildkit {
     )]
     param(
         [parameter(HelpMessage = "BuildKit path")]
-        [String]$Path,
+        [String]$Path = "$ENV:ProgramFiles\Buildkit",
+
+        [parameter(HelpMessage = "Delete all Buildkit program files and program data")]
+        [Switch] $Purge,
 
         [parameter(HelpMessage = "Bypass confirmation to uninstall BuildKit")]
         [Switch] $Force
@@ -351,28 +368,42 @@ function Uninstall-Buildkit {
             $Path = Get-DefaultInstallPath -Tool $tool
         }
 
-        $WhatIfMessage = "Buildkit will be uninstalled from $path and buildkitd service will be stopped and unregistered"
+        # If we are not purging, we are uninstalling from the bin directory
+        # that contains the buildkit binaries, buildkit/bin
+        $path = $path.TrimEnd("\")
+        if (-not $Purge -and (-not $path.EndsWith("\bin"))) {
+            $path = $path.Trim() + "\bin"
+        }
+
+        $WhatIfMessage = "Buildkit will be uninstalled from '$path' and buildkitd service will be stopped and unregistered."
+        if ($Purge) {
+            $WhatIfMessage += " Buildkit program data will also be removed."
+        }
+        else {
+            $WhatIfMessage += " Buildkit program data won't be removed. To remove program data, run 'Uninstall-Buildkit' command without -Purge flag."
+        }
     }
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            if (Test-EmptyDirectory -Path $path) {
-                Write-Output "$tool does not exist at $Path or the directory is empty"
+            if (Test-EmptyDirectory -Path "$path") {
+                Write-Output "$tool does not exist at '$Path' or the directory is empty"
                 return
             }
 
             $consent = $force
             if (!$ENV:PESTER) {
-                $consent = $force -or $PSCmdlet.ShouldContinue($env:COMPUTERNAME, "Are you sure you want to uninstall Buildkit from $path?")
+                $consent = $force -or $PSCmdlet.ShouldContinue($env:COMPUTERNAME, "Are you sure you want to uninstall Buildkit from '$path'?")
             }
 
             if (!$consent) {
-                Throw "$tool uninstallation cancelled."
+                Write-Warning "$tool uninstallation cancelled."
+                return
             }
 
-            Write-Warning "Uninstalling preinstalled $tool at the path $path"
+            Write-Warning "Uninstalling preinstalled $tool at the path '$path'.`n$WhatIfMessage"
             try {
-                Uninstall-BuildkitHelper -Path $path
+                Uninstall-BuildkitHelper -Path "$path" -Purge:$Purge
             }
             catch {
                 Throw "Could not uninstall $tool. $_"
@@ -389,35 +420,45 @@ function Uninstall-Buildkit {
 function Uninstall-BuildkitHelper {
     param(
         [parameter(Mandatory = $true, HelpMessage = "Buildkit path")]
-        [String]$Path
+        [String]$Path,
+
+        [parameter(HelpMessage = "Remove all program data for Buildkit")]
+        [Switch] $Purge
     )
 
-    if (Test-EmptyDirectory -Path $Path) {
-        Write-Error "Buildkit does not exist at $Path or the directory is empty."
+    if (Test-EmptyDirectory -Path "$Path") {
+        Write-Error "Buildkit does not exist at '$Path' or the directory is empty."
         return
     }
 
     try {
         if (Test-ServiceRegistered -Service 'Buildkitd') {
             Stop-BuildkitdService
-            Unregister-Buildkitd -BuildkitPath $Path
+            Unregister-Buildkitd -BuildkitPath "$Path"
         }
     }
     catch {
         Throw "Could not stop or unregister buildkitd service. $_"
     }
 
-    # Delete the buildkit key
-    Remove-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\buildkit" -Recurse -Force -ErrorAction Ignore
-
     # Remove the folder where buildkit is installed and related folders
-    Remove-Item -Path $Path -Recurse -Force
+    Remove-Item -Path "$Path" -Recurse -Force
 
-    # Delete Buildkit programdata
-    Uninstall-ProgramFiles "$ENV:ProgramData\Buildkit"
+    if ($Purge) {
+        Write-Output "Purging Buildkit program data"
 
-    # Remove from env path
-    Remove-FeatureFromPath -Feature "buildkit"
+        # Delete the buildkit key
+        Write-Warning "Removing Buildkit registry key"
+        Remove-Item -Path "HKLM:\SYSTEM\CurrentControlSet\Services\buildkit" -Recurse -Force -ErrorAction Ignore
+
+        # Delete Buildkit programdata
+        Write-Warning "Removing Buildkit program data"
+        Uninstall-ProgramFiles "$ENV:ProgramData\Buildkit"
+
+        # Remove from env path
+        Write-Warning "Removing Buildkit from env path"
+        Remove-FeatureFromPath -Feature "buildkit"
+    }
 
     Write-Output "Successfully uninstalled buildkit."
 }

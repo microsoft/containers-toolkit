@@ -1,4 +1,4 @@
-﻿TOPIC
+TOPIC
     about_containerstoolkit
 
     Containers-Toolkit contains PowerShell functions that allow you to download,
@@ -28,6 +28,6 @@ KEYWORDS
     - Containerd
     - BuildKit
     - nerdctl
-    - Windows CNI
+    - CNI
     - Windows Containers
     - Microsoft Windows
