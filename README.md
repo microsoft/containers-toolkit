@@ -112,13 +112,7 @@ For more details on the logger, please refer to the [Logger documentation](./doc
 
 #### Logging Environment Variables
 
-The logger uses the following environment variables to configure its behavior:
-
-| Variable                | Description                                                                                                                                                                                                                                  |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `$env:CTK_LOG_LEVEL`    | Sets the minimum log level. Accepted values are: `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `FATAL`. Defaults to `INFO` if not set.                                                                                                            |
-| `$env:CTK_LOG_FILE`     | Path to a file where logs should be written. If not set, logs will be written to the console and Windows Event Log (for applicable levels). **Note:** The logger does not handle log file rotation or cleanup—use external tooling for that. |
-| `$env:SKIP_CTK_LOGGING` | If set to `"true"`, suppresses console output for all log levels except `DEBUG` (when `$DebugPreference` is not `"SilentlyContinue"`). Logging to file (if set) and to the Windows Event Log (excluding `DEBUG`) still occurs.               |
+See [Logger documentation](./docs/LOGGER.md#environment-variables) for more details on the environment variables used to control logging.
 
 ## Important Notes
 
