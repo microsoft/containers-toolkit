@@ -25,11 +25,11 @@ To use the logger, you need to import the module (if it is not already imported)
 using using module "..\Private\logger.psm1"
 ```
 
-## Log Levels
+### Log Levels
 
 The logger supports the following log levels:
 
-### Info level
+#### Info level
 
 ```PowerShell
 [Logger]::Log("This is a test message") # Defaults to INFO level
@@ -39,7 +39,7 @@ The logger supports the following log levels:
 INFO:   [2025-05-20T08:23:12Z] [Install-Nerdctl:42]: "This is a test message"
 ```
 
-### Debug level
+#### Debug level
 
 To enable `DEBUG` level logging, set the environment variable `CTK_LOG_LEVEL` to `"DEBUG"` or ensure `$DebugPreference` is not set to `"SilentlyContinue"`.
 
@@ -50,7 +50,7 @@ To enable `DEBUG` level logging, set the environment variable `CTK_LOG_LEVEL` to
 DEBUG:   [2025-05-20T08:23:12Z] [Install-Nerdctl:42]: "This is a test message"
 ```
 
-### Warning level
+#### Warning level
 
 ```PowerShell
 [Logger]::Log("This is a test message", "WARNING")
@@ -59,7 +59,7 @@ DEBUG:   [2025-05-20T08:23:12Z] [Install-Nerdctl:42]: "This is a test message"
 WARNING:   [2025-05-20T08:23:12Z] [Install-Nerdctl:42]: "This is a test message"
 ```
 
-### Error level
+#### Error level
 
 ```PowerShell
 [Logger]::Log("This is a test message", "ERROR")
@@ -68,7 +68,7 @@ WARNING:   [2025-05-20T08:23:12Z] [Install-Nerdctl:42]: "This is a test message"
 ERROR:   [2025-05-20T08:23:12Z] [Install-Nerdctl:42]: "This is a test message"
 ```
 
-### Fatal level
+#### Fatal level
 
 Throws a terminating error.
 
@@ -85,8 +85,9 @@ Exception: Uncaught Critical message
 
 The logger uses the following environment variables to configure its behavior:
 
-| Variable                | Description                                                                                                                                                                                                                                  |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `$env:CTK_LOG_LEVEL`    | Sets the minimum log level. Accepted values are: `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `FATAL`. Defaults to `INFO` if not set.                                                                                                            |
-| `$env:CTK_LOG_FILE`     | Path to a file where logs should be written. If not set, logs will be written to the console and Windows Event Log (for applicable levels). **Note:** The logger does not handle log file rotation or cleanup—use external tooling for that. |
-| `$env:SKIP_CTK_LOGGING` | If set to `"true"`, suppresses console output for all log levels except `DEBUG` (when `$DebugPreference` is not `"SilentlyContinue"`). Logging to file (if set) and to the Windows Event Log (excluding `DEBUG`) still occurs.               |
+| Variable               | Type    | Description                                                                                                                                                                                                                                        |
+| ---------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CTK_LOG_LEVEL`        | String  | Sets the minimum log level. Accepted values are: `DEBUG`, `INFO`, `WARNING`, `ERROR`, and `FATAL`. <br>Defaults to `INFO` if not set.                                                                                                              |
+| `CTK_LOG_FILE`         | String  | Path to a file where logs should be written. If not set, logs will be written to the console and Windows Event Log (for applicable levels). <br>**Note:** The logger does not handle log file rotation or cleanup — use external tooling for that. |
+| `SKIP_CTK_LOGGING`     | Boolean | If set to `"true"`, suppresses console output for all log levels except `DEBUG` (when `$DebugPreference` is not `"SilentlyContinue"`). <br>Logging to file (if set) and to the Windows Event Log (excluding `DEBUG`) still occurs.                 |
+| `CTK_FORMAT_LOG`       | Boolean | If set to `"true"`, formats the log message with a timestamp and the calling function name. This is useful for debugging and tracking the source of log messages.                                                                                  |
