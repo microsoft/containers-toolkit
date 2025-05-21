@@ -1,10 +1,12 @@
-﻿###########################################################################
+###########################################################################
 #                                                                         #
 #   Copyright (c) Microsoft Corporation. All rights reserved.             #
 #                                                                         #
 #   This code is licensed under the MIT License (MIT).                    #
 #                                                                         #
 ###########################################################################
+
+using module "..\Private\logger.psm1"
 
 function Update-EnvironmentPath {
     [CmdletBinding(
@@ -57,7 +59,7 @@ function Update-EnvironmentPath {
             }
 
             if ($pathChanged) {
-                Write-Information -InformationAction Continue -MessageData "$ActionVerb $toAction in $PathType Environment Path"
+                [Logger]::Info("$ActionVerb $toAction in $PathType Environment Path")
 
                 # Get the updated path
                 $updatedPath = switch ($Action) {
@@ -68,7 +70,7 @@ function Update-EnvironmentPath {
 
                 # For tests, we do not want to update the environment path
                 if ($env:pester) {
-                    Write-Debug "Skipping environment path update for tests"
+                    [Logger]::Debug("Skipping environment path update for tests")
                     return $updatedPath
                 }
 
