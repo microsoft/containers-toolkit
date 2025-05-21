@@ -6,6 +6,7 @@
 #                                                                         #
 ###########################################################################
 
+using module ..\containers-toolkit\Private\Logger.psm1
 
 Describe "AllToolsUtilities.psm1" {
     BeforeAll {
@@ -17,6 +18,10 @@ Describe "AllToolsUtilities.psm1" {
         Import-Module -Name "$ModuleParentPath\Public\NerdctlTools.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Public\ContainerNetworkTools.psm1" -Force
         Import-Module -Name "$ModuleParentPath\Public\AllToolsUtilities.psm1" -Force
+
+        # Mock functions
+        Mock New-EventLog -ModuleName 'Logger'
+        Mock Write-EventLog -ModuleName 'Logger'
     }
 
     AfterAll {

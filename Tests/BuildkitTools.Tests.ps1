@@ -7,6 +7,7 @@
 ###########################################################################
 
 using module "..\containers-toolkit\Private\CommonToolUtilities.psm1"
+using module ..\containers-toolkit\Private\Logger.psm1
 
 Describe "BuildkitTools.psm1" {
     BeforeAll {
@@ -28,6 +29,8 @@ Describe "BuildkitTools.psm1" {
         # Mock functions
         function Test-ServiceRegistered { }
         Mock Test-ServiceRegistered -ModuleName 'BuildkitTools' -MockWith { return $true }
+        Mock New-EventLog -ModuleName 'Logger'
+        Mock Write-EventLog -ModuleName 'Logger'
     }
 
     AfterEach {

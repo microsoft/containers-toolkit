@@ -6,6 +6,7 @@
 #                                                                         #
 ###########################################################################
 
+using module ..\containers-toolkit\Private\Logger.psm1
 
 Describe "UpdateEnvironmentPath.psm1" {
     BeforeAll {
@@ -16,6 +17,10 @@ Describe "UpdateEnvironmentPath.psm1" {
         # Original enviromnent values
         $Script:originalUserPathString = $ENV:Path
         $Script:originalSysPathString = [System.Environment]::GetEnvironmentVariable("Path", "Machine")
+
+        # Mock functions
+        Mock New-EventLog -ModuleName 'Logger'
+        Mock Write-EventLog -ModuleName 'Logger'
     }
 
     AfterAll {
