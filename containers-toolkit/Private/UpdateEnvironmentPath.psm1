@@ -6,6 +6,8 @@
 #                                                                         #
 ###########################################################################
 
+using module "..\Private\logger.psm1"
+
 function Update-EnvironmentPath {
     [CmdletBinding(
         SupportsShouldProcess = $true
