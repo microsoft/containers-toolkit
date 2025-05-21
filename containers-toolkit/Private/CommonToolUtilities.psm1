@@ -283,7 +283,7 @@ function Get-InstallationFile {
                     Receive-File -Params $downloadParams
                 }
                 catch {
-                    [Logger]::Fatal("Failed to download $($downloadParams.Feature) release assets. $($_.Exception.Message)")
+                    [Logger]::Fatal($_.Exception.Message)
                 }
             }
 
