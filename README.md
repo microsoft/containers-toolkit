@@ -97,6 +97,23 @@ Get-Command -Module containers-toolkit
     Install-Containerd -Version "1.7.7" -InstallPath 'C:\Test\Path\Containerd'
     ```
 
+### Logging
+
+The module uses a static logger designed for use across module files within the **Containers Toolkit**. It supports configurable log levels, console output, optional log file writing, and integration with the **Windows Event Log**.
+The logger supports the following log levels:
+
+- `DEBUG`
+- `INFO`
+- `WARNING`
+- `ERROR`
+- `FATAL`
+
+For more details on the logger, please refer to the [Logger documentation](./docs/LOGGER.md).
+
+#### Logging Environment Variables
+
+See [Logger documentation](./docs/LOGGER.md#environment-variables) for more details on the environment variables used to control logging.
+
 ## Important Notes
 
 1. Requires elevated PowerShell to run some commands.
