@@ -7,6 +7,8 @@
 ###########################################################################
 
 
+using module "..\Private\logger.psm1"
+
 $ModuleParentPath = Split-Path -Parent $PSScriptRoot
 Import-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force
 
@@ -30,7 +32,7 @@ function Show-ContainerTools {
 
     $registerCommands = (Get-Command -Name "*-*Service" -Module 'Containers-Toolkit').Name -join ', '
     $message = "For unregistered services/daemons, check the tool's help or register the service using `n`t$registerCommands"
-    Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
+    [Logger]::Info($message)
     return $installedTools
 }
 
@@ -89,10 +91,10 @@ function Install-ContainerTools {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            Write-Output "The following tools will be installed: $toInstallString"
+            [Logger]::Info("The following tools will be installed: $toInstallString")
 
-            Write-Debug "Downloading files to $DownloadPath"
-            Write-Debug "Installing files to $InstallPath"
+            [Logger]::Debug("Downloading files to $DownloadPath")
+            [Logger]::Debug("Installing files to $InstallPath")
 
             $completedInstalls = @()
             $failedInstalls = @()
@@ -135,17 +137,17 @@ function Install-ContainerTools {
                     $completedInstalls += $task.Name
                 }
                 catch {
-                    Write-Error "$($task.Name) installation failed. $_"
+                    [Logger]::Error("$($task.Name) installation failed. $_")
                     $failedInstalls += $task.Name
                 }
             }
 
             if ($completedInstalls) {
-                Write-Output "$($completedInstalls -join ', ') installed successfully.`n"
+                [Logger]::Info("$($completedInstalls -join ', ') installed successfully.`n")
             }
 
             if ($failedInstalls) {
-                Write-Warning "Installation failed for $($failedInstalls -join ', ')`n"
+                [Logger]::Warning("Installation failed for $($failedInstalls -join ', ')`n")
             }
 
             if ($RegisterServices) {
@@ -153,7 +155,7 @@ function Install-ContainerTools {
                     Initialize-NatNetwork -Force:$force -Confirm:$false
                 }
                 catch {
-                    Write-Error "Failed to initialize NAT network. $_"
+                    [Logger]::Error("Failed to initialize NAT network. $_")
                 }
             }
             else {
@@ -163,10 +165,10 @@ To register containerd and buildkitd services and create a NAT network, see help
     Get-Help Register-BuildkitdService
     Get-Help Initialize-NatNetwork
 "@
-                Write-Information -MessageData $message -Tags "Instructions" -InformationAction Continue
+                [Logger]::Info($message)
             }
 
-            Write-Output "Installation complete. See logs for more details"
+            [Logger]::Info("Installation complete. See logs for more details")
         }
         else {
             # Code that should be processed if doing a WhatIf operation
