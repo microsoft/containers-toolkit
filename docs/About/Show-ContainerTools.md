@@ -1,4 +1,4 @@
----
+﻿---
 external help file: Containers-Toolkit-help.xml
 Module Name: Containers-Toolkit
 online version:
@@ -13,8 +13,8 @@ List container tools (Containerd, BuildKit, and nerdctl) install status.
 
 ## SYNTAX
 
-```PowerShell
-Show-ContainerTools [-Latest] [-ToolName <String>] [<CommonParameters>]
+```
+Show-ContainerTools [-Latest] [-ToolName <String[]>] [<CommonParameters>]
 ```
 
 ## DESCRIPTION
@@ -27,14 +27,12 @@ List container tools (Containerd, BuildKit, nerdctl) and shows if the tool is in
 
 ```powershell
 PS C:\> Show-ContainerTools -Latest
-```
 
-```Output
-Tool       Installed Version LatestVersion
-----       --------- ------- -------------
-containerd      True v1.7.7  v1.7.7
-buildkit        True v0.12.2 v0.12.2
-nerdctl         True unknown v1.6.1
+        Tool        Installed   Version     LatestVersion
+        ------      ------      ------      ------
+        containerd  True        v1.7.7      v1.7.7
+        buildkit    False       -           v0.12.2
+        nerdctl     True        unknown     v1.6.1
 ```
 
 ## PARAMETERS
@@ -50,10 +48,31 @@ Aliases:
 
 Required: False
 Position: Named
-Default value: None
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
+
+### -ToolName
+
+Displays the version of a specified tool.
+If no tool is specified, it returns the versions of containerd, buildkit, and nerdctl.
+
+```yaml
+Type: String[]
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: Null
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## OUTPUTS
 
@@ -73,7 +92,8 @@ Returns an array of [PSCustomObject](https://learn.microsoft.com/en-us/dotnet/ap
 ## NOTES
 
 1. This information may not be accurate if a tool's paths has not been added to environment path.
-2. A daemon's status could be unavailable if it has not been installed
+2. A daemon's status could be unavailable if the service has not been registered or started.
+3. The latest version is fetched from the GitHub releases page of the tool.
 
 ## RELATED LINKS
 

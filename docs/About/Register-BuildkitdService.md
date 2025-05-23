@@ -52,8 +52,24 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 0
-Default value: Buildkit path in the environment path variable or $Env:ProgramFiles\Buildkit
+Position: 1
+Default value: $Env:ProgramFiles\Buildkit
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### -Force
+
+Bypass confirmation to register buildkitd service
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases:
+
+Required: False
+Position: Named
+Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
@@ -77,7 +93,7 @@ Accept wildcard characters: False
 ### -WinCNIPath
 
 Path where Windows CNI plugin is installed.
-If not provided, it defaults to Containerd path in the environment path variable or \`$Env:ProgramFiles\Containerd\`
+If not provided, it defaults to Containerd path in the environment path variable or `$Env:ProgramFiles\Containerd`
 
 ```yaml
 Type: String
@@ -85,20 +101,20 @@ Parameter Sets: (All)
 Aliases:
 
 Required: False
-Position: 1
-Default value: Containerd path in the environment path variable or $Env:ProgramFiles\Containerd
+Position: 0
+Default value: $Env:ProgramFiles\Containerd
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
 
-### -WhatIf
+### -Confirm
 
-Shows what would happen if the cmdlet runs. The cmdlet isn't run.
+Prompts you for confirmation before running the cmdlet.
 
 ```yaml
 Type: SwitchParameter
-Parameter Sets: Setup
-Aliases:
+Parameter Sets: (All)
+Aliases: cf
 
 Required: False
 Position: Named
@@ -106,6 +122,27 @@ Default value: False
 Accept pipeline input: False
 Accept wildcard characters: False
 ```
+
+### -WhatIf
+
+Shows what would happen if the cmdlet runs.
+The cmdlet is not run.
+
+```yaml
+Type: SwitchParameter
+Parameter Sets: (All)
+Aliases: wi
+
+Required: False
+Position: Named
+Default value: False
+Accept pipeline input: False
+Accept wildcard characters: False
+```
+
+### CommonParameters
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## NOTES
 
