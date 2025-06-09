@@ -69,6 +69,7 @@ Note that the HostNetworkingService module is available only when the Hyper-V Wi
     NestedModules     = @(
         'Private\CommonToolUtilities.psm1',
         'Private\UpdateEnvironmentPath.psm1',
+        'Private\Json-Validator.psm1',
         'Public\AllToolsUtilities.psm1',
         'Public\BuildkitTools.psm1',
         'Public\ContainerdTools.psm1',
@@ -125,6 +126,7 @@ Note that the HostNetworkingService module is available only when the Hyper-V Wi
     FileList          = @(
         './Private/CommonToolUtilities.psm1',
         './Private/UpdateEnvironmentPath.psm1',
+        './Private/Json-Validator.psm1',
         './Public/AllToolsUtilities.psm1',
         './Public/BuildkitTools.psm1',
         './Public/ContainerdTools.psm1',

@@ -650,11 +650,18 @@ function ValidateJSONChecksumFile {
 
     # Test JSON checksum file is valid
     try {
+        # Check if Test-Json cmdlet is available
+        if (-not (Get-Command -Name Test-Json -ErrorAction SilentlyContinue)) {
+            Write-Debug "Using custom JSON validation module."
+            Import-Module (Join-Path $ModuleParentPath "Private\Json-Validator.psm1") -DisableNameChecking -Force -ErrorAction Stop
+        } else {
+            Write-Debug "Using built-in Test-Json cmdlet."
+        }
         $isValidJSON = Test-Json -Json "$(Get-Content -Path $ChecksumFilePath -Raw)" -Schema "$schemaFileContent"
         return $isValidJSON
     }
     catch {
-        Throw "Invalid JSON format in checksum file. $_"
+        Throw "Error validating JSON checksum file. $($_.Exception.Message)"
     }
 }
 

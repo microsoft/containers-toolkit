@@ -534,6 +534,17 @@ Describe "CommonToolUtilities.psm1" {
                 -ParameterFilter { $Path -eq $Script:ChecksumFile }
         }
 
+        It "should use custom Test-JSON if command not exists" {
+            Mock Get-Command -ModuleName "CommonToolUtilities" -MockWith { return $null }
+            Mock Get-Content -ModuleName "CommonToolUtilities" `
+                -MockWith { return ($SbomJson -replace "__CHECKSUM__", "SampleHash") } `
+                -ParameterFilter { $Path -eq $Script:ChecksumFile }
+
+            # We rely on the absence of the required types (Newtonsoft.Json)
+            # to confirm that your fallback logic is being exercised.
+            { & $Script:FunctionToCall } | Should -Throw "*Unable to find type*Newtonsoft.Json*"
+        }
+
         It "should throw an error if checksum file does not exist" {
             Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $false } -ParameterFilter { $Path -eq $Script:ChecksumFile }
 
@@ -583,7 +594,7 @@ Describe "CommonToolUtilities.psm1" {
             Mock Test-Json -ModuleName "CommonToolUtilities" -MockWith { Throw "Error" }
 
             # Test the function
-            { & $Script:FunctionToCall } | Should -Throw "Invalid JSON format in checksum file. Error"
+            { & $Script:FunctionToCall } | Should -Throw "Error validating JSON checksum file. Error"
         }
 
         It "should throw an error if script block throws an error" {

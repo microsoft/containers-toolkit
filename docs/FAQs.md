@@ -5,6 +5,7 @@
 - [`Import-Module` issues](#import-module-issues)
 - [Tool uninstall issues](#tool-uninstall-issues)
 - [`Initialize-NatNetwork` issues](#initialize-natnetwork-issues)
+- [`'Test-Json' is not recognized as the name of a cmdlet`](#test-json-is-not-recognized-as-the-name-of-a-cmdlet)
 
 ## `Import-Module` issues
 
@@ -107,3 +108,42 @@ Import-Module HNS
 > [!CAUTION]  
 > **We do not recommend** using the [_third-party_ HNS module](https://www.powershellgallery.com/packages/HNS/0.2.4) available in the PowerShell Gallery. This module is **NOT** maintained and signed by Microsoft and may not be up-to-date with the latest changes in the HNS module.
 > _Microsoft does **NOT** take any responsibility for issues that may arise from installing and/or execution of commands in any third-party modules/scripts. Install the _third-party_ HNS module at your own risk!_
+
+## `'Test-Json' is not recognized as the name of a cmdlet`
+
+This error occurs because the `Test-Json` cmdlet was introduced in **PowerShell 6.1** and is not available in **Windows PowerShell 5.1** or earlier. To maintain compatibility, a custom implementation of `Test-Json` is provided for environments where the native cmdlet is unavailable.
+
+To enable this compatibility, you must ensure that the `Newtonsoft.Json` and `Newtonsoft.Json.Schema` assemblies are loaded in your PowerShell session. You can do this in one of two ways:
+
+**Option 1 – Use the loader script**
+
+Use the `Load-NewtonsoftDlls` script to automatically download and load the required assemblies:
+
+```powershell
+.\build\hacks\Load-NewtonsoftDlls.ps1
+```
+
+**Option 2 – Load the assemblies manually**
+
+1. **Download the NuGet package**:
+
+   ```powershell
+   $newtonsoftDir = \"$env:USERPROFILE\Documents\PowerShell\Modules\Newtonsoft.Json\"
+   nuget.exe install Newtonsoft.Json.Schema -OutputDirectory $newtonsoftDir -Framework \"net45\" -ExcludeVersion
+   ```
+
+2. **Load the assemblies**:
+
+   ```powershell
+   $jsondllPath = \"$newtonsoftDir\\Newtonsoft.Json\\lib\\net45\\Newtonsoft.Json.dll\"
+   [Reflection.Assembly]::LoadFile($jsondllPath) | Out-Null
+
+   $schemadllPath = \"$newtonsoftDir\\Newtonsoft.Json.Schema\\lib\\net45\\Newtonsoft.Json.Schema.dll\"
+   [Reflection.Assembly]::LoadFile($schemadllPath) | Out-Null
+   ```
+
+### Reference
+
+- [Test-Json](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/test-json?view=powershell-7.4)
+- [Newtonsoft.Json](https://www.nuget.org/packages/Newtonsoft.Json#supportedframeworks-body-tab)
+- [Differences between Windows PowerShell 5.1 and PowerShell 7.x](https://learn.microsoft.com/en-us/powershell/scripting/whats-new/differences-from-windows-powershell?view=powershell-7.5#new-test-json-cmdlet)
