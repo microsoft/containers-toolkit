@@ -224,10 +224,11 @@ function Uninstall-Nerdctl {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            if (Test-EmptyDirectory -Path "$path") {
-                Write-Output "$tool does not exist at '$Path' or the directory is empty"
-                return
-            }
+
+            # if (Test-EmptyDirectory -Path "$path") {
+            #     Write-Output "$tool does not exist at '$Path' or the directory is empty"
+            #     return
+            # }
 
             $consent = $force
             if (!$ENV:PESTER) {
@@ -239,11 +240,15 @@ function Uninstall-Nerdctl {
                 return
             }
 
+            $executablePath = (Get-ChildItem -Path "$path" -Filter "nerdctl.exe" -Recurse | Select-Object -First 1).FullName
+            Write-Debug "nerdctl executable path: $executablePath"
+
             Write-Warning "Uninstalling preinstalled $tool at the path '$path'.`n$WhatIfMessage"
             try {
-                if ($Purge) {
+                if ($executablePath -and $Purge) {
                     # Remove all unused images, not just dangling ones
-                    $cmdOutput = Invoke-ExecutableCommand -Executable "$path\nerdctl.exe" -Arguments "system prune --all"
+                    Write-Debug "Pruning all unused images..."
+                    $cmdOutput = Invoke-ExecutableCommand -Executable "$executablePath" -Arguments "system prune --all --force"
                     if ($cmdOutput.ExitCode -ne 0) {
                         Write-Warning "Couldn't prune images. $($cmdOutput.StandardError.ReadToEnd())"
                     }
@@ -275,12 +280,12 @@ function Uninstall-NerdctlHelper {
     )
 
     if (Test-EmptyDirectory -Path "$Path") {
-        Write-Error "nerdctl does not exist at '$Path' or the directory is empty."
-        return
-    }
+        # Write-Error "nerdctl does not exist at '$Path' or the directory is empty."
+        # return
 
-    # Remove the folder where nerdctl is installed and related folders
-    Remove-Item -Path "$Path" -Recurse -Force
+        # Remove the folder where nerdctl is installed and related folders
+        Remove-Item -Path "$Path" -Recurse -Force
+    }
 
     if ($Purge) {
         Write-Output "Purging nerdctl program data"
