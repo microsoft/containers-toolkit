@@ -242,13 +242,13 @@ function Register-ContainerdService {
 
             Write-Output "Configuring containerd service"
 
-            Add-MpPreference -ExclusionProcess $containerdExecutable
+            Add-MpPreference -ExclusionProcess "$containerdExecutable"
 
             # Get default containerd config and write to file
             $containerdConfigFile = "$ContainerdPath\config.toml"
             Write-Debug "Containerd config file: $containerdConfigFile"
 
-            $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "config default"
+            $output = Invoke-ExecutableCommand -Executable "$containerdExecutable" -Arguments "config default"
             $output.StandardOutput.ReadToEnd() | Out-File -FilePath $containerdConfigFile -Encoding ascii -Force
 
             # Check config file is not empty
@@ -260,7 +260,7 @@ function Register-ContainerdService {
             Write-Output "Review containerd configutations at $containerdConfigFile"
 
             # Register containerd service
-            $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "--register-service --log-level debug --service-name containerd --log-file `"$env:TEMP\containerd.log`""
+            $output = Invoke-ExecutableCommand -Executable "$containerdExecutable" -Arguments "--register-service --log-level debug --service-name containerd --log-file `"$env:TEMP\containerd.log`""
             if ($output.ExitCode -ne 0) {
                 Throw "Failed to register containerd service. $($output.StandardError.ReadToEnd())"
             }
@@ -331,10 +331,10 @@ function Uninstall-Containerd {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            if (Test-EmptyDirectory -Path $path) {
-                Write-Output "$tool does not exist at $Path or the directory is empty"
-                return
-            }
+            # if (Test-EmptyDirectory -Path $path) {
+            #     Write-Output "$tool does not exist at $Path or the directory is empty"
+            #     return
+            # }
 
             $consent = $force
             if (!$ENV:PESTER) {
@@ -372,23 +372,23 @@ function Uninstall-ContainerdHelper {
         [Switch] $Purge
     )
 
-    if (Test-EmptyDirectory -Path "$Path") {
-        Write-Error "Containerd does not exist at $Path or the directory is empty."
-        return
-    }
+    if (-not (Test-EmptyDirectory -Path "$Path")) {
+        # Write-Error "Containerd does not exist at $Path or the directory is empty."
+        # return
 
-    try {
-        if (Test-ServiceRegistered -Service 'containerd') {
-            Stop-ContainerdService
-            Unregister-Containerd -ContainerdPath "$Path"
+        try {
+            if (Test-ServiceRegistered -Service 'containerd') {
+                Stop-ContainerdService
+                Unregister-Containerd -ContainerdPath "$Path"
+            }
         }
-    }
-    catch {
-        Throw "Could not stop or unregister containerd service. $_"
-    }
+        catch {
+            Throw "Could not stop or unregister containerd service. $_"
+        }
 
-    # Remove the folder where containerd is installed and related folders
-    Remove-Item -Path "$Path" -Recurse -Force
+        # Remove the folder where containerd is installed and related folders
+        Remove-Item -Path "$Path" -Recurse -Force
+    }
 
     if ($Purge) {
         Write-Output "Purging Containerd program data"
@@ -417,7 +417,7 @@ function Unregister-Containerd ($containerdPath) {
 
     # Unregister containerd service
     $containerdExecutable = (Get-ChildItem -Path "$ContainerdPath" -Recurse -Filter "containerd.exe").FullName | Select-Object -First 1
-    $output = Invoke-ExecutableCommand -Executable $containerdExecutable -Arguments "--unregister-service"
+    $output = Invoke-ExecutableCommand -Executable "$containerdExecutable" -Arguments "--unregister-service"
     if ($output.ExitCode -ne 0) {
         Throw "Could not unregister containerd service. $($output.StandardError.ReadToEnd())"
     }
