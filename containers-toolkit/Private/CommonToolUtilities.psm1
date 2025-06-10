@@ -67,8 +67,8 @@ public enum ActionConsent {
 }
 '@
 
-$HASH_FUNCTIONS = @("SHA1", "SHA256", "SHA384", "SHA512", "MD5")
-$HASH_FUNCTIONS_STR = $HASH_FUNCTIONS -join '|' # SHA1|SHA256|SHA384|SHA512|MD5
+$HASH_FUNCTIONS = @("SHA256", "SHA384", "SHA512")
+$HASH_FUNCTIONS_STR = $HASH_FUNCTIONS -join '|' # SHA256|SHA384|SHA512
 $NERDCTL_CHECKSUM_FILE_PATTERN = "(?<hashfunction>(?:^({0})))" -f ($HASH_FUNCTIONS -join '|')
 $NERDCTL_FILTER_SCRIPTBLOCK_STR = { (("{0}" -match "$NERDCTL_CHECKSUM_FILE_PATTERN") -and "{0}" -notmatch ".*.asc$") }.ToString()
 
@@ -652,10 +652,8 @@ function ValidateJSONChecksumFile {
     try {
         # Check if Test-Json cmdlet is available
         if (-not (Get-Command -Name Test-Json -ErrorAction SilentlyContinue)) {
-            Write-Debug "Using custom JSON validation module."
-            Import-Module (Join-Path $ModuleParentPath "Private\Json-Validator.psm1") -DisableNameChecking -Force -ErrorAction Stop
-        } else {
-            Write-Debug "Using built-in Test-Json cmdlet."
+            Write-Warning "Couldn't validate JSON checksum file. Test-Json cmdlet is not available. Upgrade to PowerShell 6.1 or later to use this feature."
+            return $false
         }
         $isValidJSON = Test-Json -Json "$(Get-Content -Path $ChecksumFilePath -Raw)" -Schema "$schemaFileContent"
         return $isValidJSON

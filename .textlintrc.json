@@ -38,7 +38,6 @@
         "/nat/gi",
         "NatNetwork",
         "nerdctl",
-        "/nuget/gi",
         "PowerShell",
         "/PSCustomObject/gi",
         "subnet",
