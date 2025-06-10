@@ -579,6 +579,9 @@ function Test-JSONChecksum {
     # Validate the checksum file
     $isJsonValid = ValidateJSONChecksumFile -ChecksumFilePath $checksumFile -SchemaFile $SchemaFile
     Write-Debug "Checksum JSON file validation status. {success: $isJsonValid}"
+    if ($isJsonValid -eq $false) {
+        Throw "Checksum file validation failed for $checksumFile. Please check the file format and schema."
+    }
 
     if ($null -eq $ExtractDigestScriptBlock) {
         Write-Debug "Using default JSON checksum extraction script block"
@@ -653,7 +656,7 @@ function ValidateJSONChecksumFile {
         # Check if Test-Json cmdlet is available
         if (-not (Get-Command -Name Test-Json -ErrorAction SilentlyContinue)) {
             Write-Warning "Couldn't validate JSON checksum file. Test-Json cmdlet is not available. Upgrade to PowerShell 6.1 or later to use this feature."
-            return $false
+            return $null
         }
         $isValidJSON = Test-Json -Json "$(Get-Content -Path $ChecksumFilePath -Raw)" -Schema "$schemaFileContent"
         return $isValidJSON
