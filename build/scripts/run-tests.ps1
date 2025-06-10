@@ -151,6 +151,8 @@ $config.CodeCoverage.OutputPath = "$RootDir\TestResults\coverage.xml"
 $config.CodeCoverage.Path = @( "$ModuleParentPath\Private", "$ModuleParentPath\Public" )
 $config.Run.Exit = $False
 $config.Run.Container = $array
+$config.TestDrive.Enabled = $true
+$config.TestRegistry.Enabled = $true
 
 Invoke-Pester -Configuration $config
 

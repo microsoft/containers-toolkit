@@ -1,0 +1,85 @@
+#########################################################
+# This pipeline is used to run end-to-end tests
+# for the Containers Toolkit PowerShell module.
+# The pipeline should run on ADO when changes are pushed
+# to the main branch or when a pull request is created
+# against the main branch.
+# We run the E2E tests on:
+# - Windows Server 2025
+# - Windows Server 2022
+# - Windows Server 2019
+# The tests are run using both PowerShell Core and Windows PowerShell.
+#########################################################
+
+name: e2e
+trigger:
+  branches:
+    include:
+      - main
+      - release/*
+  paths:
+    include:
+      - build/e2e.yaml
+      - containers-toolkit/*
+
+# The difference in the two jobs is that the first one runs the E2E tests using PowerShell Core (pwsh: true),
+# while the second one runs them using Windows PowerShell (pwsh: false).
+# By default, PowerShell v2 uses PowerShell Core for Linux agents and Windows PowerShell for Windows agents.
+# To use the latest version of PowerShell on Windows agents, set the pwsh parameter to true.
+# PowerShell Core will then be used instead.
+# https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/powershell-v2?view=azure-pipelines
+# We run a separate job for each to ensure that the tests are run a clean environment for each PowerShell version.
+jobs:
+
+# pwsh: true (PowerShell Core)
+- job: PowerShellCoreE2ETests
+  displayName: 'Run E2E Tests on PowerShell Core'
+  strategy:
+    matrix:
+      windows-latest:
+        imageName: 'windows-latest'
+      windows-2022:
+        imageName: 'windows-2022'
+      windows-2019:
+        imageName: 'windows-2019'
+  pool:
+    vmImage: $(imageName)
+  steps:
+    - task: PowerShell@2
+      displayName: Run E2E Tests on PowerShell Core
+      inputs:
+        pwsh: true
+        continueOnError: true
+        targetType: 'filePath'
+        filePath: "$(Build.SourcesDirectory)/build/e2e/e2e.ps1"
+        errorActionPreference: 'stop'
+        failOnStderr: true
+        ignoreLASTEXITCODE: false
+        showWarnings: true
+
+
+# pwsh: false (Windows PowerShell)
+- job: WindowsPowerShellE2ETests
+  displayName: 'Run E2E Tests on Windows PowerShell'
+  strategy:
+    matrix:
+      windows-latest:
+        imageName: 'windows-latest'
+      windows-2022:
+        imageName: 'windows-2022'
+      windows-2019:
+        imageName: 'windows-2019'
+  pool:
+    vmImage: $(imageName)
+  steps:
+    - task: PowerShell@2
+      displayName: Run E2E Tests on Windows PowerShell
+      inputs:
+        pwsh: false
+        continueOnError: true
+        targetType: 'filePath'
+        filePath: "$(Build.SourcesDirectory)/build/e2e/e2e.ps1"
+        errorActionPreference: 'stop'
+        failOnStderr: true
+        ignoreLASTEXITCODE: false
+        showWarnings: true
