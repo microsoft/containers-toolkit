@@ -534,6 +534,15 @@ Describe "CommonToolUtilities.psm1" {
                 -ParameterFilter { $Path -eq $Script:ChecksumFile }
         }
 
+        It "should skip JSON validation when Test-Json is not available" {
+            Mock Get-Command -ModuleName "CommonToolUtilities" -MockWith { return $null } -ParameterFilter {
+                $Name -eq 'Test-Json'
+            }
+
+            { & $Script:FunctionToCall } | Should -Not -Throw
+            Should -Invoke Test-Json -Times 0 -Scope It -ModuleName "CommonToolUtilities"
+        }
+
         It "should throw an error if checksum file does not exist" {
             Mock Test-Path -ModuleName "CommonToolUtilities" -MockWith { return $false } -ParameterFilter { $Path -eq $Script:ChecksumFile }
 
@@ -576,14 +585,24 @@ Describe "CommonToolUtilities.psm1" {
             { & $Script:FunctionToCall } | Should -Throw "Invalid schema file: $Script:SchemaFile. Schema file is empty."
         }
 
-        It "should throw an error if the JSON file is not valid" {
+        It "should throw an error if Test-Json fails" {
             Mock Get-Content -ModuleName "CommonToolUtilities" -MockWith { return "Test data" }
 
             # Test-Json returns true if the JSON is valid, otherwise it throws an error
             Mock Test-Json -ModuleName "CommonToolUtilities" -MockWith { Throw "Error" }
 
             # Test the function
-            { & $Script:FunctionToCall } | Should -Throw "Invalid JSON format in checksum file. Error"
+            { & $Script:FunctionToCall } | Should -Throw "Error validating JSON checksum file. Error"
+        }
+
+        It "should throw an error if the JSON file is not valid" {
+            Mock Get-Content -ModuleName "CommonToolUtilities" -MockWith { return "Test data" }
+
+            # Test-Json returns true if the JSON is valid, otherwise it throws an error
+            Mock Test-Json -ModuleName "CommonToolUtilities" -MockWith { return $false }
+
+            # Test the function
+            { & $Script:FunctionToCall } | Should -Throw "Checksum file validation failed for $Script:ChecksumFile. Please check the file format and schema."
         }
 
         It "should throw an error if script block throws an error" {

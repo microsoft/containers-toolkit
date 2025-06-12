@@ -32,6 +32,8 @@ You can find documentation for these functions here: [Containers-Toolkit Documen
 
 1. PowerShell: Minimum Version 7
 
+    > NOTE: While this module is developed and tested with PowerShell 7, it may work with PowerShell 5.1, but it is not guaranteed. PowerShell 7 is recommended for the best experience.
+
 1. `HNS` module
 
     To install the HNS module, follow the [instructions here](./docs/FAQs.md#2-new-hnsnetwork-command-does-not-exist)

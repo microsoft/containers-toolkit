@@ -67,8 +67,8 @@ public enum ActionConsent {
 }
 '@
 
-$HASH_FUNCTIONS = @("SHA1", "SHA256", "SHA384", "SHA512", "MD5")
-$HASH_FUNCTIONS_STR = $HASH_FUNCTIONS -join '|' # SHA1|SHA256|SHA384|SHA512|MD5
+$HASH_FUNCTIONS = @("SHA256", "SHA384", "SHA512")
+$HASH_FUNCTIONS_STR = $HASH_FUNCTIONS -join '|' # SHA256|SHA384|SHA512
 $NERDCTL_CHECKSUM_FILE_PATTERN = "(?<hashfunction>(?:^({0})))" -f ($HASH_FUNCTIONS -join '|')
 $NERDCTL_FILTER_SCRIPTBLOCK_STR = { (("{0}" -match "$NERDCTL_CHECKSUM_FILE_PATTERN") -and "{0}" -notmatch ".*.asc$") }.ToString()
 
@@ -579,6 +579,9 @@ function Test-JSONChecksum {
     # Validate the checksum file
     $isJsonValid = ValidateJSONChecksumFile -ChecksumFilePath $checksumFile -SchemaFile $SchemaFile
     Write-Debug "Checksum JSON file validation status. {success: $isJsonValid}"
+    if ($isJsonValid -eq $false) {
+        Throw "Checksum file validation failed for $checksumFile. Please check the file format and schema."
+    }
 
     if ($null -eq $ExtractDigestScriptBlock) {
         Write-Debug "Using default JSON checksum extraction script block"
@@ -650,11 +653,16 @@ function ValidateJSONChecksumFile {
 
     # Test JSON checksum file is valid
     try {
+        # Check if Test-Json cmdlet is available
+        if (-not (Get-Command -Name Test-Json -ErrorAction SilentlyContinue)) {
+            Write-Warning "Couldn't validate JSON checksum file. Test-Json cmdlet is not available. Upgrade to PowerShell 6.1 or later to use this feature."
+            return $null
+        }
         $isValidJSON = Test-Json -Json "$(Get-Content -Path $ChecksumFilePath -Raw)" -Schema "$schemaFileContent"
         return $isValidJSON
     }
     catch {
-        Throw "Invalid JSON format in checksum file. $_"
+        Throw "Error validating JSON checksum file. $($_.Exception.Message)"
     }
 }
 
