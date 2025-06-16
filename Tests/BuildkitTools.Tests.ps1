@@ -32,8 +32,6 @@ Describe "BuildkitTools.psm1" {
         function CleanupTestDrive {
             Get-ChildItem -Path "$TestDrive" -Force -ErrorAction SilentlyContinue | `
                 Remove-Item -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
-            Get-ChildItem -Path "TestDrive:\" -Recurse -Force -ErrorAction SilentlyContinue | `
-                Remove-Item -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
         }
     }
 
@@ -111,10 +109,10 @@ Describe "BuildkitTools.psm1" {
         }
 
         It "Should call function with user-specified values" {
-            $customPath = "TestDrive:\Downloads\buildkit-v0.2.3.windows-amd64.tar.gz"
+            $customPath = "$TestDrive\Downloads\buildkit-v0.2.3.windows-amd64.tar.gz"
             Mock Get-InstallationFile -ModuleName 'BuildkitTools' -MockWith { return $customPath }
 
-            Install-Buildkit -Version '0.2.3' -InstallPath 'TestDrive:\BuildKit' -DownloadPath 'TestDrive:\Downloads' -OSArchitecture "arm64" -Force -Confirm:$false
+            Install-Buildkit -Version '0.2.3' -InstallPath "$TestDrive\BuildKit" -DownloadPath "$TestDrive\Downloads" -OSArchitecture "arm64" -Force -Confirm:$false
 
             Should -Invoke Uninstall-Buildkit -ModuleName 'BuildkitTools' -Times 0 -Exactly -Scope It
             Should -Invoke Get-InstallationFile -ModuleName 'BuildkitTools' -ParameterFilter {
@@ -123,9 +121,9 @@ Describe "BuildkitTools.psm1" {
             }
             Should -Invoke Install-RequiredFeature -ModuleName 'BuildkitTools' -ParameterFilter {
                 $Feature -eq "Buildkit" -and
-                $InstallPath -eq 'TestDrive:\BuildKit' -and
+                $InstallPath -eq "$TestDrive\BuildKit" -and
                 $SourceFile -eq "$customPath" -and
-                $EnvPath -eq 'TestDrive:\Buildkit\bin' -and
+                $EnvPath -eq "$TestDrive\Buildkit\bin" -and
                 $cleanup -eq $true
             }
         }
@@ -310,7 +308,7 @@ Describe "BuildkitTools.psm1" {
 
     Context "Uninstall-Buildkit" -Tag "Uninstall-Buildkit" {
         BeforeAll {
-            Mock Get-DefaultInstallPath -ModuleName 'BuildkitTools' -MockWith { return 'TestDrive:\Program Files\Buildkit' }
+            Mock Get-DefaultInstallPath -ModuleName 'BuildkitTools' -MockWith { return "$TestDrive\Program Files\Buildkit" }
             Mock Test-EmptyDirectory -ModuleName 'BuildkitTools' -MockWith { return  $false }
             Mock Stop-BuildkitdService -ModuleName 'BuildkitTools'
             Mock Unregister-Buildkitd -ModuleName 'BuildkitTools'
@@ -320,7 +318,7 @@ Describe "BuildkitTools.psm1" {
         }
 
         It "Should successfully uninstall Buildkit" {
-            Uninstall-Buildkit -Path 'TestDrive:\Custom\Buildkit\' -Confirm:$false -Force
+            Uninstall-Buildkit -Path "$TestDrive\Custom\Buildkit\" -Confirm:$false -Force
 
             # Should stop and deregister the buildkitd service
             Should -Invoke Stop-BuildkitdService -Times 1 -Scope It -ModuleName "BuildkitTools"
@@ -328,7 +326,7 @@ Describe "BuildkitTools.psm1" {
 
             # Should remove buildkit dir
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "BuildkitTools" `
-                -ParameterFilter { $Path -eq 'TestDrive:\Custom\Buildkit\bin' }
+                -ParameterFilter { $Path -eq "$TestDrive\Custom\Buildkit\bin" }
 
             # Should not purge program data
             Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "BuildkitTools" `
@@ -343,15 +341,15 @@ Describe "BuildkitTools.psm1" {
             Uninstall-Buildkit -Confirm:$false -Force
 
             Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "BuildkitTools" `
-                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Buildkit\bin' }
+                -ParameterFilter { $Path -eq "$TestDrive\Program Files\Buildkit\bin" }
         }
 
         It "Should successfully purge program data" {
-            Uninstall-Buildkit -Path 'TestDrive:\Program Files\Buildkit' -Confirm:$false -Force -Purge
+            Uninstall-Buildkit -Path "$TestDrive\Program Files\Buildkit" -Confirm:$false -Force -Purge
 
             # Should purge program data
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "BuildkitTools" `
-                -ParameterFilter { $Path -eq 'TestDrive:\Program Files\Buildkit' }
+                -ParameterFilter { $Path -eq "$TestDrive\Program Files\Buildkit" }
             Should -Invoke Uninstall-ProgramFiles -Times 1 -Scope It -ModuleName "BuildkitTools" `
                 -ParameterFilter { $Path -eq "$ENV:ProgramData\Buildkit" }
             Should -Invoke Remove-FeatureFromPath -Times 1 -Scope It -ModuleName "BuildkitTools" `
@@ -360,7 +358,7 @@ Describe "BuildkitTools.psm1" {
 
         It "Should do nothing if user does not consent to uninstalling Buildkit" {
             $ENV:PESTER = $true
-            Uninstall-Buildkit -Path 'TestDrive:\Program Files\Buildkit' -Confirm:$false -Force:$false
+            Uninstall-Buildkit -Path "$TestDrive\Program Files\Buildkit" -Confirm:$false -Force:$false
 
             # Should NOT stop and deregister the buildkit service
             Should -Invoke Stop-BuildkitdService -Times 0 -Scope It -ModuleName "BuildkitTools"
@@ -373,7 +371,7 @@ Describe "BuildkitTools.psm1" {
         It "Should do nothing if buildkit is not installed at specified path" {
             Mock Test-EmptyDirectory -ModuleName 'BuildkitTools' -MockWith { return $true }
 
-            Uninstall-Buildkit -Path 'TestDrive:\Program Files\Buildkit' -Confirm:$false
+            Uninstall-Buildkit -Path "$TestDrive\Program Files\Buildkit" -Confirm:$false
 
             Should -Invoke Stop-BuildkitdService -Times 0 -Scope It -ModuleName "BuildkitTools"
             Should -Invoke Unregister-Buildkitd -Times 0 -Scope It -ModuleName "BuildkitTools"
@@ -383,7 +381,7 @@ Describe "BuildkitTools.psm1" {
         It "Should throw an error if buildkitd service stop or unregister was unsuccessful" {
             Mock Stop-BuildkitdService -ModuleName 'BuildkitTools' -MockWith { Throw 'Error' }
 
-            { Uninstall-Buildkit -Path 'TestDrive:\Program Files\Buildkit' -Confirm:$false -Force -Purge } | Should -Throw "*Could not stop or unregister buildkitd service.*"
+            { Uninstall-Buildkit -Path "$TestDrive\Program Files\Buildkit" -Confirm:$false -Force -Purge } | Should -Throw "*Could not stop or unregister buildkitd service.*"
             Should -Invoke Unregister-Buildkitd -Times 0 -Scope It -ModuleName "BuildkitTools"
             Should -Invoke Remove-Item -Times 0 -Scope It -ModuleName "BuildkitTools"
             Should -Invoke Remove-FeatureFromPath -Times 0 -Scope It -ModuleName "BuildkitTools"

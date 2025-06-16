@@ -140,7 +140,7 @@ function Install-Buildkit {
                 }
             }
             catch {
-                Write-Warning "Failed to setup Buildkitd service. $_"
+                Write-Warning "Failed to set up Buildkitd service. $_"
             }
 
             if ($showCommands) {
