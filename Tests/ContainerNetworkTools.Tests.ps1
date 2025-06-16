@@ -228,17 +228,24 @@ Describe "ContainerNetworkTools.psm1" {
 
         It "Should use HNS module if HostNetworkingService is not installed" {
             Mock Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HostNetworkingService' }
-            Mock Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' } -MockWith { return @{} }
+            Mock Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' } -MockWith {
+                return @{Name = 'HNS'; Path = "TestDrive:\PowerShell\Modules\HNS\HNS.psm1" }
+            }
 
             Initialize-NatNetwork -Force
 
             Should -Invoke Import-Module -Times 0 -Scope It -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HostNetworkingService' }
-            Should -Invoke Import-Module -Times 1 -Scope It -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
+            Should -Invoke Get-Module -Times 1 -Scope It -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' }
+
+            # NOTE: Because we are piping the HNS module info from Get-Module, Pester's Should -Invoke
+            # often struggle to intercept commands invoked via the pipeline, especially when parameter
+            # binding happens implicitly or when the function relies on parameter value from a piped object.
+            Should -Invoke Import-Module -Times 1 -Scope It -ModuleName 'ContainerNetworkTools'
         }
 
         It "Should throw an error when importing HNS module fails" {
             Mock Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HostNetworkingService' }
-            Mock Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' } -MockWith { return @{} }
+            Mock Get-Module -ModuleName 'ContainerNetworkTools' -ParameterFilter { $Name -eq 'HNS' } -MockWith { return @{ Name = 'HNS' } }
             Mock Import-Module -ModuleName 'ContainerNetworkTools' -MockWith { Throw 'Error message.' }
 
             { Initialize-NatNetwork -Force } | Should -Throw "Could not import HNS module. Error message."

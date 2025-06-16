@@ -382,11 +382,6 @@ function Uninstall-Buildkit {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            # if (Test-EmptyDirectory -Path "$path") {
-            #     Write-Output "$tool does not exist at '$Path' or the directory is empty"
-            #     return
-            # }
-
             $consent = $force
             if (!$ENV:PESTER) {
                 $consent = $force -or $PSCmdlet.ShouldContinue($env:COMPUTERNAME, "Are you sure you want to uninstall Buildkit from '$path'?")

@@ -28,20 +28,27 @@ Describe "BuildkitTools.psm1" {
         # Mock functions
         function Test-ServiceRegistered { }
         Mock Test-ServiceRegistered -ModuleName 'BuildkitTools' -MockWith { return $true }
+
+        function CleanupTestDrive {
+            Get-ChildItem -Path "$TestDrive" -Force -ErrorAction SilentlyContinue | `
+                Remove-Item -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+            Get-ChildItem -Path "TestDrive:\" -Recurse -Force -ErrorAction SilentlyContinue | `
+                Remove-Item -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+        }
     }
 
     BeforeEach {
-        Remove-Item -Path "$TestDrive" -Re -Force -ErrorAction Ignore
+        CleanupTestDrive
     }
 
     AfterEach {
         $ENV:PESTER = $false
-        Remove-Item -Path "$TestDrive" -Re -Force -ErrorAction Ignore
+
+        CleanupTestDrive
     }
 
     AfterAll {
-        Remove-Module -Name "$ModuleParentPath\Private\CommonToolUtilities.psm1" -Force -ErrorAction Ignore
-        Remove-Module -Name "$ModuleParentPath\Public\BuildkitTools.psm1" -Force -ErrorAction Ignore
+        CleanupTestDrive
     }
 
     Context "Install-Buildkit" -Tag "Install-Buildkit" {
@@ -63,7 +70,7 @@ Describe "BuildkitTools.psm1" {
         }
 
         AfterEach {
-            Remove-Item -Path "TestDrive:\" -Force -ErrorAction Ignore
+            CleanupTestDrive
         }
 
         It 'Should not process on implicit request for validation (WhatIfPreference)' {
@@ -130,10 +137,10 @@ Describe "BuildkitTools.psm1" {
 
             Should -Invoke Register-BuildkitdService -Times 1 -Exactly -Scope It -ModuleName 'BuildkitTools' `
                 -ParameterFilter {
-                    $BuildKitPath -eq "$Env:ProgramFiles\Buildkit" -and
-                    $WinCNIPath -eq "$ENV:ProgramFiles\Containerd\cni"
-                    $Start -eq $true
-                }
+                $BuildKitPath -eq "$Env:ProgramFiles\Buildkit" -and
+                $WinCNIPath -eq "$ENV:ProgramFiles\Containerd\cni"
+                $Start -eq $true
+            }
         }
 
         It "Should uninstall tool if it is already installed" {
@@ -222,7 +229,6 @@ Describe "BuildkitTools.psm1" {
 
             $expectedExecutablePath = "$MockBuildKitPath\bin\buildkitd.exe"
             $expectedCommandArguments = "--register-service --debug --containerd-worker=true --containerd-cni-config-path=`"$MockCniConfPath`" --containerd-cni-binary-dir=`"$MockCniBinDir`" --service-name buildkitd"
-            Write-Host "'$expectedCommandArguments'" -ForegroundColor Magenta
             Should -Invoke Invoke-ExecutableCommand -Times 1 -Scope It -ModuleName "BuildkitTools" `
                 -ParameterFilter {
                     ($Executable -eq $expectedExecutablePath ) -and

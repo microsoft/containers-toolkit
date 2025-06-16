@@ -224,12 +224,6 @@ function Uninstall-Nerdctl {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-
-            # if (Test-EmptyDirectory -Path "$path") {
-            #     Write-Output "$tool does not exist at '$Path' or the directory is empty"
-            #     return
-            # }
-
             $consent = $force
             if (!$ENV:PESTER) {
                 $consent = $force -or $PSCmdlet.ShouldContinue($Path, 'Are you sure you want to uninstall nerdctl?')
@@ -279,10 +273,7 @@ function Uninstall-NerdctlHelper {
         [Switch] $Purge
     )
 
-    if (Test-EmptyDirectory -Path "$Path") {
-        # Write-Error "nerdctl does not exist at '$Path' or the directory is empty."
-        # return
-
+    if (-not (Test-EmptyDirectory -Path "$Path")) {
         # Remove the folder where nerdctl is installed and related folders
         Remove-Item -Path "$Path" -Recurse -Force
     }

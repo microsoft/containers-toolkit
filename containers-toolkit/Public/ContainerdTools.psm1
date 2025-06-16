@@ -331,11 +331,6 @@ function Uninstall-Containerd {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            # if (Test-EmptyDirectory -Path $path) {
-            #     Write-Output "$tool does not exist at $Path or the directory is empty"
-            #     return
-            # }
-
             $consent = $force
             if (!$ENV:PESTER) {
                 $consent = $force -or $PSCmdlet.ShouldContinue($Path, 'Are you sure you want to uninstall Containerd?')
@@ -373,9 +368,6 @@ function Uninstall-ContainerdHelper {
     )
 
     if (-not (Test-EmptyDirectory -Path "$Path")) {
-        # Write-Error "Containerd does not exist at $Path or the directory is empty."
-        # return
-
         try {
             if (Test-ServiceRegistered -Service 'containerd') {
                 Stop-ContainerdService
