@@ -380,10 +380,10 @@ function Import-HNSModule {
         return
     }
 
-    $ModuleName = 'HNS'
-    # https://www.powershellgallery.com/packages/HNS/0.2.4
-    if (Get-Module -ListAvailable -Name $ModuleName) {
-        Import-Module -Name $ModuleName -DisableNameChecking -Force:$Force
+    # Check and import HostNetworkingService module
+    $hnsModule = Get-Module -ListAvailable -Name 'HNS' -ErrorAction SilentlyContinue
+    if ($hnsModule) {
+        $hnsModule | Import-Module -DisableNameChecking -Force:$force
         return
     }
 
