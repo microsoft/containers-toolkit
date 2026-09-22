@@ -46,7 +46,7 @@ function Install-Buildkit {
 
         [Parameter(ParameterSetName = 'Setup')]
         [Parameter(HelpMessage = "Path to Windows CNI plugin. Defaults to `$ENV:ProgramFiles\Containerd\cni")]
-        [string]$WinCNIPath="$ENV:ProgramFiles\Containerd\cni",
+        [string]$WinCNIPath = "$ENV:ProgramFiles\Containerd\cni",
 
         [Parameter(ParameterSetName = 'Install')]
         [Parameter(ParameterSetName = 'Setup')]
@@ -140,7 +140,7 @@ function Install-Buildkit {
                 }
             }
             catch {
-                Write-Warning "Failed to registed and start Buildkitd service. $_"
+                Write-Warning "Failed to set up Buildkitd service. $_"
             }
 
             if ($showCommands) {
@@ -213,10 +213,10 @@ function Register-BuildkitdService {
     )]
     param(
         [parameter(HelpMessage = "Windows CNI plugin path. Defaults to `$ENV:ProgramFiles\Containerd\cni")]
-        [String]$WinCNIPath= "$ENV:ProgramFiles\Containerd\cni",
+        [String]$WinCNIPath = "$ENV:ProgramFiles\Containerd\cni",
 
         [parameter(HelpMessage = "Buildkit path. Defaults to `$ENV:ProgramFiles\Buildkit")]
-        [String]$BuildKitPath= "$ENV:ProgramFiles\Buildkit",
+        [String]$BuildKitPath = "$ENV:ProgramFiles\Buildkit",
 
         [parameter(HelpMessage = "Specify to start Buildkitd service after registration is complete")]
         [Switch]$Start,
@@ -285,7 +285,7 @@ function Register-BuildkitdService {
             Write-Debug "CNI conf path: $cniConfPath"
 
             # Register buildkit service
-            $command = "$buildkitdExecutable --register-service --debug --containerd-worker=true --containerd-cni-config-path=`"$cniConfPath`" --containerd-cni-binary-dir=`"$cniBinDir`" --service-name buildkitd"
+            $arguments = "--register-service --debug --containerd-worker=true --containerd-cni-config-path=`"$cniConfPath`" --containerd-cni-binary-dir=`"$cniBinDir`" --service-name buildkitd"
             if (Test-ConfFileEmpty -Path $cniConfPath) {
 
                 $consent = $force
@@ -295,7 +295,7 @@ function Register-BuildkitdService {
 
                 if ($consent) {
                     Write-Warning "Containerd conf file not found at $cniConfPath. Buildkit service will be registered without Containerd cni configurations."
-                    $command = "$buildkitdExecutable --register-service --debug --containerd-worker=true --service-name buildkitd"
+                    $arguments = "--register-service --debug --containerd-worker=true --service-name buildkitd"
                 }
                 else {
                     Write-Error "Failed to register buildkit service. Containerd conf file not found at $cniConfPath.`n`t1. Ensure that the required CNI plugins are installed or you can install them using 'Install-WinCNIPlugin'.`n`t2. Create the file to resolve this issue .`n`t3. Rerun this command  'Register-BuildkitdService'"
@@ -303,12 +303,8 @@ function Register-BuildkitdService {
                 }
             }
 
-            # remove the executable extension from the command
-            $escapedPath = [regex]::Escape($buildkitdExecutable)
-            $arguments = ($command -replace "$escapedPath", "").Trim()
-
             # Register the service
-            $output = Invoke-ExecutableCommand -Executable $buildkitdExecutable -Arguments $arguments
+            $output = Invoke-ExecutableCommand -Executable "$buildkitdExecutable" -Arguments $arguments
             if ($output.ExitCode -ne 0) {
                 Throw "Failed to register buildkitd service. $($output.StandardError.ReadToEnd())"
             }
@@ -386,11 +382,6 @@ function Uninstall-Buildkit {
 
     process {
         if ($PSCmdlet.ShouldProcess($env:COMPUTERNAME, $WhatIfMessage)) {
-            if (Test-EmptyDirectory -Path "$path") {
-                Write-Output "$tool does not exist at '$Path' or the directory is empty"
-                return
-            }
-
             $consent = $force
             if (!$ENV:PESTER) {
                 $consent = $force -or $PSCmdlet.ShouldContinue($env:COMPUTERNAME, "Are you sure you want to uninstall Buildkit from '$path'?")
@@ -426,23 +417,20 @@ function Uninstall-BuildkitHelper {
         [Switch] $Purge
     )
 
-    if (Test-EmptyDirectory -Path "$Path") {
-        Write-Error "Buildkit does not exist at '$Path' or the directory is empty."
-        return
-    }
-
-    try {
-        if (Test-ServiceRegistered -Service 'Buildkitd') {
-            Stop-BuildkitdService
-            Unregister-Buildkitd -BuildkitPath "$Path"
+    if (-not (Test-EmptyDirectory -Path "$Path")) {
+        try {
+            if (Test-ServiceRegistered -Service 'Buildkitd') {
+                Stop-BuildkitdService
+                Unregister-Buildkitd -BuildkitPath "$Path"
+            }
         }
-    }
-    catch {
-        Throw "Could not stop or unregister buildkitd service. $_"
-    }
+        catch {
+            Throw "Could not stop or unregister buildkitd service. $_"
+        }
 
-    # Remove the folder where buildkit is installed and related folders
-    Remove-Item -Path "$Path" -Recurse -Force
+        # Remove the folder where buildkit is installed and related folders
+        Remove-Item -Path "$Path" -Recurse -Force
+    }
 
     if ($Purge) {
         Write-Output "Purging Buildkit program data"
@@ -494,10 +482,10 @@ function Unregister-Buildkitd($buildkitPath) {
     }
 
     # Unregister buildkit service
-    $buildkitdExecutable = "$buildkitPath\bin\buildkitd.exe"
+    $buildkitdExecutable = (Get-ChildItem -Path "$buildkitPath" -Recurse -Filter "buildkitd.exe").FullName | Select-Object -First 1
 
-    Write-Debug "Buildkitd path: $buildkitdExecutable "
-    $output = Invoke-ExecutableCommand -Executable $buildkitdExecutable -Arguments "--unregister-service"
+    Write-Debug "Buildkitd path: '$buildkitdExecutable'"
+    $output = Invoke-ExecutableCommand -Executable "$buildkitdExecutable" -Arguments "--unregister-service"
     if ($output.ExitCode -ne 0) {
         Throw "Could not unregister buildkitd service. $($output.StandardError.ReadToEnd())"
     }

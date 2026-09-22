@@ -183,7 +183,24 @@ Describe "NerdctlTools.psm1" {
         }
 
         It "Should successfully purge program data" {
-            Uninstall-Nerdctl -Path 'TestDrive:\Program Files\nerdctl' -Confirm:$false -Force -Purge
+            $mockPath = 'TestDrive:\Program Files\nerdctl'
+            Mock Get-ChildItem -ModuleName 'NerdctlTools' -ParameterFilter { $Path -eq "$mockPath" } -MockWith {
+                return @(
+                    New-MockObject -Type  'System.IO.DirectoryInfo' -Properties @{
+                        FullName      = "$mockPath\nerdctl.exe"
+                        Name          = 'nerdctl.exe'
+                        Length        = 27259904
+                        DirectoryName = "$mockPath"
+                        Directory     = "$mockPath"
+                        PSIsContainer = $false
+                    }
+                )
+            }
+
+            $mockProcess = New-MockObject -Type 'System.Diagnostics.Process' -Properties @{ ExitCode = 0 }
+            Mock Invoke-ExecutableCommand -ModuleName "NerdctlTools" -MockWith { return $mockProcess }
+
+            Uninstall-Nerdctl -Path "$mockPath" -Confirm:$false -Force -Purge
 
             # Should purge program data
             Should -Invoke Remove-Item -Times 1 -Scope It -ModuleName "NerdctlTools" `
@@ -194,7 +211,7 @@ Describe "NerdctlTools.psm1" {
                 -ParameterFilter { $Feature -eq "nerdctl" }
             Should -Invoke Invoke-ExecutableCommand -Time 1 -Scope It -ModuleName "NerdctlTools" -ParameterFilter {
                 $executable -eq "TestDrive:\Program Files\nerdctl\nerdctl.exe" -and
-                $arguments -eq "system prune --all"
+                $arguments -eq "system prune --all --force"
             }
         }
 
